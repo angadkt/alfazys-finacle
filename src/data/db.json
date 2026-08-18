@@ -1,0 +1,160 @@
+{
+  "user": {
+    "name": "Sarah Al-Fayed",
+    "email": "sarah.alfayed@finacle.io",
+    "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120",
+    "occupation": "Principal Financial Consultant",
+    "joinedDate": "2024-03-12"
+  },
+  "accounts": [
+    {
+      "id": "acc-1",
+      "type": "Checking Account",
+      "accountNumber": "FA-4820-9182-01",
+      "routingNumber": "FINA10098",
+      "balance": 18450.75,
+      "currency": "USD",
+      "status": "active"
+    },
+    {
+      "id": "acc-2",
+      "type": "High-Yield Savings",
+      "accountNumber": "FA-1928-8374-05",
+      "routingNumber": "FINA10098",
+      "balance": 142300.50,
+      "currency": "USD",
+      "status": "active"
+    },
+    {
+      "id": "acc-3",
+      "type": "Global Investment Portfolio",
+      "accountNumber": "FA-9938-2281-99",
+      "routingNumber": "FINA10098",
+      "balance": 64800.00,
+      "currency": "USD",
+      "status": "active"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx-1",
+      "accountId": "acc-1",
+      "date": "2026-08-18T14:32:00Z",
+      "description": "Amazon Web Services Hosting",
+      "amount": 256.40,
+      "type": "withdrawal",
+      "category": "Technology",
+      "status": "completed"
+    },
+    {
+      "id": "tx-2",
+      "accountId": "acc-1",
+      "date": "2026-08-18T10:15:00Z",
+      "description": "Starbucks Coffee #4912",
+      "amount": 14.80,
+      "type": "withdrawal",
+      "category": "Food & Beverage",
+      "status": "completed"
+    },
+    {
+      "id": "tx-3",
+      "accountId": "acc-1",
+      "date": "2026-08-17T18:00:00Z",
+      "description": "Salary Direct Deposit - Finacle Corp",
+      "amount": 6250.00,
+      "type": "deposit",
+      "category": "Income",
+      "status": "completed"
+    },
+    {
+      "id": "tx-4",
+      "accountId": "acc-2",
+      "date": "2026-08-16T12:00:00Z",
+      "description": "Interest Payment - HYSA",
+      "amount": 474.33,
+      "type": "deposit",
+      "category": "Interest",
+      "status": "completed"
+    },
+    {
+      "id": "tx-5",
+      "accountId": "acc-1",
+      "date": "2026-08-15T09:24:00Z",
+      "description": "Uber Ride - Airport Express",
+      "amount": 48.50,
+      "type": "withdrawal",
+      "category": "Transportation",
+      "status": "completed"
+    },
+    {
+      "id": "tx-6",
+      "accountId": "acc-1",
+      "date": "2026-08-14T16:45:00Z",
+      "description": "Transfer to High-Yield Savings",
+      "amount": 2000.00,
+      "type": "transfer",
+      "category": "Transfer",
+      "status": "completed"
+    },
+    {
+      "id": "tx-7",
+      "accountId": "acc-3",
+      "date": "2026-08-12T15:30:00Z",
+      "description": "Dividend Payment - APPL",
+      "amount": 125.00,
+      "type": "deposit",
+      "category": "Investment",
+      "status": "completed"
+    }
+  ],
+  "cards": [
+    {
+      "id": "card-1",
+      "type": "Visa Signature",
+      "cardNumber": "**** **** **** 8294",
+      "cardholderName": "SARAH AL-FAYED",
+      "expiry": "11/29",
+      "status": "active",
+      "limit": 15000,
+      "balance": 1420.50,
+      "color": "gradient-to-br from-slate-900 to-slate-800"
+    },
+    {
+      "id": "card-2",
+      "type": "Gold MasterCard",
+      "cardNumber": "**** **** **** 3918",
+      "cardholderName": "SARAH AL-FAYED",
+      "expiry": "04/28",
+      "status": "active",
+      "limit": 10000,
+      "balance": 310.20,
+      "color": "gradient-to-br from-amber-600 to-amber-800"
+    }
+  ],
+  "recipients": [
+    {
+      "id": "rec-1",
+      "name": "Hamdan Al-Maktoum",
+      "accountNumber": "FA-1029-8837-12",
+      "bankName": "Emirates NBD",
+      "email": "hamdan@dubai-fin.ae",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120"
+    },
+    {
+      "id": "rec-2",
+      "name": "Evelyn Sterling",
+      "accountNumber": "FA-5532-1192-38",
+      "bankName": "Vanguard Bank UK",
+      "email": "e.sterling@london-corp.co.uk",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120"
+    },
+    {
+      "id": "rec-3",
+      "name": "Kenji Sato",
+      "accountNumber": "FA-9012-7746-23",
+      "bankName": "Sumitomo Mitsui",
+      "email": "k.sato@tokyotech.jp",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120"
+    }
+  ]
+}
