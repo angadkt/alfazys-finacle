@@ -17,6 +17,15 @@ export default function AdminCustomerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [currentTimeStr, setCurrentTimeStr] = useState('');
 
+  // Editable customer states
+  const [customerName, setCustomerName] = useState('');
+  const [shortName, setShortName] = useState('');
+  const [phoneNo, setPhoneNo] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [emirates, setEmirates] = useState('');
+
   // Clock ticks every second
   useEffect(() => {
     const updateTime = () => {
@@ -49,36 +58,45 @@ export default function AdminCustomerDetailPage() {
     }
 
     setCustomer(found);
+    setCustomerName(found.name || '');
+    setShortName(found.shortName || '');
+    setPhoneNo(found.phone || '');
+    setEmail(found.email || '');
+    setAddress(found.address || '');
+    setCity(found.city || '');
+    setEmirates(found.emirates || '');
     setLoading(false);
   }, [id, navigate]);
 
   const handleApprove = () => {
     if (!customer) return;
-    const db = dbService.getDb();
-    const updated = db.customers.map(c => {
-      if (c.id === customer.id) {
-        return { ...c, status: 'approved' as const };
-      }
-      return c;
+    dbService.updateCustomer(customer.id, {
+      name: customerName,
+      shortName: shortName,
+      phone: phoneNo,
+      email: email,
+      address: address,
+      city: city,
+      emirates: emirates,
+      status: 'approved'
     });
-    db.customers = updated;
-    localStorage.setItem('infazys_finacle_db', JSON.stringify(db));
-    toast.success(`Customer "${customer.name}" approved successfully!`);
+    toast.success(`Customer "${customerName}" approved successfully!`);
     navigate('/admin-panel');
   };
 
   const handleReject = () => {
     if (!customer) return;
-    const db = dbService.getDb();
-    const updated = db.customers.map(c => {
-      if (c.id === customer.id) {
-        return { ...c, status: 'rejected' as const };
-      }
-      return c;
+    dbService.updateCustomer(customer.id, {
+      name: customerName,
+      shortName: shortName,
+      phone: phoneNo,
+      email: email,
+      address: address,
+      city: city,
+      emirates: emirates,
+      status: 'rejected'
     });
-    db.customers = updated;
-    localStorage.setItem('infazys_finacle_db', JSON.stringify(db));
-    toast.error(`Customer "${customer.name}" has been rejected.`);
+    toast.error(`Customer "${customerName}" has been rejected.`);
     navigate('/admin-panel');
   };
 
@@ -156,9 +174,9 @@ export default function AdminCustomerDetailPage() {
               </label>
               <input
                 type="text"
-                readOnly
-                value={customer.name}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200 select-all"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200"
               />
             </div>
 
@@ -169,10 +187,10 @@ export default function AdminCustomerDetailPage() {
               </label>
               <input
                 type="text"
-                readOnly
-                value={customer.shortName || ''}
+                value={shortName}
+                onChange={(e) => setShortName(e.target.value)}
                 placeholder="-"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200 select-all"
+                className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200"
               />
             </div>
 
@@ -183,9 +201,9 @@ export default function AdminCustomerDetailPage() {
               </label>
               <input
                 type="text"
-                readOnly
-                value={customer.phone}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200 select-all"
+                value={phoneNo}
+                onChange={(e) => setPhoneNo(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200"
               />
             </div>
 
@@ -196,9 +214,9 @@ export default function AdminCustomerDetailPage() {
               </label>
               <input
                 type="email"
-                readOnly
-                value={customer.email}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200 select-all"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200"
               />
             </div>
 
@@ -209,10 +227,10 @@ export default function AdminCustomerDetailPage() {
               </label>
               <input
                 type="text"
-                readOnly
-                value={customer.address || ''}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
                 placeholder="-"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200 select-all"
+                className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200"
               />
             </div>
 
@@ -223,10 +241,10 @@ export default function AdminCustomerDetailPage() {
               </label>
               <input
                 type="text"
-                readOnly
-                value={customer.city || ''}
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
                 placeholder="-"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200 select-all"
+                className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200"
               />
             </div>
 
@@ -235,12 +253,19 @@ export default function AdminCustomerDetailPage() {
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
                 Emirates
               </label>
-              <input
-                type="text"
-                readOnly
-                value={customer.emirates || customer.country}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200 select-all"
-              />
+              <select
+                value={emirates}
+                onChange={(e) => setEmirates(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition-all duration-200 bg-white"
+              >
+                <option value="Abu Dhabi">Abu Dhabi</option>
+                <option value="Dubai">Dubai</option>
+                <option value="Sharjah">Sharjah</option>
+                <option value="Ajman">Ajman</option>
+                <option value="Umm Al Quwain">Umm Al Quwain</option>
+                <option value="Ras Al Khaimah">Ras Al Khaimah</option>
+                <option value="Fujairah">Fujairah</option>
+              </select>
             </div>
 
             {/* Submitted Date */}

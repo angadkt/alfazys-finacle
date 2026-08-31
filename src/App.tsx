@@ -9,7 +9,7 @@ import AdminCustomerDetailPage from './pages/AdminCustomerDetailPage';
 import CustomerViewPage from './pages/CustomerViewPage';
 import { ToastProvider } from './contexts/ToastContext';
 
-// Trigger HMR rebuild to register newly created AdminCustomerDetailPage and CustomerViewPage files
+// Trigger HMR rebuild to register newly created AdminCustomerDetailPage and CustomerViewPage files.
 export default function App() {
   return (
     <ToastProvider>

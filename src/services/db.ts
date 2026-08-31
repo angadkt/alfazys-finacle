@@ -312,6 +312,16 @@ export const dbService = {
  return newCustomer;
  },
 
+ // Update an existing customer
+ updateCustomer: (id: string, updates: Partial<Customer>): Customer | null => {
+ const db = getDb();
+ const index = db.customers.findIndex(c => c.id === id);
+ if (index === -1) return null;
+ db.customers[index] = { ...db.customers[index], ...updates };
+ saveDb(db);
+ return db.customers[index];
+ },
+
  // Reset database to default mock JSON state
  resetDb: (): DbSchema => {
  const typedInitialData = initialData as DbSchema;

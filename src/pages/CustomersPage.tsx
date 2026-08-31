@@ -155,76 +155,10 @@ export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
-  // Add Customer Modal States
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [customerName, setCustomerName] = useState('');
-  const [shortName, setShortName] = useState('');
-  const [phoneNo, setPhoneNo] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [emirates, setEmirates] = useState('');
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
-
   useEffect(() => {
     setCustomers(dbService.getCustomers());
   }, []);
 
-  const handleAddSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-
-    if (!customerName.trim() || !shortName.trim() || !phoneNo.trim() || !email.trim() || !address.trim() || !city.trim() || !emirates) {
-      setFormError('Please fill in all the details, including selecting an Emirate.');
-      toast.error('Please fill in all the details, including selecting an Emirate.');
-      return;
-    }
-
-    setFormLoading(true);
-
-    try {
-      dbService.addCustomer({
-        name: customerName,
-        shortName: shortName,
-        phone: phoneNo,
-        email: email,
-        address: address,
-        city: city,
-        emirates: emirates,
-        country: 'United Arab Emirates',
-        balance: 0,
-        status: 'pending'
-      });
-
-      // Simulate a small network delay for smooth UX
-      setTimeout(() => {
-        setFormLoading(false);
-        toast.success(`Customer "${customerName}" submitted for approval!`);
-        
-        // Refresh local list
-        setCustomers(dbService.getCustomers());
-        
-        // Reset states
-        setCustomerName('');
-        setShortName('');
-        setPhoneNo('');
-        setEmail('');
-        setAddress('');
-        setCity('');
-        setEmirates('');
-        
-        // Close modal
-        setIsAddModalOpen(false);
-      }, 800);
-    } catch (err) {
-      setFormLoading(false);
-      setFormError('Failed to add customer. Please try again.');
-      toast.error('Failed to add customer. Please try again.');
-    }
-  };
-
-  // Trigger Toast Notification on Status Filter change
   useEffect(() => {
     if (customers.length === 0) return;
     const matched = customers.filter(c => {
@@ -505,16 +439,16 @@ export default function CustomersPage() {
  <p className="text-xs text-slate-450 font-bold tracking-wide mt-2">Manage corporate and individual customer accounts</p>
  </div>
 
- {/* Add Customer Button */}
- <button 
- onClick={() => setIsAddModalOpen(true)}
- className="bg-[#9e0248] hover:bg-[#85013c] text-white hover:brightness-110 shadow-md shadow-[#9e0248]/10 hover:shadow-[#9e0248]/20 hover:shadow-lg transition duration-200 py-3 px-5 font-bold flex items-center gap-2 text-xs uppercase tracking-wider rounded-xl"
- >
- <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
- <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
- </svg>
- Add Customer
- </button>
+  {/* Add Customer Button */}
+  <button 
+  onClick={() => navigate('/customers/new')}
+  className="bg-[#9e0248] hover:bg-[#85013c] text-white hover:brightness-110 shadow-md shadow-[#9e0248]/10 hover:shadow-[#9e0248]/20 hover:shadow-lg transition duration-200 py-3 px-5 font-bold flex items-center gap-2 text-xs uppercase tracking-wider rounded-xl"
+  >
+  <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+  </svg>
+  Add Customer
+  </button>
   </div>
 
   {/* Filter & Local Search Toolbar */}
@@ -704,161 +638,7 @@ export default function CustomersPage() {
 
  </div>
 
-  {/* Add Customer Modal Overlay */}
-  {isAddModalOpen && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div 
-        className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-w-2xl w-full overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="bg-[#9e0248] text-white px-6 py-5 flex items-center justify-between select-none">
-          <span className="text-sm font-black uppercase tracking-wider font-montserrat">
-            Customer Code Creation - Retail
-          </span>
-          <button 
-            onClick={() => setIsAddModalOpen(false)}
-            className="text-white/85 hover:text-white transition p-1.5 hover:bg-white/10 rounded-full cursor-pointer"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
 
-        {/* Modal Body */}
-        <form onSubmit={handleAddSubmit} className="p-6 md:p-8 flex flex-col gap-6 max-h-[80vh] overflow-y-auto scrollbar-thin text-left">
-          {formError && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg text-xs font-semibold">
-              {formError}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-            {/* Customer Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Customer Name</label>
-              <input
-                type="text"
-                required
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Enter official registration name"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
-              />
-            </div>
-
-            {/* Short Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Short Name</label>
-              <input
-                type="text"
-                required
-                value={shortName}
-                onChange={(e) => setShortName(e.target.value)}
-                placeholder="Enter internal code/short name"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
-              />
-            </div>
-
-            {/* Phone No */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Phone No</label>
-              <input
-                type="tel"
-                required
-                value={phoneNo}
-                onChange={(e) => setPhoneNo(e.target.value)}
-                placeholder="Enter phone with country code"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
-              />
-            </div>
-
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter official email address"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
-              />
-            </div>
-
-            {/* Address */}
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Address</label>
-              <input
-                type="text"
-                required
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Street, building number, district details"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
-              />
-            </div>
-
-            {/* City */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider">City</label>
-              <input
-                type="text"
-                required
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Enter city (e.g. Dubai, Abu Dhabi)"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
-              />
-            </div>
-
-            {/* Emirates Selection Drop-down */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Emirates</label>
-              <select
-                required
-                value={emirates}
-                onChange={(e) => setEmirates(e.target.value)}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition cursor-pointer"
-              >
-                <option value="" disabled>-- Select Emirate --</option>
-                <option value="Abu Dhabi">Abu Dhabi</option>
-                <option value="Dubai">Dubai</option>
-                <option value="Sharjah">Sharjah</option>
-                <option value="Ajman">Ajman</option>
-                <option value="Umm Al Quwain">Umm Al Quwain</option>
-                <option value="Ras Al Khaimah">Ras Al Khaimah</option>
-                <option value="Fujairah">Fujairah</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Modal Footer Actions */}
-          <div className="flex items-center justify-end gap-3.5 border-t border-slate-100 pt-6 mt-2">
-            <button
-              type="button"
-              onClick={() => setIsAddModalOpen(false)}
-              className="border border-slate-300 hover:bg-slate-50 text-slate-700 font-black px-5 py-3.5 rounded-xl text-xs tracking-wider uppercase cursor-pointer transition select-none text-center"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={formLoading}
-              className="bg-[#9e0248] hover:bg-[#85013c] text-white font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none min-w-[140px]"
-            >
-              {formLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <span>Create Customer</span>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )}
 
  {/* Footer Info */}
  <footer className={`border-t border-slate-200 bg-white py-8 transition-all duration-300 ${sidebarExpanded ? 'pl-64' : 'pl-0'}`}>

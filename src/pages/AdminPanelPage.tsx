@@ -194,15 +194,7 @@ export default function AdminPanelPage() {
   };
 
   const handleApprove = (id: string, name: string) => {
-    const db = dbService.getDb();
-    const updated = db.customers.map(c => {
-      if (c.id === id) {
-        return { ...c, status: 'approved' as const };
-      }
-      return c;
-    });
-    db.customers = updated;
-    localStorage.setItem('infazys_finacle_db', JSON.stringify(db));
+    dbService.updateCustomer(id, { status: 'approved' });
     
     // Feedback Notice
     setMessage(`Customer Code for "${name}" has been APPROVED successfully!`);
@@ -212,15 +204,7 @@ export default function AdminPanelPage() {
   };
 
   const handleReject = (id: string, name: string) => {
-    const db = dbService.getDb();
-    const updated = db.customers.map(c => {
-      if (c.id === id) {
-        return { ...c, status: 'rejected' as const };
-      }
-      return c;
-    });
-    db.customers = updated;
-    localStorage.setItem('infazys_finacle_db', JSON.stringify(db));
+    dbService.updateCustomer(id, { status: 'rejected' });
 
     // Feedback Notice
     setMessage(`Customer Code for "${name}" has been REJECTED!`);
