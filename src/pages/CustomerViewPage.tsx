@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { dbService } from '../services/db';
 import type { Customer } from '../services/db';
+import { useToast } from '../contexts/ToastContext';
 
 const getInitials = (name: string) => {
   const val = name || 'Anonymous';
@@ -10,10 +11,24 @@ const getInitials = (name: string) => {
 
 export default function CustomerViewPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const { id } = useParams<{ id: string }>();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentTimeStr, setCurrentTimeStr] = useState('');
+
+  // Active Role
+  const activeRole = dbService.getUserRole();
+  const isAdmin = activeRole === 'super_admin';
+
+  // Editable customer states (for Admin Checker verification)
+  const [customerName, setCustomerName] = useState('');
+  const [shortName, setShortName] = useState('');
+  const [phoneNo, setPhoneNo] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [emirates, setEmirates] = useState('');
 
   // Clock ticks every second in IST
   useEffect(() => {
@@ -57,14 +72,8 @@ export default function CustomerViewPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Access Control Guard & Data Loader
+  // Data Loader
   useEffect(() => {
-    const user = dbService.getUser();
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
     if (!id) {
       navigate('/customers');
       return;
@@ -78,8 +87,48 @@ export default function CustomerViewPage() {
     }
 
     setCustomer(found);
+    setCustomerName(found.name || '');
+    setShortName(found.shortName || '');
+    setPhoneNo(found.phone || '');
+    setEmail(found.email || '');
+    setAddress(found.address || '');
+    setCity(found.city || '');
+    setEmirates(found.emirates || found.country || 'Dubai');
     setLoading(false);
   }, [id, navigate]);
+
+  // Admin Actions
+  const handleApprove = () => {
+    if (!customer) return;
+    dbService.updateCustomer(customer.id, {
+      name: customerName,
+      shortName: shortName,
+      phone: phoneNo,
+      email: email,
+      address: address,
+      city: city,
+      emirates: emirates,
+      status: 'approved'
+    });
+    toast.success(`Customer "${customerName}" has been APPROVED successfully!`);
+    navigate('/customers');
+  };
+
+  const handleReject = () => {
+    if (!customer) return;
+    dbService.updateCustomer(customer.id, {
+      name: customerName,
+      shortName: shortName,
+      phone: phoneNo,
+      email: email,
+      address: address,
+      city: city,
+      emirates: emirates,
+      status: 'rejected'
+    });
+    toast.error(`Customer "${customerName}" registration was rejected.`);
+    navigate('/customers');
+  };
 
   if (loading || !customer) {
     return (
@@ -92,17 +141,19 @@ export default function CustomerViewPage() {
     );
   }
 
+  const isPending = customer.status === 'pending';
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col antialiased selection:bg-[#9e0248]/10 selection:text-[#9e0248] p-4 md:p-6 lg:p-8">
       <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
         
-        {/* Banner Header Style matching design */}
+        {/* Banner Header Style */}
         <div className="bg-[#9e0248] text-white rounded-t-xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm select-none gap-2">
           <div className="flex items-center">
             <button 
               type="button"
               onClick={() => navigate('/customers')}
-              className="mr-3.5 hover:text-white/80 transition flex items-center gap-1.5 text-white font-bold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider"
+              className="mr-3.5 hover:text-white/80 transition flex items-center gap-1.5 text-white font-bold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -110,7 +161,9 @@ export default function CustomerViewPage() {
               <span>Back</span>
             </button>
             <span className="text-sm font-black uppercase tracking-wider font-montserrat">
-              Customer Registry Detailed Code Card
+              {isAdmin && isPending 
+                ? 'Customer Verification & Checker Approval' 
+                : 'Customer Detailed Code Card'}
             </span>
           </div>
           <span className="text-xs font-bold text-white/90 tracking-wide bg-white/10 px-3 py-1 rounded">
@@ -118,16 +171,29 @@ export default function CustomerViewPage() {
           </span>
         </div>
 
-        {/* Form Container Card matching design */}
+        {/* Form Container Card */}
         <div className="bg-white border border-slate-200 shadow-md p-6 md:p-10 rounded-b-xl flex flex-col gap-8">
           
-          {/* Waiting for verification banner if pending */}
-          {customer.status === 'pending' && (
+          {/* Waiting for verification banner if pending for staff/agent */}
+          {!isAdmin && isPending && (
             <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 font-bold px-5 py-4 rounded-xl text-xs flex items-center gap-2.5 animate-pulse">
               <svg className="w-5 h-5 text-amber-600 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
-              <span className="uppercase tracking-wider font-montserrat font-black">Waiting for verification</span>
+              <span className="uppercase tracking-wider font-montserrat font-black">Waiting for checker verification & approval</span>
+            </div>
+          )}
+
+          {/* Admin Verification Notice */}
+          {isAdmin && isPending && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 font-semibold px-5 py-4 rounded-xl text-xs flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 flex-shrink-0" />
+                <span><strong>Checker Review:</strong> Verify customer details and choose to approve or reject this onboarding request.</span>
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 px-2.5 py-1 rounded-md">
+                Action Required
+              </span>
             </div>
           )}
 
@@ -138,7 +204,18 @@ export default function CustomerViewPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-black text-slate-800 leading-tight">{customer.name}</span>
-              <span className="text-xs text-slate-450 font-bold mt-1.5">{customer.email}</span>
+              <span className="text-xs text-slate-400 font-bold mt-1.5">{customer.email}</span>
+            </div>
+            <div className="ml-auto">
+              <span className={`inline-flex px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider leading-none rounded-full border ${
+                customer.status === 'approved'
+                  ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                  : customer.status === 'rejected'
+                  ? 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                  : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+              }`}>
+                {customer.status}
+              </span>
             </div>
           </div>
 
@@ -162,12 +239,21 @@ export default function CustomerViewPage() {
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
                 Customer Name
               </label>
-              <input
-                type="text"
-                readOnly
-                value={customer.name}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
-              />
+              {isAdmin && isPending ? (
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                />
+              ) : (
+                <input
+                  type="text"
+                  readOnly
+                  value={customer.name}
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                />
+              )}
             </div>
 
             {/* Short Name */}
@@ -175,13 +261,23 @@ export default function CustomerViewPage() {
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
                 Short Name
               </label>
-              <input
-                type="text"
-                readOnly
-                value={customer.shortName || ''}
-                placeholder="-"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
-              />
+              {isAdmin && isPending ? (
+                <input
+                  type="text"
+                  value={shortName}
+                  onChange={(e) => setShortName(e.target.value)}
+                  placeholder="-"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                />
+              ) : (
+                <input
+                  type="text"
+                  readOnly
+                  value={customer.shortName || ''}
+                  placeholder="-"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                />
+              )}
             </div>
 
             {/* Phone No */}
@@ -189,12 +285,21 @@ export default function CustomerViewPage() {
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
                 Phone No
               </label>
-              <input
-                type="text"
-                readOnly
-                value={customer.phone}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
-              />
+              {isAdmin && isPending ? (
+                <input
+                  type="text"
+                  value={phoneNo}
+                  onChange={(e) => setPhoneNo(e.target.value)}
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                />
+              ) : (
+                <input
+                  type="text"
+                  readOnly
+                  value={customer.phone}
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                />
+              )}
             </div>
 
             {/* Email */}
@@ -202,12 +307,21 @@ export default function CustomerViewPage() {
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
                 Email
               </label>
-              <input
-                type="email"
-                readOnly
-                value={customer.email}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
-              />
+              {isAdmin && isPending ? (
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                />
+              ) : (
+                <input
+                  type="email"
+                  readOnly
+                  value={customer.email}
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                />
+              )}
             </div>
 
             {/* Address */}
@@ -215,13 +329,23 @@ export default function CustomerViewPage() {
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
                 Address
               </label>
-              <input
-                type="text"
-                readOnly
-                value={customer.address || ''}
-                placeholder="-"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
-              />
+              {isAdmin && isPending ? (
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="-"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                />
+              ) : (
+                <input
+                  type="text"
+                  readOnly
+                  value={customer.address || ''}
+                  placeholder="-"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                />
+              )}
             </div>
 
             {/* City */}
@@ -229,13 +353,23 @@ export default function CustomerViewPage() {
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
                 City
               </label>
-              <input
-                type="text"
-                readOnly
-                value={customer.city || ''}
-                placeholder="-"
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
-              />
+              {isAdmin && isPending ? (
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="-"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                />
+              ) : (
+                <input
+                  type="text"
+                  readOnly
+                  value={customer.city || ''}
+                  placeholder="-"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                />
+              )}
             </div>
 
             {/* Emirates */}
@@ -243,12 +377,28 @@ export default function CustomerViewPage() {
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
                 Emirates
               </label>
-              <input
-                type="text"
-                readOnly
-                value={customer.emirates || customer.country}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
-              />
+              {isAdmin && isPending ? (
+                <select
+                  value={emirates}
+                  onChange={(e) => setEmirates(e.target.value)}
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                >
+                  <option value="Abu Dhabi">Abu Dhabi</option>
+                  <option value="Dubai">Dubai</option>
+                  <option value="Sharjah">Sharjah</option>
+                  <option value="Ajman">Ajman</option>
+                  <option value="Umm Al Quwain">Umm Al Quwain</option>
+                  <option value="Ras Al Khaimah">Ras Al Khaimah</option>
+                  <option value="Fujairah">Fujairah</option>
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  readOnly
+                  value={customer.emirates || customer.country}
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                />
+              )}
             </div>
 
             {/* Submitted Date */}
@@ -267,7 +417,7 @@ export default function CustomerViewPage() {
             {/* Status */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
-                Status
+                Current Verification Status
               </label>
               <div className="flex items-center h-full">
                 <span className={`inline-flex px-3.5 py-1.5 text-[9px] font-black uppercase tracking-wider leading-none rounded-full border ${
@@ -286,14 +436,50 @@ export default function CustomerViewPage() {
 
           {/* Action Buttons Footer */}
           <div className="flex flex-col sm:flex-row items-center justify-end gap-3.5 border-t border-slate-100 pt-8 mt-4">
-            {/* Back Button */}
-            <button
-              type="button"
-              onClick={() => navigate('/customers')}
-              className="w-full sm:w-auto border border-slate-300 hover:bg-slate-50 text-slate-700 font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase cursor-pointer transition select-none text-center"
-            >
-              Return to Customers
-            </button>
+            
+            {/* If Admin and Customer is Pending: Show Reject and Approve Buttons */}
+            {isAdmin && isPending ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate('/customers')}
+                  className="w-full sm:w-auto border border-slate-300 hover:bg-slate-50 text-slate-700 font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase cursor-pointer transition select-none text-center"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleReject}
+                  className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Reject Customer
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  Approve Customer
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate('/customers')}
+                className="w-full sm:w-auto bg-[#9e0248] hover:bg-[#85013c] text-white font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase cursor-pointer transition select-none text-center shadow-md"
+              >
+                Return to Customers Registry
+              </button>
+            )}
+
           </div>
 
         </div>

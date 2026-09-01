@@ -15,21 +15,21 @@ export const mockUsers: Record<UserRole, User> = {
  name: "Sarah Al-Fayed",
  email: "sarah.alfayed@finacle.io",
  avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120",
- occupation: "Principal Financial Consultant (Super Admin)",
+ occupation: "Operations Manager & Checker (Admin)",
  joinedDate: "2024-03-12"
  },
  staff: {
  name: "David Miller",
  email: "david.miller@finacle.io",
  avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
- occupation: "Senior Operations Specialist (Staff)",
+ occupation: "Branch Operations Specialist (Staff Maker)",
  joinedDate: "2025-01-15"
  },
  agent: {
  name: "Marcus Vance",
  email: "marcus.vance@finacle.io",
  avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120",
- occupation: "Independent Field Agent",
+ occupation: "Field Relationship Agent (Agent)",
  joinedDate: "2025-06-20"
  }
 };

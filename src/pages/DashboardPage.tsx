@@ -95,11 +95,6 @@ const AuditLogsIcon = () => (
   </svg>
 );
 
-const AdminPanelIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-.255c.007-.378-.138-.75-.43-.991l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.645-.869L9.594 3.94zM15 12a3 3 0 11-6 0 3 3 0 0 1 6 0z" />
-  </svg>
-);
 
 const ChevronRightIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5">
@@ -176,13 +171,6 @@ const HeadOfficeIcon = () => (
   </div>
 );
 
-const GridAdminPanelIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-10 h-10" fill="#16335f">
-      <path d="M32 20c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12zm0 18c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6zm20.4-8.4l-4.2-1.4c-.3-1-.8-2-1.4-2.9l2.4-3.7c.5-.8.4-1.8-.3-2.5l-2.8-2.8c-.7-.7-1.7-.8-2.5-.3l-3.7 2.4c-.9-.6-1.9-1.1-2.9-1.4l-1.4-4.2c-.3-.9-1.1-1.5-2.1-1.5h-4c-1 0-1.8.6-2.1 1.5l-1.4 4.2c-1 .3-2 .8-2.9 1.4l-3.7-2.4c-.8-.5-1.8-.4-2.5.3L16.7 19c-.7.7-.8 1.7-.3 2.5l2.4 3.7c-.6.9-1.1 1.9-1.4 2.9l-4.2 1.4c-.9.3-1.5 1.1-1.5 2.1v4c0 1 .6 1.8 1.5 2.1l4.2 1.4c.3 1 .8 2 1.4 2.9l-2.4 3.7c-.5.8-.4 1.8.3 2.5l2.8 2.8c.7.7 1.7.8 2.5.3l3.7-2.4c.9.6 1.9 1.1 2.9 1.4l1.4 4.2c.3.9 1.1 1.5 2.1 1.5h4c1 0 1.8-.6 2.1-1.5l1.4-4.2c1-.3 2-.8 2.9-1.4l3.7 2.4c.8.5 1.8.4 2.5-.3l2.8-2.8c.7-.7.8-1.7.3-2.5l-2.4-3.7c.6-.9 1.1-1.9 1.4-2.9l4.2-1.4c.9-.3 1.5-1.1 1.5-2.1v-4c0-1-.6-1.8-1.5-2.1z" />
-    </svg>
-  </div>
-);
 
 const ReportsIcon = () => (
   <div className="w-12 h-12 flex items-center justify-center relative">
@@ -235,12 +223,16 @@ const ShareIcon = () => (
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [currentUser] = useState(() => dbService.getUser());
-  const [isAdmin, setIsAdmin] = useState(false);
+  const activeRole = dbService.getUserRole();
+  const currentUser = dbService.getUser();
+  const [pendingCount, setPendingCount] = useState(0);
+  const isAdmin = activeRole === 'super_admin';
 
   useEffect(() => {
-    setIsAdmin(dbService.getUserRole() === 'super_admin');
+    const custs = dbService.getCustomers();
+    setPendingCount(custs.filter(c => c && c.status === 'pending').length);
   }, []);
+
   const [loginTime] = useState(() => {
     let stored = localStorage.getItem('infazys_finacle_login_time');
     if (!stored) {
@@ -307,7 +299,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Centered Search Bar */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm lg:max-w-md px-4 z-20">
+          <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm xl:max-w-md px-4 z-20">
             <div className="flex items-center gap-3 bg-white/15 border border-white/25 rounded-2xl px-4 py-2 h-11 transition-all duration-200 focus-within:bg-white/20 focus-within:border-white/40">
               <SearchIcon />
               <input
@@ -319,30 +311,37 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Actions Menu */}
-          <div className="flex items-center gap-6 relative z-10">
+          <div className="flex items-center gap-4 sm:gap-6 relative z-10">
 
             {/* User Session Info */}
-            <div className="flex items-center gap-4 select-none">
+            <div className="flex items-center gap-3.5 select-none">
               <img
                 src={currentUser.avatar}
                 alt={currentUser.name}
-                className="w-12 h-12 rounded-full object-cover border-2 border-white/30 shadow-sm"
+                className="w-11 h-11 rounded-full object-cover border-2 border-white/40 shadow-sm"
               />
               <div className="flex flex-col text-left justify-center">
-                <span className="text-sm font-bold text-white leading-tight">
-                  {currentUser.name}
-                </span>
-                <span className="text-xs text-white/70 font-semibold mt-1 leading-tight block">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-white leading-tight">
+                    {currentUser.name}
+                  </span>
+                  <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                    isAdmin ? 'bg-amber-400 text-slate-950' : 'bg-white/25 text-white'
+                  }`}>
+                    {isAdmin ? 'Checker' : activeRole === 'staff' ? 'Staff Maker' : 'Agent'}
+                  </span>
+                </div>
+                <span className="text-[11px] text-white/70 font-semibold mt-0.5 leading-tight block">
                   Last login: {loginTime}
                 </span>
               </div>
             </div>
 
             {/* Divider */}
-            <div className="w-px h-8 bg-white/25" />
+            <div className="w-px h-8 bg-white/25 hidden sm:block" />
 
             {/* Notification & Logout */}
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-4">
               <BellIcon className="w-5.5 h-5.5 text-white cursor-pointer hover:text-white/80 transition" />
 
               <button
@@ -394,9 +393,16 @@ export default function DashboardPage() {
               <span className="flex-shrink-0 bg-[#f0f7ff] text-[#2563eb] p-2 rounded-2xl flex items-center justify-center group-hover/item:bg-blue-100/50 transition">
                 <CustomersIcon />
               </span>
-              <span className={`ml-4 text-xs font-bold uppercase tracking-wider whitespace-nowrap text-[#1e293b] group-hover/item:text-[#2563eb] transition-all duration-200 ${sidebarExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                CUSTOMERS
-              </span>
+              <div className={`ml-4 flex items-center justify-between flex-1 ${sidebarExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <span className="text-xs font-bold uppercase tracking-wider whitespace-nowrap text-[#1e293b] group-hover/item:text-[#2563eb]">
+                  CUSTOMERS
+                </span>
+                {isAdmin && pendingCount > 0 && (
+                  <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                    {pendingCount}
+                  </span>
+                )}
+              </div>
               <span className={`ml-auto text-[#2563eb] transition-opacity duration-200 flex ${sidebarExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <ChevronRightIcon />
               </span>
@@ -433,7 +439,6 @@ export default function DashboardPage() {
                 <ChevronRightIcon />
               </span>
             </a>
-
 
             {/* AED COLLECTION */}
             <a
@@ -515,24 +520,6 @@ export default function DashboardPage() {
               </span>
             </a>
 
-            {/* ADMIN PANEL */}
-            {isAdmin && (
-              <div
-                onClick={() => navigate('/admin-panel')}
-                className="flex items-center h-16 px-3 rounded-2xl transition hover:bg-slate-50 group/item cursor-pointer"
-              >
-                <span className="flex-shrink-0 bg-[#f0f7ff] text-[#2563eb] p-2 rounded-2xl flex items-center justify-center group-hover/item:bg-blue-100/50 transition">
-                  <AdminPanelIcon />
-                </span>
-                <span className={`ml-4 text-xs font-bold uppercase tracking-wider whitespace-nowrap text-[#1e293b] group-hover/item:text-[#2563eb] transition-all duration-200 ${sidebarExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                  ADMIN PANEL
-                </span>
-                <span className={`ml-auto text-[#2563eb] transition-opacity duration-200 flex ${sidebarExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                  <ChevronRightIcon />
-                </span>
-              </div>
-            )}
-
           </nav>
 
         </aside>
@@ -573,16 +560,26 @@ export default function DashboardPage() {
               <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Head Office Account</span>
             </div>
 
-            {/* Admin Panel */}
-            {isAdmin && (
-              <div 
-                onClick={() => navigate('/admin-panel')}
-                className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer"
-              >
-                <GridAdminPanelIcon />
-                <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Admin Panel</span>
+            {/* Customers Registry */}
+            <div 
+              onClick={() => navigate('/customers')}
+              className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer relative group"
+            >
+              <div className="w-12 h-12 flex items-center justify-center relative">
+                <svg viewBox="0 0 64 64" className="w-10 h-10" fill="#16335f">
+                  <path d="M42 38c5.5 0 10 4.5 10 10v2H32v-2c0-5.5 4.5-10 10-10zm0-16a7 7 0 1 1 0 14 7 7 0 0 1 0-14z" fill="#16335f" opacity="0.55" />
+                  <path d="M22 34c6.6 0 12 5.4 12 12v4H10v-4c0-6.6 5.4-12 12-12zm0-18a8 8 0 1 1 0 16 8 8 0 0 1 0-16z" fill="#16335f" />
+                </svg>
               </div>
-            )}
+              <div className="flex items-center gap-1 mt-2">
+                <span className="text-[11px] font-bold text-slate-700 leading-tight">Customers Registry</span>
+                {isAdmin && pendingCount > 0 && (
+                  <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                    {pendingCount}
+                  </span>
+                )}
+              </div>
+            </div>
 
             {/* Reports */}
             <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
