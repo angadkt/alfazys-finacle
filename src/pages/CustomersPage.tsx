@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import logoImg from '../assets/alfazys-logo-nobg.png';
 import { dbService } from '../services/db';
 import type { Customer } from '../services/db';
+import CustomerTable from '../components/CustomerTable';
+import AddCustomerModal from '../components/AddCustomerModal';
 import { useToast } from '../contexts/ToastContext';
 
 // Sidebar Icons
@@ -113,29 +115,6 @@ const BellIcon = ({ className = "w-5.5 h-5.5" }: { className?: string }) => (
   </svg>
 );
 
-const CheckIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-  </svg>
-);
-
-const CrossIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
-const EyeIcon = () => (
-  <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const getInitials = (name: string) => {
-  const val = name || 'Anonymous';
-  return val.split(' ').map(n => n[0] || '').join('').substring(0, 2).toUpperCase();
-};
 
 export default function CustomersPage() {
   const navigate = useNavigate();
@@ -168,6 +147,8 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [activeTab, setActiveTab] = useState<'customers' | 'requests'>('customers');
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 
   const reloadCustomers = () => {
     setCustomers(dbService.getCustomers());
@@ -179,14 +160,26 @@ export default function CustomersPage() {
 
 
   // Counts
-  const totalCount = customers.length;
+  const totalCount = customers.filter(c => c && c.status !== 'pending').length;
   const pendingCount = customers.filter(c => c && c.status === 'pending').length;
-  const approvedCount = customers.filter(c => c && c.status === 'approved').length;
-  const rejectedCount = customers.filter(c => c && c.status === 'rejected').length;
 
-  // Filtered List
+  // Pending Requests (Separate Section)
+  const pendingCustomers = customers.filter(c => {
+    if (!c || c.status !== 'pending') return false;
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return (
+      (c.name || '').toLowerCase().includes(query) ||
+      (c.email || '').toLowerCase().includes(query) ||
+      (c.phone || '').includes(query) ||
+      (c.city || '').toLowerCase().includes(query) ||
+      (c.emirates || c.country || '').toLowerCase().includes(query)
+    );
+  });
+
+  // Filtered List for Main Registry (Excludes Pending)
   const filteredCustomers = customers.filter(c => {
-    if (!c) return false;
+    if (!c || c.status === 'pending') return false;
 
     // 1. Filter by status
     if (statusFilter !== 'all' && c.status !== statusFilter) {
@@ -454,284 +447,153 @@ export default function CustomersPage() {
         <main className={`flex-1 min-h-screen bg-slate-50/50 pt-6 pb-6 pr-6 lg:pt-8 lg:pb-8 lg:pr-8 transition-all duration-300 ${sidebarExpanded ? 'pl-72' : 'pl-6'}`}>
           <div className="max-w-7xl mx-auto space-y-6">
             
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              <span>Home</span>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
-              <span className="text-slate-800">Customers</span>
-            </div>
-
-            {/* Header Content Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-black text-slate-800 tracking-tight leading-none font-montserrat">
-                    Customers Registry
-                  </h1>
-                  {isAdmin ? (
-                    <span className="bg-amber-500/10 border border-amber-500/20 text-amber-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full">
-                      Admin Mode
-                    </span>
-                  ) : (
-                    <span className="bg-[#9e0248]/10 border border-[#9e0248]/20 text-[#9e0248] text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full">
-                      {activeRole === 'staff' ? 'Staff' : 'Field Agent'}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 font-bold tracking-wide mt-2">
-                  {isAdmin 
-                    ? 'Review, verify, approve, or reject customer onboarding requests in real-time.' 
-                    : 'Manage corporate and individual customer accounts & register new customers.'}
-                </p>
+            {/* Breadcrumb & Header Container */}
+            <div className="flex flex-col gap-6 mb-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <span>Home</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                <span className="text-[#9e0248]">Customers</span>
               </div>
-
-              <div className="flex items-center gap-3">
-                {/* Pending alert banner for Admin */}
-                {isAdmin && pendingCount > 0 && (
-                  <button
-                    onClick={() => setStatusFilter('pending')}
-                    className="bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-800 text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-2 transition cursor-pointer"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    <span>{pendingCount} Pending Verification</span>
-                  </button>
-                )}
-
+              
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none font-montserrat">
+                    Customers
+                  </h1>
+                  <p className="text-sm text-slate-500 font-semibold tracking-wide mt-2">
+                    Manage customer profiles, verification and customer information.
+                  </p>
+                </div>
+                
                 {/* Add Customer Button */}
                 <button 
-                  onClick={() => navigate('/customers/new')}
-                  className="bg-[#9e0248] hover:bg-[#85013c] text-white shadow-md shadow-[#9e0248]/10 hover:shadow-[#9e0248]/20 transition duration-200 py-3 px-5 font-bold flex items-center gap-2 text-xs uppercase tracking-wider rounded-xl cursor-pointer"
+                  onClick={() => setIsAddCustomerModalOpen(true)}
+                  className="bg-[#9e0248] hover:bg-[#85013c] text-white shadow-md shadow-[#9e0248]/10 hover:shadow-[#9e0248]/20 transition duration-200 py-2.5 px-4 font-bold flex items-center gap-2 text-xs uppercase tracking-wider rounded-md cursor-pointer whitespace-nowrap h-fit"
                 >
-                  <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
                   <span>Add Customer</span>
                 </button>
               </div>
+
+              {/* Tabs */}
+              <div className="flex items-center gap-8 border-b border-slate-200 w-full mt-2">
+                <button 
+                  onClick={() => setActiveTab('customers')}
+                  className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'customers' ? 'text-[#9e0248]' : 'text-slate-500 hover:text-slate-700'} cursor-pointer flex items-center gap-2`}
+                >
+                  Customers ({totalCount})
+                  {activeTab === 'customers' && (
+                    <span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-[#9e0248] rounded-t-full" />
+                  )}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('requests')}
+                  className={`pb-3 text-sm font-bold transition-colors relative flex items-center gap-2 ${activeTab === 'requests' ? 'text-[#9e0248]' : 'text-slate-500 hover:text-slate-700'} cursor-pointer`}
+                >
+                  Requests ({pendingCount})
+                  {activeTab === 'requests' && (
+                    <span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-[#9e0248] rounded-t-full" />
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* Unified Data Card */}
-            <div className="bg-white border border-slate-200 shadow-sm rounded-lg overflow-hidden flex flex-col">
-              {/* Filter & Local Search Toolbar */}
-              <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                
-                {/* Filter Pills */}
-                <div className="flex items-center gap-2 flex-wrap select-none">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-2">Filter By:</span>
+            {/* Content Area Based on Active Tab */}
+            {activeTab === 'requests' ? (
+              <div className="bg-white border border-slate-200 shadow-sm rounded-lg overflow-hidden flex flex-col mb-6">
+                <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+                  <div className="flex flex-col">
+                    <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                      Customer Requests
+                    </h2>
+                    <p className="text-xs font-semibold text-slate-500 mt-1">Review and process new customer registration requests.</p>
+                  </div>
+                  <span className="text-xs font-black text-amber-700 bg-amber-50 px-3 py-1.5 rounded-md border border-amber-200 flex items-center gap-1.5 uppercase tracking-wider">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    {pendingCount} Pending
+                  </span>
+                </div>
+                <CustomerTable 
+                  customers={pendingCustomers}
+                  isAdmin={isAdmin}
+                  onApprove={handleQuickApprove}
+                  onReject={handleQuickReject}
+                />
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200 shadow-sm rounded-lg overflow-hidden flex flex-col">
+                <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   
-                  {/* ALL PILL */}
-                  <button
-                    onClick={() => setStatusFilter('all')}
-                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
-                      statusFilter === 'all'
-                        ? 'bg-[#9e0248]/10 text-[#9e0248]'
-                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span>All</span>
-                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] ${statusFilter === 'all' ? 'bg-[#9e0248] text-white' : 'bg-slate-200 text-slate-600'}`}>{totalCount}</span>
-                  </button>
+                  {/* Search Input */}
+                  <div className="flex items-center gap-3 bg-white border border-slate-300 rounded-md px-3 py-2 h-10 w-full lg:max-w-xs transition focus-within:shadow-[0_0_0_2px_rgba(158,2,72,0.1)] focus-within:border-[#9e0248]">
+                    <SearchIcon />
+                    <input
+                      type="text"
+                      placeholder="Search customers..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 font-semibold"
+                    />
+                  </div>
 
-                  {/* PENDING PILL */}
-                  <button
-                    onClick={() => setStatusFilter('pending')}
-                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
-                      statusFilter === 'pending'
-                        ? 'bg-amber-50 text-amber-700'
-                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${statusFilter === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-amber-500/50'}`} />
-                    <span>Pending</span>
-                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] ${statusFilter === 'pending' ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-600'}`}>{pendingCount}</span>
-                  </button>
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-2 flex-wrap select-none">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-2">Status:</span>
+                    
+                    <button
+                      onClick={() => setStatusFilter('all')}
+                      className={`px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
+                        statusFilter === 'all'
+                          ? 'bg-[#9e0248]/10 text-[#9e0248]'
+                          : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>All</span>
+                    </button>
 
-                  {/* APPROVED PILL */}
-                  <button
-                    onClick={() => setStatusFilter('approved')}
-                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
-                      statusFilter === 'approved'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${statusFilter === 'approved' ? 'bg-emerald-500' : 'bg-emerald-500/50'}`} />
-                    <span>Approved</span>
-                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] ${statusFilter === 'approved' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}>{approvedCount}</span>
-                  </button>
+                    <button
+                      onClick={() => setStatusFilter('approved')}
+                      className={`px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
+                        statusFilter === 'approved'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${statusFilter === 'approved' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      <span>Approved</span>
+                    </button>
 
-                  {/* REJECTED PILL */}
-                  <button
-                    onClick={() => setStatusFilter('rejected')}
-                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
-                      statusFilter === 'rejected'
-                        ? 'bg-rose-50 text-rose-700'
-                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${statusFilter === 'rejected' ? 'bg-rose-500' : 'bg-rose-500/50'}`} />
-                    <span>Rejected</span>
-                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] ${statusFilter === 'rejected' ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-600'}`}>{rejectedCount}</span>
-                  </button>
+                    <button
+                      onClick={() => setStatusFilter('rejected')}
+                      className={`px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
+                        statusFilter === 'rejected'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${statusFilter === 'rejected' ? 'bg-rose-500' : 'bg-slate-300'}`} />
+                      <span>Rejected</span>
+                    </button>
+                    
+                    <button className="px-2 py-1.5 ml-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer border border-transparent">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
-                {/* Local Table Search Input */}
-                <div className="flex items-center gap-3 bg-white border border-slate-300 rounded-lg px-4 py-2 h-11 w-full md:max-w-xs transition focus-within:shadow-[0_0_0_2px_rgba(158,2,72,0.1)] focus-within:border-[#9e0248]">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-slate-400 flex-shrink-0">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z" />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Search registry table..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 font-semibold"
-                  />
-                </div>
-
+                <CustomerTable 
+                  customers={filteredCustomers}
+                  isAdmin={isAdmin}
+                  onApprove={handleQuickApprove}
+                  onReject={handleQuickReject}
+                />
               </div>
-
-              {/* Customers Data Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100">
-                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Customer Name</th>
-                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Short Name</th>
-                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Phone Number</th>
-                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Address & City</th>
-                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Emirates</th>
-                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Status</th>
-                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6 text-center">
-                        {isAdmin ? 'Actions & Verification' : 'Actions'}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCustomers.length > 0 ? (
-                      filteredCustomers.map((cust) => {
-                        const isPending = cust.status === 'pending';
-                        return (
-                          <tr 
-                            key={cust.id} 
-                            onClick={() => navigate(`/customers/view/${cust.id}`)}
-                            className="transition duration-150 border-b border-slate-100 hover:bg-[#9e0248]/3 bg-white last:border-none cursor-pointer"
-                          >
-                            
-                            {/* Name + Email + Avatar */}
-                            <td className="py-4.5 px-6">
-                              <div className="flex items-center gap-3.5">
-                                <div className="text-[#9e0248] bg-[#9e0248]/10 border border-[#9e0248]/20 w-9 h-9 flex items-center justify-center font-bold text-xs uppercase flex-shrink-0 rounded-full">
-                                  {getInitials(cust.name)}
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-xs font-black text-slate-800 leading-tight">{cust.name}</span>
-                                  <span className="text-[10px] text-slate-400 font-bold mt-1">{cust.email}</span>
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* Short Name */}
-                            <td className="py-4.5 px-6">
-                              <span className="text-xs font-semibold text-slate-600">{cust.shortName || '-'}</span>
-                            </td>
-
-                            {/* Phone */}
-                            <td className="py-4.5 px-6">
-                              <span className="text-xs font-semibold text-slate-600 tabular-nums font-inter">{cust.phone}</span>
-                            </td>
-
-                            {/* Address & City */}
-                            <td className="py-4.5 px-6">
-                              <span className="text-xs font-semibold text-slate-600">
-                                {cust.address ? `${cust.address}, ${cust.city || ''}` : `${cust.city || '-'}`}
-                              </span>
-                            </td>
-
-                            {/* Emirates */}
-                            <td className="py-4.5 px-6">
-                              <span className="text-xs font-semibold text-slate-600">{cust.emirates || cust.country}</span>
-                            </td>
-
-                            {/* Status Pill Badge */}
-                            <td className="py-4.5 px-6">
-                              <span className={`inline-flex px-3 py-1 text-[9px] font-black uppercase tracking-wider leading-none rounded-full ${
-                                cust.status === 'approved' 
-                                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/15' 
-                                  : cust.status === 'rejected'
-                                  ? 'bg-rose-500/10 text-rose-600 border border-rose-500/15'
-                                  : 'bg-amber-500/10 text-amber-600 border border-amber-500/15'
-                              }`}>
-                                {cust.status}
-                              </span>
-                            </td>
-
-                            {/* Action Buttons */}
-                            <td className="py-4.5 px-6 text-center">
-                              <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                
-                                {/* If Admin & Pending: Show quick Approve and Reject buttons */}
-                                {isAdmin && isPending && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleQuickApprove(e, cust.id, cust.name)}
-                                      className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border border-emerald-200 rounded-lg transition shadow-xs cursor-pointer"
-                                      title="Approve Customer"
-                                    >
-                                      <CheckIcon />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleQuickReject(e, cust.id, cust.name)}
-                                      className="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-200 rounded-lg transition shadow-xs cursor-pointer"
-                                      title="Reject Customer"
-                                    >
-                                      <CrossIcon />
-                                    </button>
-                                  </>
-                                )}
-
-                                {/* View / Review Details Button */}
-                                <button 
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/customers/view/${cust.id}`);
-                                  }}
-                                  className="text-slate-400 hover:text-[#9e0248] p-1.5 hover:bg-[#9e0248]/5 rounded-lg transition cursor-pointer"
-                                  title={isAdmin && isPending ? "Review & Verify Details" : "View Customer Details"}
-                                >
-                                  <EyeIcon />
-                                </button>
-                              </div>
-                            </td>
-
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td colSpan={7} className="py-24 text-center">
-                          <div className="flex flex-col items-center justify-center gap-4">
-                            <div className="w-20 h-20 bg-slate-50 flex items-center justify-center rounded-full border border-slate-100">
-                              <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A2.25 2.25 0 0112.75 21.5h-1.5a2.25 2.25 0 01-2.25-2.263V19.13m5.75-.002a9.397 9.397 0 01-2.17.283 9.4 9.4 0 01-2.17-.283M8.25 19.128a9.38 9.38 0 01-2.625.372 9.337 9.337 0 01-4.121-.952 4.125 4.125 0 017.533-2.493M8.25 19.128v-.003c0-1.113.285-2.16.786-3.07M12 18.75c-3.12 0-5.84-1.632-7.38-4.088A9.37 9.37 0 0112 12.75c3.12 0 5.84 1.532 7.38 4.088A9.37 9.37 0 0112 18.75z" />
-                              </svg>
-                            </div>
-                            <div className="flex flex-col items-center">
-                              <span className="text-sm font-black text-slate-700">No Customers Found</span>
-                              <span className="text-xs text-slate-500 font-medium max-w-xs mt-1">No customers match your current filters. Try adjusting your search or register a new customer.</span>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
+            )}
+            
           </div>
         </main>
 
@@ -744,6 +606,13 @@ export default function CustomersPage() {
         </div>
       </footer>
 
+      <AddCustomerModal 
+        isOpen={isAddCustomerModalOpen} 
+        onClose={() => setIsAddCustomerModalOpen(false)} 
+        onSuccess={() => { 
+          reloadCustomers(); 
+        }} 
+      />
     </div>
   );
 }
