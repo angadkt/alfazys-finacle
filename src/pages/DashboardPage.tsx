@@ -115,110 +115,6 @@ const SearchIcon = () => (
 );
 
 
-// Grid Section custom vector SVGs representing layout elements
-const AccountsServicesIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-11 h-11">
-      <path d="M42 38c5.5 0 10 4.5 10 10v2H32v-2c0-5.5 4.5-10 10-10zm0-16a7 7 0 1 1 0 14 7 7 0 0 1 0-14z" fill="#16335f" opacity="0.55" />
-      <path d="M22 34c6.6 0 12 5.4 12 12v4H10v-4c0-6.6 5.4-12 12-12zm0-18a8 8 0 1 1 0 16 8 8 0 0 1 0-16z" fill="#16335f" />
-    </svg>
-  </div>
-);
-
-const PayTransferIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-11 h-11">
-      <path d="M14 22h36v-4L58 24l-8 6v-4H14v-4z" fill="#16335f" opacity="0.55" transform="rotate(180 32 24)" />
-      <path d="M14 40h36v-4L58 42l-8 6v-4H14v-4z" fill="#16335f" />
-    </svg>
-  </div>
-);
-
-const DepositsIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-10 h-10" fill="none" stroke="#16335f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="8" y="16" width="48" height="32" rx="4" />
-      <line x1="8" y1="26" x2="56" y2="26" strokeWidth="4" />
-      <path d="M32 42V32M27 37l5-5 5 5" strokeWidth="3" />
-      <rect x="14" y="34" width="6" height="6" rx="1" fill="#16335f" stroke="none" />
-    </svg>
-  </div>
-);
-
-const LoansIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-10 h-10" fill="#16335f">
-      <path d="M8 40c4 0 10-3 14-3h20c2.2 0 4-1.8 4-4s-1.8-4-4-4h-8c-1.1 0-2-.9-2-2s.9-2 2-2h6c1.7 0 3-1.3 3-3s-1.3-3-3-3h-12c-3.3 0-6 2.7-6 6v1c0 1.1-.9 2-2 2H10c-1.1 0-2 .9-2 2s.9 2 2 2z" />
-      <circle cx="34" cy="13" r="4.5" />
-      <circle cx="24" cy="18" r="3.5" />
-      <circle cx="44" cy="18" r="3.5" />
-    </svg>
-  </div>
-);
-
-const HeadOfficeIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-10 h-10" fill="#16335f">
-      <polygon points="32,12 8,24 56,24" />
-      <rect x="10" y="24" width="44" height="4" />
-      <rect x="14" y="28" width="4" height="18" />
-      <rect x="23" y="28" width="4" height="18" />
-      <rect x="32" y="28" width="4" height="18" />
-      <rect x="41" y="28" width="4" height="18" />
-      <rect x="50" y="28" width="4" height="18" />
-      <rect x="6" y="46" width="52" height="6" rx="1" />
-    </svg>
-  </div>
-);
-
-
-const ReportsIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-10 h-10" fill="none" stroke="#16335f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 10h24l12 12v32H14V10z" strokeWidth="3.5" />
-      <path d="M38 10v12h12" fill="none" />
-      <path d="M20 44l6-8 8 6 10-12" strokeWidth="3" />
-      <circle cx="44" cy="30" r="2" fill="#16335f" stroke="none" />
-    </svg>
-  </div>
-);
-
-const ApartmentIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-10 h-10" fill="#16335f">
-      <rect x="18" y="10" width="28" height="44" rx="1" />
-      <rect x="22" y="14" width="4" height="4" fill="white" />
-      <rect x="30" y="14" width="4" height="4" fill="white" />
-      <rect x="38" y="14" width="4" height="4" fill="white" />
-
-      <rect x="22" y="22" width="4" height="4" fill="white" />
-      <rect x="30" y="22" width="4" height="4" fill="white" />
-      <rect x="38" y="22" width="4" height="4" fill="white" />
-
-      <rect x="22" y="30" width="4" height="4" fill="white" />
-      <rect x="30" y="30" width="4" height="4" fill="white" />
-      <rect x="38" y="30" width="4" height="4" fill="white" />
-
-      <rect x="22" y="38" width="4" height="4" fill="white" />
-      <rect x="30" y="38" width="4" height="4" fill="white" />
-      <rect x="38" y="38" width="4" height="4" fill="white" />
-
-      <rect x="29" y="46" width="6" height="8" fill="white" />
-    </svg>
-  </div>
-);
-
-const ShareIcon = () => (
-  <div className="w-12 h-12 flex items-center justify-center relative">
-    <svg viewBox="0 0 64 64" className="w-10 h-10" fill="none" stroke="#16335f" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="46" cy="18" r="6" fill="#16335f" stroke="none" />
-      <circle cx="18" cy="32" r="6" fill="#16335f" stroke="none" />
-      <circle cx="46" cy="46" r="6" fill="#16335f" stroke="none" />
-      <line x1="24" y1="29.5" x2="40" y2="20.5" />
-      <line x1="24" y1="34.5" x2="40" y2="43.5" />
-    </svg>
-  </div>
-);
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -328,7 +224,7 @@ export default function DashboardPage() {
                   <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                     isAdmin ? 'bg-amber-400 text-slate-950' : 'bg-white/25 text-white'
                   }`}>
-                    {isAdmin ? 'Checker' : activeRole === 'staff' ? 'Staff Maker' : 'Agent'}
+                    {isAdmin ? 'Admin' : activeRole === 'staff' ? 'Staff' : 'Agent'}
                   </span>
                 </div>
                 <span className="text-[11px] text-white/70 font-semibold mt-0.5 leading-tight block">
@@ -342,6 +238,10 @@ export default function DashboardPage() {
 
             {/* Notification & Logout */}
             <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Secure Session</span>
+              </div>
               <BellIcon className="w-5.5 h-5.5 text-white cursor-pointer hover:text-white/80 transition" />
 
               <button
@@ -527,81 +427,18 @@ export default function DashboardPage() {
         {/* Content body offset by sidebar size, removing layout margins/paddings */}
         <main className={`flex-1 w-full py-0 transition-all duration-300 ${sidebarExpanded ? 'pl-64' : 'pl-0'}`}>
 
-          {/* Action Cards Grid - Zero gap and segmented border line layout */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-0 bg-white">
-
-            {/* Accounts & Services */}
-            <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
-              <AccountsServicesIcon />
-              <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Accounts & Services</span>
-            </div>
-
-            {/* Pay & Transfer */}
-            <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
-              <PayTransferIcon />
-              <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Pay & Transfer</span>
-            </div>
-
-            {/* Deposits */}
-            <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
-              <DepositsIcon />
-              <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Deposits</span>
-            </div>
-
-            {/* Loans */}
-            <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
-              <LoansIcon />
-              <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Loans</span>
-            </div>
-
-            {/* Head Office Account */}
-            <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
-              <HeadOfficeIcon />
-              <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Head Office Account</span>
-            </div>
-
-            {/* Customers Registry */}
-            <div 
-              onClick={() => navigate('/customers')}
-              className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer relative group"
-            >
-              <div className="w-12 h-12 flex items-center justify-center relative">
-                <svg viewBox="0 0 64 64" className="w-10 h-10" fill="#16335f">
-                  <path d="M42 38c5.5 0 10 4.5 10 10v2H32v-2c0-5.5 4.5-10 10-10zm0-16a7 7 0 1 1 0 14 7 7 0 0 1 0-14z" fill="#16335f" opacity="0.55" />
-                  <path d="M22 34c6.6 0 12 5.4 12 12v4H10v-4c0-6.6 5.4-12 12-12zm0-18a8 8 0 1 1 0 16 8 8 0 0 1 0-16z" fill="#16335f" />
-                </svg>
+          <div className="p-6 bg-slate-50 border-t border-slate-200">
+            {/* Breadcrumb & Header */}
+            <div className="mb-6 flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <span>Home</span>
+                <ChevronRightIcon />
+                <span className="text-slate-800">System Overview</span>
               </div>
-              <div className="flex items-center gap-1 mt-2">
-                <span className="text-[11px] font-bold text-slate-700 leading-tight">Customers Registry</span>
-                {isAdmin && pendingCount > 0 && (
-                  <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
-                    {pendingCount}
-                  </span>
-                )}
-              </div>
+              <h2 className="text-2xl font-bold text-slate-800 font-outfit tracking-tight">Financial Dashboard</h2>
             </div>
-
-            {/* Reports */}
-            <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
-              <ReportsIcon />
-              <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Reports</span>
-            </div>
-
-            {/* Apartment */}
-            <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
-              <ApartmentIcon />
-              <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Apartment</span>
-            </div>
-
-            {/* Other Services */}
-            <div className="bg-white border border-slate-500 hover:bg-slate-50/50 transition-all duration-300 py-5 px-2 flex flex-col items-center justify-center text-center cursor-pointer">
-              <ShareIcon />
-              <span className="text-[11px] font-bold text-slate-700 mt-2 leading-tight">Other Services</span>
-            </div>
-
-          </div>
-          <div className="p-6 bg-white border-t border-slate-500">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
               {/* Left Side: Summary Cards row and Calculator/Announcements row underneath (2/3 viewport width) */}
               <div className="lg:col-span-2 flex flex-col gap-8 items-stretch">
@@ -610,7 +447,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
 
                   {/* Payment Summary [INR] */}
-                  <div className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-slate-700/50 rounded-xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[190px]">
+                  <div className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-slate-700/50 rounded-lg p-5 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[190px]">
                     {/* Wavy Background Pattern */}
                     <div className="absolute inset-0 opacity-[0.08] pointer-events-none z-0">
                       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full stroke-white stroke-[0.5] fill-none">
@@ -627,21 +464,21 @@ export default function DashboardPage() {
                     <div className="space-y-3 relative z-10">
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Confirmed Amount</span>
-                        <span className="text-xs font-bold text-white">₹{inrSummary.confirmed.toLocaleString('en-IN')}</span>
+                        <span className="text-xs font-bold text-white tabular-nums font-inter">₹{inrSummary.confirmed.toLocaleString('en-IN')}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Approved Amount</span>
-                        <span className="text-xs font-bold text-white">₹{inrSummary.approved.toLocaleString('en-IN')}</span>
+                        <span className="text-xs font-bold text-white tabular-nums font-inter">₹{inrSummary.approved.toLocaleString('en-IN')}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Pending Amount</span>
-                        <span className="text-xs font-bold text-white">₹{inrSummary.pending.toLocaleString('en-IN')}</span>
+                        <span className="text-xs font-bold text-white tabular-nums font-inter">₹{inrSummary.pending.toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Payment Summary [AED] */}
-                  <div className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-slate-700/50 rounded-xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[190px]">
+                  <div className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-slate-700/50 rounded-lg p-5 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[190px]">
                     {/* Wavy Background Pattern */}
                     <div className="absolute inset-0 opacity-[0.08] pointer-events-none z-0">
                       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full stroke-white stroke-[0.5] fill-none">
@@ -658,21 +495,21 @@ export default function DashboardPage() {
                     <div className="space-y-3 relative z-10">
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Collection Amount</span>
-                        <span className="text-xs font-bold text-white">AED {aedSummary.confirmed.toLocaleString('en-US')}</span>
+                        <span className="text-xs font-bold text-white tabular-nums font-inter">AED {aedSummary.confirmed.toLocaleString('en-US')}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Agent Payable</span>
-                        <span className="text-xs font-bold text-white">AED {aedSummary.approved.toLocaleString('en-US')}</span>
+                        <span className="text-xs font-bold text-white tabular-nums font-inter">AED {aedSummary.approved.toLocaleString('en-US')}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Agent Receivable</span>
-                        <span className="text-xs font-bold text-white">AED {aedSummary.pending.toLocaleString('en-US')}</span>
+                        <span className="text-xs font-bold text-white tabular-nums font-inter">AED {aedSummary.pending.toLocaleString('en-US')}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Servicer By Hand [INR] */}
-                  <div className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-slate-700/50 rounded-xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[190px]">
+                  <div className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-slate-700/50 rounded-lg p-5 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[190px]">
                     {/* Wavy Background Pattern */}
                     <div className="absolute inset-0 opacity-[0.08] pointer-events-none z-0">
                       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full stroke-white stroke-[0.5] fill-none">
@@ -689,7 +526,7 @@ export default function DashboardPage() {
                     <div className="space-y-3 relative z-10">
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Hand Amount</span>
-                        <span className="text-xs font-bold text-white">₹{handSummary.confirmed.toLocaleString('en-IN')}</span>
+                        <span className="text-xs font-bold text-white tabular-nums font-inter">₹{handSummary.confirmed.toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   </div>
@@ -700,7 +537,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
 
                   {/* Currency Calculator Card */}
-                  <div className="bg-[#e2e8f0]/40 border border-slate-200/80 rounded-2xl shadow-sm p-6 flex flex-col justify-between relative overflow-hidden min-h-[300px]">
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg shadow-sm p-6 flex flex-col justify-between relative overflow-hidden min-h-[300px]">
                     <div>
                       <h3 className="text-base font-black text-slate-800 tracking-wide">Currency Calculator</h3>
                       <p className="text-[11px] text-slate-400 font-semibold mt-1">Quick and easy conversions</p>
@@ -762,7 +599,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Announcements Card */}
-                  <div className="bg-[#e2e8f0]/40 border border-slate-200/80 rounded-2xl shadow-sm p-6 flex flex-col justify-between relative overflow-hidden min-h-[300px]">
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg shadow-sm p-6 flex flex-col justify-between relative overflow-hidden min-h-[300px]">
                     {/* Megaphone Outline Icon in the bottom-right corner */}
                     <div className="absolute bottom-6 right-6 text-slate-300 pointer-events-none opacity-40 z-0">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16">

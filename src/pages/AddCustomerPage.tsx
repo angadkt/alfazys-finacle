@@ -137,8 +137,17 @@ export default function AddCustomerPage() {
 
       <div className="max-w-6xl w-full mx-auto flex flex-col gap-6 print-card">
         
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider -mb-2 no-print">
+          <span>Home</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+          <span>Customers</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+          <span className="text-slate-800">Add Customer</span>
+        </div>
+
         {/* Banner Header Style matching screenshot */}
-        <div className="bg-[#9e0248] text-white rounded-t-xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm select-none gap-2 no-print">
+        <div className="bg-[#9e0248] text-white rounded-t-lg px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm select-none gap-2 no-print">
           <div className="flex items-center">
             <button 
               type="button"
@@ -162,7 +171,7 @@ export default function AddCustomerPage() {
         </div>
 
         {/* Form Container Card matching screenshot style */}
-        <div className="bg-white border border-slate-200 shadow-md p-6 md:p-10 rounded-b-xl flex flex-col gap-8 print-card">
+        <div className="bg-white border border-slate-200 shadow-md p-6 md:p-10 rounded-b-lg flex flex-col gap-8 print-card">
           
           {error && (
             <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg text-xs font-semibold animate-in fade-in duration-205 no-print">
@@ -281,14 +290,14 @@ export default function AddCustomerPage() {
                       setCreatedCustomer(null);
                       setIsConfirmationMode(false);
                     }}
-                    className="border border-[#9e0248] text-[#9e0248] hover:bg-[#9e0248]/5 transition font-black px-5 py-3 rounded-xl text-[10px] tracking-wider uppercase cursor-pointer select-none text-center"
+                    className="border border-[#9e0248] text-[#9e0248] hover:bg-[#9e0248]/5 transition font-black px-5 py-3 rounded-md text-[10px] tracking-wider uppercase cursor-pointer select-none text-center"
                   >
                     Register Another Customer
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate('/customers')}
-                    className="bg-slate-50 hover:bg-slate-100 text-slate-650 font-black border border-slate-200 px-5 py-3 rounded-xl text-[10px] tracking-wider uppercase cursor-pointer transition select-none text-center"
+                    className="bg-slate-50 hover:bg-slate-100 text-slate-650 font-black border border-slate-200 px-5 py-3 rounded-md text-[10px] tracking-wider uppercase cursor-pointer transition select-none text-center"
                   >
                     Go to Customers Registry
                   </button>
@@ -314,7 +323,7 @@ export default function AddCustomerPage() {
                       placeholder="Enter customer full name"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-xl transition"
+                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
@@ -329,7 +338,7 @@ export default function AddCustomerPage() {
                       placeholder="Enter short code/alias"
                       value={shortName}
                       onChange={(e) => setShortName(e.target.value)}
-                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-xl transition"
+                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
@@ -344,7 +353,7 @@ export default function AddCustomerPage() {
                       placeholder="e.g. +971 50 123 4567"
                       value={phoneNo}
                       onChange={(e) => setPhoneNo(e.target.value)}
-                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-xl transition"
+                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
@@ -359,7 +368,7 @@ export default function AddCustomerPage() {
                       placeholder="e.g. name@company.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-xl transition"
+                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
@@ -379,7 +388,7 @@ export default function AddCustomerPage() {
                       placeholder="Enter physical address"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-xl transition"
+                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
@@ -394,7 +403,7 @@ export default function AddCustomerPage() {
                       placeholder="e.g. Dubai"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-xl transition"
+                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
@@ -407,7 +416,7 @@ export default function AddCustomerPage() {
                       required
                       value={emirates}
                       onChange={(e) => setEmirates(e.target.value)}
-                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-xl transition bg-white cursor-pointer"
+                      className="w-full border border-slate-200 px-4 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition bg-white cursor-pointer"
                     >
                       <option value="" disabled>Please Select</option>
                       <option value="Abu Dhabi">Abu Dhabi</option>
@@ -429,7 +438,7 @@ export default function AddCustomerPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-[#9e0248] hover:bg-[#85013c] text-white font-bold py-3.5 px-8 rounded-xl transition cursor-pointer text-xs uppercase tracking-wider shadow-md shadow-[#9e0248]/15 disabled:opacity-75"
+                  className="bg-[#9e0248] hover:bg-[#85013c] text-white font-bold py-3.5 px-8 rounded-md transition cursor-pointer text-xs uppercase tracking-wider shadow-md shadow-[#9e0248]/15 disabled:opacity-75"
                 >
                   Create Customer
                 </button>
@@ -437,7 +446,7 @@ export default function AddCustomerPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/customers')}
-                  className="bg-slate-50 hover:bg-slate-100 text-slate-650 font-bold py-3.5 px-8 rounded-xl transition cursor-pointer text-xs uppercase tracking-wider border border-slate-200"
+                  className="bg-slate-50 hover:bg-slate-100 text-slate-650 font-bold py-3.5 px-8 rounded-md transition cursor-pointer text-xs uppercase tracking-wider border border-slate-200"
                 >
                   Cancel
                 </button>

@@ -283,7 +283,7 @@ export default function CustomersPage() {
                   <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                     isAdmin ? 'bg-amber-400 text-slate-950' : 'bg-white/25 text-white'
                   }`}>
-                    {isAdmin ? 'Checker' : activeRole === 'staff' ? 'Staff Maker' : 'Agent'}
+                    {isAdmin ? 'Admin' : activeRole === 'staff' ? 'Staff' : 'Agent'}
                   </span>
                 </div>
                 <span className="text-[11px] text-white/70 font-semibold mt-0.5 leading-tight block">
@@ -454,6 +454,13 @@ export default function CustomersPage() {
         <main className={`flex-1 min-h-screen bg-slate-50/50 pt-6 pb-6 pr-6 lg:pt-8 lg:pb-8 lg:pr-8 transition-all duration-300 ${sidebarExpanded ? 'pl-72' : 'pl-6'}`}>
           <div className="max-w-7xl mx-auto space-y-6">
             
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <span>Home</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              <span className="text-slate-800">Customers</span>
+            </div>
+
             {/* Header Content Section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -463,11 +470,11 @@ export default function CustomersPage() {
                   </h1>
                   {isAdmin ? (
                     <span className="bg-amber-500/10 border border-amber-500/20 text-amber-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full">
-                      Checker Mode
+                      Admin Mode
                     </span>
                   ) : (
-                    <span className="bg-blue-500/10 border border-blue-500/20 text-blue-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full">
-                      {activeRole === 'staff' ? 'Staff Maker' : 'Field Agent'}
+                    <span className="bg-[#9e0248]/10 border border-[#9e0248]/20 text-[#9e0248] text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full">
+                      {activeRole === 'staff' ? 'Staff' : 'Field Agent'}
                     </span>
                   )}
                 </div>
@@ -503,94 +510,99 @@ export default function CustomersPage() {
               </div>
             </div>
 
-            {/* Filter & Local Search Toolbar */}
-            <div className="bg-white border border-slate-200 shadow-sm p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-              
-              {/* Filter Pills */}
-              <div className="flex items-center gap-2 flex-wrap select-none">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-2">Filter By:</span>
+            {/* Unified Data Card */}
+            <div className="bg-white border border-slate-200 shadow-sm rounded-lg overflow-hidden flex flex-col">
+              {/* Filter & Local Search Toolbar */}
+              <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 
-                {/* ALL PILL */}
-                <button
-                  onClick={() => setStatusFilter('all')}
-                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer ${
-                    statusFilter === 'all'
-                      ? 'bg-[#9e0248] text-white shadow-md shadow-[#9e0248]/10'
-                      : 'bg-slate-50 border border-slate-200 text-slate-650 hover:bg-slate-100'
-                  }`}
-                >
-                  All ({totalCount})
-                </button>
+                {/* Filter Pills */}
+                <div className="flex items-center gap-2 flex-wrap select-none">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-2">Filter By:</span>
+                  
+                  {/* ALL PILL */}
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
+                      statusFilter === 'all'
+                        ? 'bg-[#9e0248]/10 text-[#9e0248]'
+                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>All</span>
+                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] ${statusFilter === 'all' ? 'bg-[#9e0248] text-white' : 'bg-slate-200 text-slate-600'}`}>{totalCount}</span>
+                  </button>
 
-                {/* PENDING PILL */}
-                <button
-                  onClick={() => setStatusFilter('pending')}
-                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
-                    statusFilter === 'pending'
-                      ? 'bg-amber-500 text-white shadow-md shadow-amber-500/10'
-                      : 'bg-slate-50 border border-slate-200 text-slate-650 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${statusFilter === 'pending' ? 'bg-white' : 'bg-amber-500 animate-pulse'}`} />
-                  <span>Pending ({pendingCount})</span>
-                </button>
+                  {/* PENDING PILL */}
+                  <button
+                    onClick={() => setStatusFilter('pending')}
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
+                      statusFilter === 'pending'
+                        ? 'bg-amber-50 text-amber-700'
+                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${statusFilter === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-amber-500/50'}`} />
+                    <span>Pending</span>
+                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] ${statusFilter === 'pending' ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-600'}`}>{pendingCount}</span>
+                  </button>
 
-                {/* APPROVED PILL */}
-                <button
-                  onClick={() => setStatusFilter('approved')}
-                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
-                    statusFilter === 'approved'
-                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/10'
-                      : 'bg-slate-50 border border-slate-200 text-slate-650 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${statusFilter === 'approved' ? 'bg-white' : 'bg-emerald-600'}`} />
-                  <span>Approved ({approvedCount})</span>
-                </button>
+                  {/* APPROVED PILL */}
+                  <button
+                    onClick={() => setStatusFilter('approved')}
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
+                      statusFilter === 'approved'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${statusFilter === 'approved' ? 'bg-emerald-500' : 'bg-emerald-500/50'}`} />
+                    <span>Approved</span>
+                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] ${statusFilter === 'approved' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}>{approvedCount}</span>
+                  </button>
 
-                {/* REJECTED PILL */}
-                <button
-                  onClick={() => setStatusFilter('rejected')}
-                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
-                    statusFilter === 'rejected'
-                      ? 'bg-rose-600 text-white shadow-md shadow-rose-600/10'
-                      : 'bg-slate-50 border border-slate-200 text-slate-650 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${statusFilter === 'rejected' ? 'bg-white' : 'bg-rose-600'}`} />
-                  <span>Rejected ({rejectedCount})</span>
-                </button>
+                  {/* REJECTED PILL */}
+                  <button
+                    onClick={() => setStatusFilter('rejected')}
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
+                      statusFilter === 'rejected'
+                        ? 'bg-rose-50 text-rose-700'
+                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${statusFilter === 'rejected' ? 'bg-rose-500' : 'bg-rose-500/50'}`} />
+                    <span>Rejected</span>
+                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] ${statusFilter === 'rejected' ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-600'}`}>{rejectedCount}</span>
+                  </button>
+                </div>
+
+                {/* Local Table Search Input */}
+                <div className="flex items-center gap-3 bg-white border border-slate-300 rounded-lg px-4 py-2 h-11 w-full md:max-w-xs transition focus-within:shadow-[0_0_0_2px_rgba(158,2,72,0.1)] focus-within:border-[#9e0248]">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-slate-400 flex-shrink-0">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search registry table..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 font-semibold"
+                  />
+                </div>
+
               </div>
 
-              {/* Local Table Search Input */}
-              <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 h-11 w-full md:max-w-xs transition focus-within:bg-white focus-within:border-[#9e0248]">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-slate-400 flex-shrink-0">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search registry table..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 font-semibold"
-                />
-              </div>
-
-            </div>
-
-            {/* Customers Data Table */}
-            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden rounded-3xl">
+              {/* Customers Data Table */}
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="bg-[#9e0248]/5 border-b border-[#9e0248]/10">
-                      <th className="text-slate-600 text-[10px] uppercase font-black tracking-wider py-4 px-6">Customer Name</th>
-                      <th className="text-slate-600 text-[10px] uppercase font-black tracking-wider py-4 px-6">Short Name</th>
-                      <th className="text-slate-600 text-[10px] uppercase font-black tracking-wider py-4 px-6">Phone Number</th>
-                      <th className="text-slate-600 text-[10px] uppercase font-black tracking-wider py-4 px-6">Address & City</th>
-                      <th className="text-slate-600 text-[10px] uppercase font-black tracking-wider py-4 px-6">Emirates</th>
-                      <th className="text-slate-600 text-[10px] uppercase font-black tracking-wider py-4 px-6">Status</th>
-                      <th className="text-slate-600 text-[10px] uppercase font-black tracking-wider py-4 px-6 text-center">
+                    <tr className="bg-slate-50 border-b border-slate-100">
+                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Customer Name</th>
+                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Short Name</th>
+                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Phone Number</th>
+                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Address & City</th>
+                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Emirates</th>
+                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Status</th>
+                      <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6 text-center">
                         {isAdmin ? 'Actions & Verification' : 'Actions'}
                       </th>
                     </tr>
@@ -626,7 +638,7 @@ export default function CustomersPage() {
 
                             {/* Phone */}
                             <td className="py-4.5 px-6">
-                              <span className="text-xs font-semibold text-slate-600">{cust.phone}</span>
+                              <span className="text-xs font-semibold text-slate-600 tabular-nums font-inter">{cust.phone}</span>
                             </td>
 
                             {/* Address & City */}
@@ -700,12 +712,17 @@ export default function CustomersPage() {
                       })
                     ) : (
                       <tr>
-                        <td colSpan={7} className="py-12 text-center">
-                          <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
-                            <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A2.25 2.25 0 0112.75 21.5h-1.5a2.25 2.25 0 01-2.25-2.263V19.13m5.75-.002a9.397 9.397 0 01-2.17.283 9.4 9.4 0 01-2.17-.283M8.25 19.128a9.38 9.38 0 01-2.625.372 9.337 9.337 0 01-4.121-.952 4.125 4.125 0 017.533-2.493M8.25 19.128v-.003c0-1.113.285-2.16.786-3.07M12 18.75c-3.12 0-5.84-1.632-7.38-4.088A9.37 9.37 0 0112 12.75c3.12 0 5.84 1.532 7.38 4.088A9.37 9.37 0 0112 18.75z" />
-                            </svg>
-                            <span className="text-xs font-black uppercase tracking-wider text-slate-400">No Customers Found</span>
+                        <td colSpan={7} className="py-24 text-center">
+                          <div className="flex flex-col items-center justify-center gap-4">
+                            <div className="w-20 h-20 bg-slate-50 flex items-center justify-center rounded-full border border-slate-100">
+                              <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A2.25 2.25 0 0112.75 21.5h-1.5a2.25 2.25 0 01-2.25-2.263V19.13m5.75-.002a9.397 9.397 0 01-2.17.283 9.4 9.4 0 01-2.17-.283M8.25 19.128a9.38 9.38 0 01-2.625.372 9.337 9.337 0 01-4.121-.952 4.125 4.125 0 017.533-2.493M8.25 19.128v-.003c0-1.113.285-2.16.786-3.07M12 18.75c-3.12 0-5.84-1.632-7.38-4.088A9.37 9.37 0 0112 12.75c3.12 0 5.84 1.532 7.38 4.088A9.37 9.37 0 0112 18.75z" />
+                              </svg>
+                            </div>
+                            <div className="flex flex-col items-center">
+                              <span className="text-sm font-black text-slate-700">No Customers Found</span>
+                              <span className="text-xs text-slate-500 font-medium max-w-xs mt-1">No customers match your current filters. Try adjusting your search or register a new customer.</span>
+                            </div>
                           </div>
                         </td>
                       </tr>

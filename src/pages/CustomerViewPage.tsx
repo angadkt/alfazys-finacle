@@ -21,7 +21,7 @@ export default function CustomerViewPage() {
   const activeRole = dbService.getUserRole();
   const isAdmin = activeRole === 'super_admin';
 
-  // Editable customer states (for Admin Checker verification)
+  // Editable customer states (for Admin verification)
   const [customerName, setCustomerName] = useState('');
   const [shortName, setShortName] = useState('');
   const [phoneNo, setPhoneNo] = useState('');
@@ -147,8 +147,17 @@ export default function CustomerViewPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col antialiased selection:bg-[#9e0248]/10 selection:text-[#9e0248] p-4 md:p-6 lg:p-8">
       <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
         
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider -mb-2">
+          <span>Home</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+          <span>Customers</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+          <span className="text-slate-800">Customer Details</span>
+        </div>
+
         {/* Banner Header Style */}
-        <div className="bg-[#9e0248] text-white rounded-t-xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm select-none gap-2">
+        <div className="bg-[#9e0248] text-white rounded-t-lg px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm select-none gap-2">
           <div className="flex items-center">
             <button 
               type="button"
@@ -162,7 +171,7 @@ export default function CustomerViewPage() {
             </button>
             <span className="text-sm font-black uppercase tracking-wider font-montserrat">
               {isAdmin && isPending 
-                ? 'Customer Verification & Checker Approval' 
+                ? 'Customer Verification & Admin Approval' 
                 : 'Customer Detailed Code Card'}
             </span>
           </div>
@@ -172,24 +181,24 @@ export default function CustomerViewPage() {
         </div>
 
         {/* Form Container Card */}
-        <div className="bg-white border border-slate-200 shadow-md p-6 md:p-10 rounded-b-xl flex flex-col gap-8">
+        <div className="bg-white border border-slate-200 shadow-md p-6 md:p-10 rounded-b-lg flex flex-col gap-8">
           
           {/* Waiting for verification banner if pending for staff/agent */}
           {!isAdmin && isPending && (
-            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 font-bold px-5 py-4 rounded-xl text-xs flex items-center gap-2.5 animate-pulse">
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 font-bold px-5 py-4 rounded-md text-xs flex items-center gap-2.5 animate-pulse">
               <svg className="w-5 h-5 text-amber-600 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
-              <span className="uppercase tracking-wider font-montserrat font-black">Waiting for checker verification & approval</span>
+              <span className="uppercase tracking-wider font-montserrat font-black">Waiting for admin verification & approval</span>
             </div>
           )}
 
           {/* Admin Verification Notice */}
           {isAdmin && isPending && (
-            <div className="bg-blue-50 border border-blue-200 text-blue-800 font-semibold px-5 py-4 rounded-xl text-xs flex items-center justify-between gap-4">
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 font-semibold px-5 py-4 rounded-md text-xs flex items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-600 flex-shrink-0" />
-                <span><strong>Checker Review:</strong> Verify customer details and choose to approve or reject this onboarding request.</span>
+                <span><strong>Admin Review:</strong> Verify customer details and choose to approve or reject this onboarding request.</span>
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 px-2.5 py-1 rounded-md">
                 Action Required
@@ -230,7 +239,7 @@ export default function CustomerViewPage() {
                 type="text"
                 readOnly
                 value={customer.id}
-                className="bg-slate-50 border border-slate-200 text-[#9e0248] font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                className="bg-slate-50 border border-slate-200 text-[#9e0248] font-bold p-3.5 rounded-md text-xs outline-none select-all"
               />
             </div>
 
@@ -244,14 +253,14 @@ export default function CustomerViewPage() {
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
                   type="text"
                   readOnly
                   value={customer.name}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
                 />
               )}
             </div>
@@ -267,7 +276,7 @@ export default function CustomerViewPage() {
                   value={shortName}
                   onChange={(e) => setShortName(e.target.value)}
                   placeholder="-"
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
@@ -275,7 +284,7 @@ export default function CustomerViewPage() {
                   readOnly
                   value={customer.shortName || ''}
                   placeholder="-"
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
                 />
               )}
             </div>
@@ -290,14 +299,14 @@ export default function CustomerViewPage() {
                   type="text"
                   value={phoneNo}
                   onChange={(e) => setPhoneNo(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
                   type="text"
                   readOnly
                   value={customer.phone}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
                 />
               )}
             </div>
@@ -312,14 +321,14 @@ export default function CustomerViewPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
                   type="email"
                   readOnly
                   value={customer.email}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
                 />
               )}
             </div>
@@ -335,7 +344,7 @@ export default function CustomerViewPage() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="-"
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
@@ -343,7 +352,7 @@ export default function CustomerViewPage() {
                   readOnly
                   value={customer.address || ''}
                   placeholder="-"
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
                 />
               )}
             </div>
@@ -359,7 +368,7 @@ export default function CustomerViewPage() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="-"
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
@@ -367,7 +376,7 @@ export default function CustomerViewPage() {
                   readOnly
                   value={customer.city || ''}
                   placeholder="-"
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
                 />
               )}
             </div>
@@ -381,7 +390,7 @@ export default function CustomerViewPage() {
                 <select
                   value={emirates}
                   onChange={(e) => setEmirates(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
                 >
                   <option value="Abu Dhabi">Abu Dhabi</option>
                   <option value="Dubai">Dubai</option>
@@ -396,7 +405,7 @@ export default function CustomerViewPage() {
                   type="text"
                   readOnly
                   value={customer.emirates || customer.country}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
                 />
               )}
             </div>
@@ -410,7 +419,7 @@ export default function CustomerViewPage() {
                 type="text"
                 readOnly
                 value={customer.joinedDate}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-xl text-xs outline-none select-all"
+                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
               />
             </div>
 
@@ -443,7 +452,7 @@ export default function CustomerViewPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/customers')}
-                  className="w-full sm:w-auto border border-slate-300 hover:bg-slate-50 text-slate-700 font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase cursor-pointer transition select-none text-center"
+                  className="w-full sm:w-auto border border-slate-300 hover:bg-slate-50 text-slate-700 font-black px-6 py-3.5 rounded-md text-xs tracking-wider uppercase cursor-pointer transition select-none text-center"
                 >
                   Cancel
                 </button>
@@ -451,7 +460,7 @@ export default function CustomerViewPage() {
                 <button
                   type="button"
                   onClick={handleReject}
-                  className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
+                  className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-black px-6 py-3.5 rounded-md text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -462,7 +471,7 @@ export default function CustomerViewPage() {
                 <button
                   type="button"
                   onClick={handleApprove}
-                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-3.5 rounded-md text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -474,7 +483,7 @@ export default function CustomerViewPage() {
               <button
                 type="button"
                 onClick={() => navigate('/customers')}
-                className="w-full sm:w-auto bg-[#9e0248] hover:bg-[#85013c] text-white font-black px-6 py-3.5 rounded-xl text-xs tracking-wider uppercase cursor-pointer transition select-none text-center shadow-md"
+                className="w-full sm:w-auto bg-[#9e0248] hover:bg-[#85013c] text-white font-black px-6 py-3.5 rounded-md text-xs tracking-wider uppercase cursor-pointer transition select-none text-center shadow-md"
               >
                 Return to Customers Registry
               </button>
