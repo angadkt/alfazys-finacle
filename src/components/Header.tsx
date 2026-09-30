@@ -11,7 +11,7 @@ export default function Header({ hideLogo = false }: { hideLogo?: boolean }) {
   return (
     <div className="w-full flex flex-col font-sans antialiased shrink-0">
       {/* Top Utility Navbar */}
-      <div className="w-full bg-white flex items-center justify-between px-8 py-2 border-b border-gray-200 text-sm shadow-sm z-10">
+      <div className="w-full bg-white flex items-center justify-between px-8 py-1 border-b border-gray-200 text-[11px] shadow-sm z-10">
         
         {/* Left Side Navigation Info */}
         <div className="flex items-center h-full">
@@ -32,32 +32,23 @@ export default function Header({ hideLogo = false }: { hideLogo?: boolean }) {
           <div className="flex items-center gap-3">
             <span className="text-[#1e4676] font-semibold">Solution:</span>
             <select 
-              className="border border-gray-300 rounded-md bg-white text-gray-700 w-[180px] py-1 px-2 focus:outline-none focus:ring-1 focus:ring-[#1e4676] focus:border-[#1e4676] transition-colors" 
+              className="border border-gray-300 rounded-md bg-white text-gray-700 text-[11px] w-[180px] py-1 px-2 focus:outline-none focus:ring-1 focus:ring-[#1e4676] focus:border-[#1e4676] transition-colors" 
               defaultValue="Select"
               onChange={(e) => {
                 if (e.target.value === 'FINCORE') {
                   navigate('/fincore');
-                } else if (e.target.value === 'CRM') {
-                  navigate('/customers');
-                } else if (e.target.value === 'ChangeCredentials') {
-                  navigate('/change-password');
                 }
               }}
             >
               <option value="Select">---Select---</option>
-              <option value="CRM">CRM</option>
-              <option value="ChangeCredentials">ChangeCredentials</option>
               <option value="FINCORE">FINCORE</option>
-              <option value="ConfigEditor">ConfigEditor</option>
-              <option value="SSOAdmin">SSOAdmin</option>
-              <option value="SVS">SVS</option>
             </select>
           </div>
           <div className="w-[1px] h-5 bg-gray-300 mx-5"></div>
           
           {/* Logout/Exit Icon */}
           <button 
-            className="flex items-center justify-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors border-2 border-[#e2e8f0] shadow-sm ml-1"
+            className="flex items-center justify-center cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors border-2 border-[#e2e8f0] shadow-sm ml-1"
             onClick={handleLogout}
             title="Logout"
           >
@@ -72,11 +63,11 @@ export default function Header({ hideLogo = false }: { hideLogo?: boolean }) {
 
       {/* Header Area (Logo & Branding) */}
       {!hideLogo && (
-        <div className="bg-white w-full px-8 py-5 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <img src={finacleLogo} alt="Finacle Logo" className="w-7 h-7 object-contain -mt-0.5" />
-            <div className="text-3xl tracking-tight text-gray-900 font-semibold" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
-              Finacle<sup className="text-sm font-medium">®</sup>
+        <div className="bg-white w-full px-8 py-1 border-b border-gray-200">
+          <div className="flex items-center gap-[2px]">
+            <img src={finacleLogo} alt="Finacle Logo" className="w-12 h-12 object-contain" />
+            <div className="text-3xl tracking-tight text-[#111827] font-bold" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+              Infasys Finacle<sup className="text-sm font-medium">®</sup>
             </div>
           </div>
         </div>
@@ -90,11 +81,11 @@ export default function Header({ hideLogo = false }: { hideLogo?: boolean }) {
         }}
       >
         <span className="text-[#1e4676] font-bold text-[14px] tracking-wide text-shadow-sm">
-          Universal Banking Solution from Infosys
+          Universal Payment Solution from Infasys
         </span>
         
         <div className="flex items-center text-black text-[12px] h-[22px]">
-          <span>25/02/2014 | Menu Shortcut:</span>
+          <span>UBSADMIN | 25/02/2014 | Menu Shortcut:</span>
           <input type="text" className="ml-1 w-[130px] h-[20px] border border-[#a0a0a0] bg-white px-1 outline-none" />
           <button className="ml-1 h-[20px] bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-2 flex items-center justify-center hover:bg-[#e4e4e4] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white">
             Go

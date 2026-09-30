@@ -12,7 +12,8 @@ export default function FincorePage() {
     "CREATE RETAIL CIF",
     "VERIFY RETAIL CIF CREATION",
     "MODIFY RETAIL CIF",
-    "VERIFY RETAIL CIF MODIFICATION"
+    "VERIFY RETAIL CIF MODIFICATION",
+    "VIEW RETAIL CIF"
   ];
 
   return (
@@ -23,7 +24,7 @@ export default function FincorePage() {
       <div className="flex flex-1 overflow-hidden bg-white">
         
         {/* Sidebar */}
-        <div className="w-[260px] flex flex-col border-r border-[#a0a0a0] bg-[#f8f9fa] flex-shrink-0">
+        <div className="w-[320px] flex flex-col border-r border-[#a0a0a0] bg-[#f8f9fa] flex-shrink-0">
           {/* Sidebar Header */}
           <div className="bg-[#e4e4e4] flex items-center justify-between px-2 py-0.5 border-b border-[#a0a0a0] text-[11px] font-bold text-black">
             <span>Menu</span>
@@ -35,12 +36,12 @@ export default function FincorePage() {
             {menuItems.map((item, idx) => (
               <div 
                 key={idx} 
-                className={`flex items-center gap-1.5 py-0.5 px-1 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[11px] text-[#000080] ${activeScreen === item ? 'bg-[#316ac5] text-white' : ''}`}
+                className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] tracking-wide text-[#000080] ${activeScreen === item ? 'bg-[#316ac5] text-white' : ''}`}
                 onClick={() => setActiveScreen(item)}
               >
                 {/* File Icon */}
-                <div className={`w-[12px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] shadow-sm flex items-start justify-end p-[1px] ${activeScreen === item ? 'border-white' : 'group-hover:border-white'}`}>
-                  <div className={`w-1 h-1 ${activeScreen === item ? 'bg-white' : 'bg-[#3b73b9] group-hover:bg-white'}`} />
+                <div className={`w-[16px] h-[18px] relative flex-shrink-0 bg-white border-2 border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === item ? 'border-white' : 'group-hover:border-white'}`}>
+                  <div className={`w-[6px] h-[6px] ${activeScreen === item ? 'bg-white' : 'bg-[#3b73b9] group-hover:bg-white'}`} />
                 </div>
                 <span className="truncate">{item}</span>
               </div>
