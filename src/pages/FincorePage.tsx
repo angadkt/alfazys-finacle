@@ -1,0 +1,92 @@
+import { useState } from 'react';
+import Header from '../components/Header';
+import CreateRetailCifForm from '../components/CreateRetailCifForm';
+
+export default function FincorePage() {
+  const [activeScreen, setActiveScreen] = useState<string>('welcome');
+
+  const menuItems = [
+    "USER PROFILE MAINTENANCE",
+    "EMPLOYEE FILE MAINTENANCE",
+    "ROLE PROFILE MAINTENANCE",
+    "CREATE RETAIL CIF",
+    "VERIFY RETAIL CIF CREATION",
+    "MODIFY RETAIL CIF",
+    "VERIFY RETAIL CIF MODIFICATION"
+  ];
+
+  return (
+    <div className="min-h-screen w-full bg-[#d4d0c8] flex flex-col font-sans select-none overflow-hidden" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+      <Header />
+
+      {/* 4. Main Body: Sidebar + Content */}
+      <div className="flex flex-1 overflow-hidden bg-white">
+        
+        {/* Sidebar */}
+        <div className="w-[260px] flex flex-col border-r border-[#a0a0a0] bg-[#f8f9fa] flex-shrink-0">
+          {/* Sidebar Header */}
+          <div className="bg-[#e4e4e4] flex items-center justify-between px-2 py-0.5 border-b border-[#a0a0a0] text-[11px] font-bold text-black">
+            <span>Menu</span>
+            <button className="font-sans text-xs border border-gray-400 px-1 bg-[#d4d0c8] hover:bg-[#e4e4e4] leading-none h-4 flex items-center justify-center">x</button>
+          </div>
+          
+          {/* Sidebar List */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-1 custom-scrollbar">
+            {menuItems.map((item, idx) => (
+              <div 
+                key={idx} 
+                className={`flex items-center gap-1.5 py-0.5 px-1 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[11px] text-[#000080] ${activeScreen === item ? 'bg-[#316ac5] text-white' : ''}`}
+                onClick={() => setActiveScreen(item)}
+              >
+                {/* File Icon */}
+                <div className={`w-[12px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] shadow-sm flex items-start justify-end p-[1px] ${activeScreen === item ? 'border-white' : 'group-hover:border-white'}`}>
+                  <div className={`w-1 h-1 ${activeScreen === item ? 'bg-white' : 'bg-[#3b73b9] group-hover:bg-white'}`} />
+                </div>
+                <span className="truncate">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Workspace */}
+        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+          {activeScreen === 'CREATE RETAIL CIF' ? (
+            <CreateRetailCifForm />
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <h1 className="text-[44px] font-bold text-black tracking-wide" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+                Welcome to Finacle Payment Solutions
+              </h1>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Global styles for retro scrollbar */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 16px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #dfdfdf;
+          border-left: 1px solid #e5e5e5;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #c0c0c0;
+          border: 1px solid #fff;
+          border-right-color: #808080;
+          border-bottom-color: #808080;
+        }
+        .custom-scrollbar::-webkit-scrollbar-button {
+          display: block;
+          background-color: #d4d0c8;
+          height: 16px;
+          border: 1px solid #fff;
+          border-right-color: #808080;
+          border-bottom-color: #808080;
+        }
+      `}</style>
+
+    </div>
+  );
+}

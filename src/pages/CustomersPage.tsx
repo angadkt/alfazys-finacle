@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logoImg from '../assets/alfazys-logo-nobg.png';
 import { dbService } from '../services/db';
 import type { Customer } from '../services/db';
 import CustomerTable from '../components/CustomerTable';
 import AddCustomerModal from '../components/AddCustomerModal';
 import { useToast } from '../contexts/ToastContext';
+import Header from '../components/Header';
 
 // Sidebar Icons
 const DashboardIcon = () => (
@@ -75,45 +75,7 @@ const SearchIcon = () => (
   </svg>
 );
 
-const MenuIcon = ({ onClick }: { onClick?: () => void }) => (
-  <svg 
-    onClick={onClick}
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    strokeWidth={2} 
-    stroke="currentColor" 
-    className="w-6 h-6 text-white cursor-pointer hover:text-white/80 transition mr-2 flex-shrink-0"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-  </svg>
-);
 
-const HomeIcon = ({ onClick }: { onClick?: () => void }) => (
-  <svg 
-    onClick={onClick}
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    strokeWidth={2} 
-    stroke="currentColor" 
-    className="w-5.5 h-5.5 text-white cursor-pointer hover:text-white/80 transition flex-shrink-0"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-  </svg>
-);
-
-const PowerIcon = ({ className = "w-5.5 h-5.5" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
-  </svg>
-);
-
-const BellIcon = ({ className = "w-5.5 h-5.5" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-  </svg>
-);
 
 
 export default function CustomersPage() {
@@ -122,26 +84,13 @@ export default function CustomersPage() {
 
   // Active Role & User Session derived strictly from login credentials
   const activeRole = dbService.getUserRole();
-  const currentUser = dbService.getUser();
   const isAdmin = activeRole === 'super_admin';
 
   // Navigation / UI States
-  const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(() => {
+  const [sidebarExpanded] = useState<boolean>(() => {
     const saved = localStorage.getItem('infazys_finacle_sidebar_expanded');
     return saved !== null ? JSON.parse(saved) : true;
   });
-
-  const loginTime = (() => {
-    return localStorage.getItem('infazys_finacle_login_time') || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  })();
-
-  const toggleSidebar = () => {
-    setSidebarExpanded(prev => {
-      const newVal = !prev;
-      localStorage.setItem('infazys_finacle_sidebar_expanded', JSON.stringify(newVal));
-      return newVal;
-    });
-  };
 
   // Customers Data State
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -222,92 +171,7 @@ export default function CustomersPage() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col antialiased selection:bg-[#9e0148]/10 selection:text-[#9e0148]">
-      
-      {/* Premium Navigation Header */}
-      <header className="sticky top-0 z-40 bg-[#9e0148] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
-        <div className="w-full h-20 flex items-center justify-between px-5 relative">
-          
-          {/* Logo Brand */}
-          <div className="flex items-center text-white select-none">
-            <MenuIcon onClick={toggleSidebar} />
-            <div className="flex items-center pl-1 pr-3">
-              <HomeIcon onClick={() => navigate('/dashboard')} />
-            </div>
-            <div className="flex flex-col justify-center ml-1">
-              <span className="text-[28px] font-medium font-montserrat tracking-widest text-white leading-none whitespace-nowrap">
-                INFAZYS FINACLE
-              </span>
-              <span className="text-[14px] text-white/90 tracking-wide whitespace-nowrap">
-                Universal Payment Solution From Infazys
-              </span>
-            </div>
-            <img src={logoImg} alt="Infazys Logo" className="h-16 w-16 object-contain ml-3.5" />
-          </div>
-
-          {/* Centered Search Bar */}
-          <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm xl:max-w-md px-4 z-20">
-            <div className="flex items-center gap-3 bg-white/15 border border-white/25 rounded-2xl px-4 py-2 h-11 transition-all duration-200 focus-within:bg-white/20 focus-within:border-white/40">
-              <SearchIcon />
-              <input 
-                type="text" 
-                placeholder="Search customers by name, country..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent border-none outline-none text-sm text-white placeholder:text-white/60 font-semibold"
-              />
-            </div>
-          </div>
-
-          {/* Right Actions Menu */}
-          <div className="flex items-center gap-4 sm:gap-6 relative z-10">
-            
-            {/* User Session Info */}
-            <div className="flex items-center gap-3.5 select-none">
-              <img 
-                src={currentUser.avatar} 
-                alt={currentUser.name} 
-                className="w-11 h-11 object-cover rounded-full border-2 border-white/40 shadow-sm"
-              />
-              <div className="flex flex-col text-left justify-center">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-bold text-white leading-tight">
-                    {currentUser.name}
-                  </span>
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
-                    isAdmin ? 'bg-amber-400 text-slate-950' : 'bg-white/25 text-white'
-                  }`}>
-                    {isAdmin ? 'Admin' : activeRole === 'staff' ? 'Staff' : 'Agent'}
-                  </span>
-                </div>
-                <span className="text-[11px] text-white/70 font-semibold mt-0.5 leading-tight block">
-                  Last login: {loginTime}
-                </span>
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="w-px h-8 bg-white/25 hidden sm:block" />
-
-            {/* Notification & Logout */}
-            <div className="flex items-center gap-4">
-              <BellIcon className="w-5.5 h-5.5 text-white cursor-pointer hover:text-white/80 transition" />
-              
-              <button 
-                onClick={() => navigate('/')}
-                className="group relative text-white hover:text-white/80 transition cursor-pointer flex items-center justify-center"
-              >
-                <PowerIcon className="w-5.5 h-5.5 text-white" />
-                <div className="absolute top-[calc(100%+14px)] left-1/2 -translate-x-1/2 bg-[#0c2340] text-white text-[11px] font-bold py-1.5 px-3.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg z-50">
-                  Logout
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-[#0c2340]" />
-                </div>
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-      </header>
+      <Header />
 
       {/* Main Layout Grid with Collapsible Sidebar */}
       <div className="flex flex-1 relative">
@@ -463,6 +327,19 @@ export default function CustomersPage() {
                   <p className="text-sm text-slate-500 font-semibold tracking-wide mt-2">
                     Manage customer profiles, verification and customer information.
                   </p>
+                </div>
+
+                <div className="flex-1 max-w-sm hidden md:block">
+                  <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm transition-all focus-within:border-slate-400 focus-within:shadow-md">
+                    <SearchIcon />
+                    <input 
+                      type="text" 
+                      placeholder="Search customers by name, country..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-transparent border-none outline-none text-sm text-slate-700 font-medium placeholder:text-slate-400"
+                    />
+                  </div>
                 </div>
                 
                 {/* Add Customer Button */}

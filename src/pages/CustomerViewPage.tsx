@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { dbService } from '../services/db';
 import type { Customer } from '../services/db';
 import { useToast } from '../contexts/ToastContext';
+import Header from '../components/Header';
 
 const getInitials = (name: string) => {
   const val = name || 'Anonymous';
@@ -144,8 +145,10 @@ export default function CustomerViewPage() {
   const isPending = customer.status === 'pending';
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col antialiased selection:bg-[#9e0248]/10 selection:text-[#9e0248] p-4 md:p-6 lg:p-8">
-      <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
+    <div className="min-h-screen bg-slate-50 flex flex-col antialiased selection:bg-[#9e0248]/10 selection:text-[#9e0248]">
+      <Header />
+      <div className="p-4 md:p-6 lg:p-8 w-full">
+        <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
         
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider -mb-2">
@@ -493,6 +496,7 @@ export default function CustomerViewPage() {
 
         </div>
 
+      </div>
       </div>
     </div>
   );
