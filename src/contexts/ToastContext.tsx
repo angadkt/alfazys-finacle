@@ -49,44 +49,38 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ toasts, showToast, removeToast }}>
       {children}
       {/* Toast Portal Container */}
-      <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none select-none">
+      <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-2 w-[300px] pointer-events-none select-none" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
         {toasts.map((toast) => (
           <div
             key={toast.id}
             onClick={() => removeToast(toast.id)}
-            className={`pointer-events-auto flex items-center justify-between gap-3.5 p-4.5 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] border backdrop-blur-md cursor-pointer transition-all duration-300 transform hover:scale-[1.02] hover:shadow-[0_16px_50px_rgba(0,0,0,0.16)] animate-in slide-in-from-right-8 fade-in duration-300 ${
-              toast.type === 'success'
-                ? 'bg-emerald-600/95 border-emerald-500/20 text-white'
-                : toast.type === 'error'
-                ? 'bg-rose-600/95 border-rose-500/20 text-white'
-                : 'bg-[#9e0248]/95 border-[#9e0248]/20 text-white'
-            }`}
+            className="pointer-events-auto flex items-start gap-2 p-2 bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] shadow-[2px_2px_4px_rgba(0,0,0,0.5)] cursor-pointer"
           >
-            <div className="flex items-center gap-3">
-              {/* Type Icons */}
-              {toast.type === 'success' && (
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            {/* Info Icon */}
+            <div className="mt-1">
+              {toast.type === 'error' ? (
+                <div className="w-[18px] h-[18px] rounded-full bg-red-600 flex items-center justify-center text-white text-xs font-bold font-sans shadow-inner">
+                  x
+                </div>
+              ) : toast.type === 'success' ? (
+                <div className="w-[18px] h-[18px] rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold font-sans shadow-inner">
+                  ✓
+                </div>
+              ) : (
+                <div className="w-[18px] h-[18px] rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold font-sans shadow-inner">
+                  i
+                </div>
               )}
-              {toast.type === 'error' && (
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              )}
-              {toast.type === 'info' && (
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.084 1.085l-.042.022m-.9-1.085a1.562 1.562 0 113.125 0 1.562 1.562 0 01-3.125 0zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
-              <span className="text-[11px] font-black uppercase tracking-wider font-montserrat leading-tight">{toast.message}</span>
+            </div>
+
+            <div className="flex-1 flex flex-col pt-1">
+              <span className="text-[12px] font-bold text-black mb-1">{toast.type === 'error' ? 'Error' : toast.type === 'success' ? 'Success' : 'Information'}</span>
+              <span className="text-[11px] text-black leading-tight">{toast.message}</span>
             </div>
             
             {/* Close Button */}
-            <button className="text-white/60 hover:text-white transition p-0.5 rounded-full hover:bg-white/10">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button className="font-sans text-[10px] font-bold text-black border-t border-l border-white border-b border-r border-b-gray-600 border-r-gray-600 bg-[#d4d0c8] hover:bg-[#e4e4e4] w-4 h-4 flex items-center justify-center focus:outline-none active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white">
+              x
             </button>
           </div>
         ))}

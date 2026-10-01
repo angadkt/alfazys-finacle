@@ -1,18 +1,23 @@
 import { useState } from 'react';
 import Header from '../components/Header';
 import CreateRetailCifForm from '../components/CreateRetailCifForm';
+import VerifyRetailCif from '../components/VerifyRetailCif';
+import ViewRetailCif from '../components/ViewRetailCif';
+
+import { dbService } from '../services/db';
 
 export default function FincorePage() {
   const [activeScreen, setActiveScreen] = useState<string>('welcome');
+  const userRole = dbService.getUserRole();
 
   const menuItems = [
     "USER PROFILE MAINTENANCE",
     "EMPLOYEE FILE MAINTENANCE",
     "ROLE PROFILE MAINTENANCE",
     "CREATE RETAIL CIF",
-    "VERIFY RETAIL CIF CREATION",
+    ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF CREATION"] : []),
     "MODIFY RETAIL CIF",
-    "VERIFY RETAIL CIF MODIFICATION",
+    ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF MODIFICATION"] : []),
     "VIEW RETAIL CIF"
   ];
 
@@ -53,6 +58,10 @@ export default function FincorePage() {
         <div className="flex-1 flex flex-col bg-white overflow-hidden">
           {activeScreen === 'CREATE RETAIL CIF' ? (
             <CreateRetailCifForm />
+          ) : activeScreen === 'VERIFY RETAIL CIF CREATION' ? (
+            <VerifyRetailCif />
+          ) : activeScreen === 'VIEW RETAIL CIF' ? (
+            <ViewRetailCif />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <h1 className="text-[44px] font-bold text-black tracking-wide" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
