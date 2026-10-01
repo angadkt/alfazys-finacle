@@ -16,7 +16,11 @@ export default function ViewRetailCif() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#e4e4e4] p-4 font-sans" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+    <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+      <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
+        <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide">view retail cif</h4>
+      </div>
+      <div className="flex-1 flex flex-col p-4">
       <h2 className="text-[18px] font-bold text-[#1e4676] mb-4">View Verified Retail CIFs</h2>
       
       <div className="bg-white border border-[#a0a0a0] p-1 flex-1 overflow-auto">
@@ -52,6 +56,7 @@ export default function ViewRetailCif() {
             )}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

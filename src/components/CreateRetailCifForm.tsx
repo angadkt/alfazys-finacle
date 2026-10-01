@@ -72,9 +72,13 @@ export default function CreateRetailCifForm() {
 
   if (step === 'selection') {
     return (
-      <div className="flex-1 bg-white p-4 font-sans" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
-        <h2 className="text-[16px] font-bold text-black mb-2">Custom Create Retail CIF</h2>
-        <div className="border-2 border-[#a0a0a0] p-4 bg-white mb-4 w-full max-w-4xl">
+      <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+        <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
+          <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide">create retail cif</h4>
+        </div>
+        <div className="flex-1 bg-white p-4 font-sans">
+          <h2 className="text-[16px] font-bold text-black mb-2">Custom Create Retail CIF</h2>
+          <div className="border-2 border-[#a0a0a0] p-4 bg-white mb-4 w-full max-w-4xl">
           <div className="grid grid-cols-[150px_1fr] gap-y-4 items-center">
             <div className="font-bold text-[13px] text-black">
               Function <span className="text-red-600">*</span>
@@ -123,14 +127,30 @@ export default function CreateRetailCifForm() {
             Clear
           </button>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#e4e4e4] p-2 overflow-auto relative" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
-      {/* Tabs */}
-      <div className="flex border-b border-[#a0a0a0]">
+    <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+      
+      <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
+        <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide mb-3">create retail cif</h4>
+        
+        {/* Selected Function and CIF ID */}
+        <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-2 text-[12px] text-black items-center w-fit">
+          <span className="font-bold text-[#1e4676]">Function:</span>
+          <span className="bg-white px-2 border border-[#a0a0a0] min-w-[150px] h-[22px] flex items-center shadow-[inset_1px_1px_2px_rgba(0,0,0,0.2)]">{selectedFunction || ''}</span>
+          
+          <span className="font-bold text-[#1e4676]">CIF ID:</span>
+          <span className="bg-white px-2 border border-[#a0a0a0] min-w-[150px] h-[22px] flex items-center shadow-[inset_1px_1px_2px_rgba(0,0,0,0.2)]">{inputCifId || ''}</span>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col p-2 overflow-auto relative">
+        {/* Tabs */}
+        <div className="flex border-b border-[#a0a0a0]">
         {tabs.map((tab) => (
           <div
             key={tab}
@@ -475,6 +495,7 @@ export default function CreateRetailCifForm() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

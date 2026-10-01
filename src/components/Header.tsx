@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import finacleLogo from '../assets/finacle-logo.png';
 
-export default function Header({ hideLogo = false }: { hideLogo?: boolean }) {
+export default function Header({ hideLogo = false, onMenuClick }: { hideLogo?: boolean; onMenuClick?: () => void }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -63,12 +63,23 @@ export default function Header({ hideLogo = false }: { hideLogo?: boolean }) {
 
       {/* Header Area (Logo & Branding) */}
       {!hideLogo && (
-        <div className="bg-white w-full px-8 py-1 border-b border-gray-200">
+        <div className="bg-white w-full px-8 py-1 border-b border-gray-200 flex justify-between items-center relative">
           <div className="flex items-center gap-[2px]">
             <img src={finacleLogo} alt="Finacle Logo" className="w-12 h-12 object-contain" />
             <div className="text-3xl tracking-tight text-[#111827] font-bold" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
               Infasys Finacle<sup className="text-sm font-medium">®</sup>
             </div>
+          </div>
+          
+          {/* Top Right Toolbar */}
+          <div className="absolute top-0 right-0 flex items-center text-[11px] font-bold text-[#1e4676] bg-[#f4f7f9] border border-[#a0a0a0] border-t-0 border-r-0">
+            <button className="px-2 py-0.5 hover:bg-[#e4e9f0] flex items-center justify-center h-full">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10"/><path d="M17 7 7 17"/></svg>
+            </button>
+            <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
+            <button className="px-2 py-0.5 hover:bg-[#e4e9f0] tracking-wide" onClick={onMenuClick}>Menu</button>
+            <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
+            <button className="px-2 py-0.5 hover:bg-[#e4e9f0] tracking-wide">CCY Converter</button>
           </div>
         </div>
       )}
