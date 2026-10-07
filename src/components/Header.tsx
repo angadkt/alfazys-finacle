@@ -1,11 +1,41 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import finacleLogo from '../assets/finacle-logo.png';
 
-export default function Header({ hideLogo = false, onMenuClick }: { hideLogo?: boolean; onMenuClick?: () => void }) {
+export default function Header({ 
+  hideLogo = false, 
+  onMenuClick,
+  onShortcutSelect
+}: { 
+  hideLogo?: boolean; 
+  onMenuClick?: () => void;
+  onShortcutSelect?: (screen: string) => void;
+}) {
   const navigate = useNavigate();
+  const [shortcutText, setShortcutText] = useState('');
 
   const handleLogout = () => {
     navigate('/');
+  };
+
+  const handleShortcutGo = () => {
+    const code = shortcutText.trim().toUpperCase();
+    if (!code) return;
+
+    if (code.includes('CRED') || code === 'CE') {
+      if (onShortcutSelect) onShortcutSelect('CREDIT ENTRY');
+    } else if (code.includes('ORD') || code === 'OE') {
+      if (onShortcutSelect) onShortcutSelect('ORDER ENTRY');
+    } else if (code.includes('CREATE') || code === 'CIF' || code === 'CRCIF') {
+      if (onShortcutSelect) onShortcutSelect('CREATE RETAIL CIF');
+    } else if (code.includes('VIEW') || code === 'VCIF') {
+      if (onShortcutSelect) onShortcutSelect('VIEW RETAIL CIF');
+    } else if (code.includes('VERIF') || code === 'VRCIF') {
+      if (onShortcutSelect) onShortcutSelect('VERIFY RETAIL CIF CREATION');
+    } else if (onShortcutSelect) {
+      onShortcutSelect(code);
+    }
+    setShortcutText('');
   };
 
   return (
@@ -97,8 +127,20 @@ export default function Header({ hideLogo = false, onMenuClick }: { hideLogo?: b
         
         <div className="flex items-center text-black text-[12px] h-[22px]">
           <span>UBSADMIN | 25/02/2014 | Menu Shortcut:</span>
-          <input type="text" className="ml-1 w-[130px] h-[20px] border border-[#a0a0a0] bg-white px-1 outline-none" />
-          <button className="ml-1 h-[20px] bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-2 flex items-center justify-center hover:bg-[#e4e4e4] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white">
+          <input 
+            type="text" 
+            value={shortcutText}
+            onChange={(e) => setShortcutText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleShortcutGo();
+            }}
+            placeholder="e.g. CREDIT"
+            className="ml-1 w-[130px] h-[20px] border border-[#a0a0a0] bg-white px-1 outline-none text-[11px] uppercase" 
+          />
+          <button 
+            onClick={handleShortcutGo}
+            className="ml-1 h-[20px] bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-2 flex items-center justify-center hover:bg-[#e4e4e4] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white text-[11px] font-bold"
+          >
             Go
           </button>
         </div>

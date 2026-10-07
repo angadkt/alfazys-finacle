@@ -3,11 +3,13 @@ import Header from '../components/Header';
 import CreateRetailCifForm from '../components/CreateRetailCifForm';
 import VerifyRetailCif from '../components/VerifyRetailCif';
 import ViewRetailCif from '../components/ViewRetailCif';
+import CreditEntryForm from '../components/CreditEntryForm';
+import OrderEntryForm from '../components/OrderEntryForm';
 
 import { dbService } from '../services/db';
 
 export default function FincorePage() {
-  const [activeScreen, setActiveScreen] = useState<string>('welcome');
+  const [activeScreen, setActiveScreen] = useState<string>('CREDIT ENTRY');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const userRole = dbService.getUserRole();
 
@@ -19,12 +21,21 @@ export default function FincorePage() {
     ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF CREATION"] : []),
     "MODIFY RETAIL CIF",
     ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF MODIFICATION"] : []),
-    "VIEW RETAIL CIF"
+    "VIEW RETAIL CIF",
+    "CREDIT ENTRY",
+    "ORDER ENTRY"
   ];
 
+  const handleShortcutSelect = (screen: string) => {
+    setActiveScreen(screen);
+  };
+
   return (
-    <div className="min-h-screen w-full bg-[#d4d0c8] flex flex-col font-sans select-none overflow-hidden" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
-      <Header onMenuClick={() => setIsSidebarOpen(true)} />
+    <div className="min-h-screen w-full bg-[#d4d0c8] flex flex-col font-sans select-none overflow-hidden" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      <Header 
+        onMenuClick={() => setIsSidebarOpen(true)} 
+        onShortcutSelect={handleShortcutSelect}
+      />
 
       {/* 4. Main Body: Sidebar + Content */}
       <div className="flex flex-1 overflow-hidden bg-white">
@@ -36,9 +47,11 @@ export default function FincorePage() {
             <div className="bg-[#e4e4e4] flex items-center justify-between px-2 py-0.5 border-b border-[#a0a0a0] text-[11px] font-bold text-black">
               <span>Menu</span>
               <button 
-                className="font-sans text-xs border border-gray-400 px-1 bg-[#d4d0c8] hover:bg-[#e4e4e4] leading-none h-4 flex items-center justify-center"
+                className="font-sans text-xs border border-gray-400 px-1 bg-[#d4d0c8] hover:bg-[#e4e4e4] leading-none h-4 flex items-center justify-center cursor-pointer"
                 onClick={() => setIsSidebarOpen(false)}
-              >x</button>
+              >
+                x
+              </button>
             </div>
             
             {/* Sidebar List */}
@@ -49,7 +62,6 @@ export default function FincorePage() {
                   className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] tracking-wide text-[#000080] ${activeScreen === item ? 'bg-[#316ac5] text-white' : ''}`}
                   onClick={() => {
                     setActiveScreen(item);
-                    setIsSidebarOpen(false);
                   }}
                 >
                   {/* File Icon */}
@@ -71,9 +83,13 @@ export default function FincorePage() {
             <VerifyRetailCif />
           ) : activeScreen === 'VIEW RETAIL CIF' ? (
             <ViewRetailCif />
+          ) : activeScreen === 'CREDIT ENTRY' ? (
+            <CreditEntryForm />
+          ) : activeScreen === 'ORDER ENTRY' ? (
+            <OrderEntryForm />
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <h1 className="text-[44px] font-bold text-black tracking-wide" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+              <h1 className="text-[44px] font-bold text-black tracking-wide" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
                 Welcome to Finacle Payment Solutions
               </h1>
             </div>
