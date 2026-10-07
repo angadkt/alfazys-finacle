@@ -97,7 +97,7 @@ export default function Header({
           <div className="flex items-center gap-[2px]">
             <img src={finacleLogo} alt="Finacle Logo" className="w-12 h-12 object-contain" />
             <div className="text-3xl tracking-tight text-[#111827] font-bold" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
-              Infasys Finacle<sup className="text-sm font-medium">®</sup>
+              Infazys Finacle<sup className="text-sm font-medium">®</sup>
             </div>
           </div>
           
@@ -122,7 +122,7 @@ export default function Header({
         }}
       >
         <span className="text-[#1e4676] font-bold text-[14px] tracking-wide text-shadow-sm">
-          Universal Payment Solution from Infasys
+          Universal Payment Solution from Infazys
         </span>
         
         <div className="flex items-center text-black text-[12px] h-[22px]">
