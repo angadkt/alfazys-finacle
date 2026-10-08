@@ -1,17 +1,76 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { dbService } from '../services/db';
+import type { Customer } from '../services/db';
 
 export default function OrderEntryForm() {
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [selectedFunction, setSelectedFunction] = useState('A-ADD');
-  const [orderType, setOrderType] = useState('REMITTANCE');
-  const [currency, setCurrency] = useState('INR');
-  const [orderAmount, setOrderAmount] = useState('');
-  const [clientName, setClientName] = useState('');
+  const [currency] = useState('INR');
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [currentAccount, setCurrentAccount] = useState({
+    clientName: '',
+    accountNumber: '',
+    orderAmount: '',
+    confirmOrderAmount: '',
+    ifscCode: '',
+    bankName: '',
+    branchName: ''
+  });
+
+  const handleCurrentAccountChange = (field: keyof typeof currentAccount, value: string) => {
+    const updated = { ...currentAccount, [field]: value };
+    if (field === 'ifscCode') {
+      if (value.length >= 4) {
+        updated.bankName = 'STATE BANK OF INDIA';
+        updated.branchName = 'MUMBAI MAIN BRANCH';
+      } else {
+        updated.bankName = '';
+        updated.branchName = '';
+      }
+    }
+    setCurrentAccount(updated);
+  };
+
+  const addAccount = () => {
+    if (!currentAccount.clientName.trim() || !currentAccount.orderAmount) {
+      alert("Please fill in Client Name and Order Amount before adding.");
+      return;
+    }
+    setAccounts([...accounts, currentAccount]);
+    setCurrentAccount({
+      clientName: '',
+      accountNumber: '',
+      orderAmount: '',
+      confirmOrderAmount: '',
+      ifscCode: '',
+      bankName: '',
+      branchName: ''
+    });
+  };
+
+  const removeAccount = (index: number) => {
+    const newAccounts = [...accounts];
+    newAccounts.splice(index, 1);
+    setAccounts(newAccounts);
+  };
+
+  const editAccount = (index: number) => {
+    const accToEdit = accounts[index];
+    setCurrentAccount(accToEdit);
+    removeAccount(index);
+  };
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [orderRef, setOrderRef] = useState('');
+  const [agentOrCustomer, setAgentOrCustomer] = useState('');
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
+  useEffect(() => {
+    setCustomers(dbService.getCustomers());
+  }, []);
 
   const handleGo = () => {
-    if (!clientName.trim() || !orderAmount) {
-      alert('Please fill Client Name and Order Amount.');
+    if (accounts.length === 0) {
+      alert('Please add at least one account detail.');
       return;
     }
     const ref = `ORD-${Date.now().toString().slice(-6)}`;
@@ -20,8 +79,16 @@ export default function OrderEntryForm() {
   };
 
   const handleClear = () => {
-    setClientName('');
-    setOrderAmount('');
+    setAccounts([]);
+    setCurrentAccount({
+      clientName: '',
+      accountNumber: '',
+      orderAmount: '',
+      confirmOrderAmount: '',
+      ifscCode: '',
+      bankName: '',
+      branchName: ''
+    });
     setSelectedFunction('A-ADD');
   };
 
@@ -55,21 +122,41 @@ export default function OrderEntryForm() {
       </div>
 
       {/* Main Workspace */}
-      <div className="flex-1 bg-white border border-[#a0a0a0] m-1 p-3 flex flex-col overflow-auto">
+      <div className="flex-1 bg-white border border-[#a0a0a0] m-1 pr-3 pb-3 flex flex-col overflow-auto">
         
-        <div className="bg-[#eaf0f8] px-2 py-1 font-bold text-[#104080] border-y border-[#a2b5cd] mb-3 text-[12px] flex items-center justify-between">
-          <span>Custom Order Entry Form (2004 Finacle Model)</span>
-          <span className="text-[10px] bg-[#1e4676] text-white px-2 py-0.5">READY FOR CLIENT SPECIFICATIONS</span>
+        {/* Navigator Bar */}
+        <div className="flex items-center gap-2 px-2 py-1 bg-[#f8f9fa] border-y border-[#a0a0a0] text-[#1e4676] font-bold text-[11px] w-fit">
+          <span className="cursor-pointer text-[14px] leading-none hover:text-[#0a244d]">↗</span>
+          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
+          <span 
+            className="cursor-pointer hover:underline tracking-wide"
+            onClick={() => setIsFormModalOpen(true)}
+          >
+            Add Order Entry
+          </span>
+          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
+          <span className="cursor-pointer hover:underline tracking-wide">View Orders</span>
         </div>
 
+        {isFormModalOpen && (
+          <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
+            <div className="bg-white border-2 border-[#104080] shadow-2xl flex flex-col max-h-[90vh] max-w-5xl w-full">
+              <div className="bg-[#eaf0f8] px-3 py-2 font-bold text-[#104080] border-b border-[#a2b5cd] text-[12px] flex items-center justify-between">
+                <span>Custom Order Entry Form</span>
+                <button onClick={() => setIsFormModalOpen(false)} className="text-red-600 font-bold hover:underline cursor-pointer">
+                  Close (X)
+                </button>
+              </div>
+              <div className="p-4 overflow-auto">
+
         {/* Function Box */}
-        <div className="border-2 border-[#a0a0a0] p-4 bg-white mb-4 max-w-4xl text-[11px]">
-          <div className="grid grid-cols-[160px_1fr] gap-y-3 items-center">
+        <div className="p-4 bg-[#eaf0f8] mb-4 w-fit min-w-[800px] text-[11px] ml-4">
+          <div className="grid grid-cols-[170px_1fr_170px_1fr] gap-x-4 gap-y-3 items-center">
             
             <div className="font-bold text-black">
               Function Code <span className="text-red-600">*</span>
             </div>
-            <div>
+            <div className="col-span-3">
               <select 
                 value={selectedFunction}
                 onChange={(e) => setSelectedFunction(e.target.value)}
@@ -83,57 +170,6 @@ export default function OrderEntryForm() {
             </div>
 
             <div className="font-bold text-black">
-              Order Type <span className="text-red-600">*</span>
-            </div>
-            <div>
-              <select 
-                value={orderType}
-                onChange={(e) => setOrderType(e.target.value)}
-                className="w-[240px] border border-[#7f9db9] bg-white text-black focus:outline-none h-[24px] text-[11px] px-1"
-              >
-                <option value="REMITTANCE">REMITTANCE ORDER (AED → INR)</option>
-                <option value="FX_CONVERSION">FX SPOT CONVERSION</option>
-                <option value="COMMERCIAL_PAYOUT">COMMERCIAL PAYOUT ORDER</option>
-                <option value="COLLECTION_ORDER">AGENT COLLECTION ORDER</option>
-              </select>
-            </div>
-
-            <div className="font-bold text-black">
-              Client / Beneficiary Name <span className="text-red-600">*</span>
-            </div>
-            <div>
-              <input 
-                type="text" 
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder="Enter client name"
-                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
-              />
-            </div>
-
-            <div className="font-bold text-black">
-              Order Amount & CCY <span className="text-red-600">*</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <select 
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="border border-[#7f9db9] bg-white h-[24px] px-1 text-[11px] font-bold"
-              >
-                <option value="INR">INR (₹)</option>
-                <option value="AED">AED (د.إ)</option>
-                <option value="USD">USD ($)</option>
-              </select>
-              <input 
-                type="number" 
-                value={orderAmount}
-                onChange={(e) => setOrderAmount(e.target.value)}
-                placeholder="Order Amount"
-                className="w-[200px] border border-[#7f9db9] h-[24px] px-2 text-[12px] font-bold text-[#1e4676] focus:outline-none"
-              />
-            </div>
-
-            <div className="font-bold text-black">
               Value Execution Date
             </div>
             <div>
@@ -144,21 +180,179 @@ export default function OrderEntryForm() {
               />
             </div>
 
-            <div className="font-bold text-black">
-              Order Notes / Instructions
+            <div className="font-bold text-black pl-4">
+              Agent / Customer
             </div>
             <div>
               <input 
                 type="text" 
-                placeholder="Special settlement remarks"
-                className="w-[450px] border border-[#7f9db9] h-[24px] px-1 text-[11px] focus:outline-none"
+                list="agent-customer-list"
+                value={agentOrCustomer}
+                onChange={(e) => setAgentOrCustomer(e.target.value)}
+                placeholder="Select Agent or Customer"
+                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
+              />
+              <datalist id="agent-customer-list">
+                {customers.map((c) => (
+                  <option key={c.id} value={`${c.name} (${c.id})`} />
+                ))}
+              </datalist>
+            </div>
+
+            <div className="font-bold text-black">
+              Client / Beneficiary Name <span className="text-red-600">*</span>
+            </div>
+            <div>
+              <input 
+                type="text" 
+                value={currentAccount.clientName}
+                onChange={(e) => handleCurrentAccountChange('clientName', e.target.value)}
+                placeholder="Enter client name"
+                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
               />
             </div>
+
+            <div className="font-bold text-black pl-4">
+              Account Number <span className="text-red-600">*</span>
+            </div>
+            <div>
+              <input 
+                type="text" 
+                value={currentAccount.accountNumber}
+                onChange={(e) => handleCurrentAccountChange('accountNumber', e.target.value)}
+                placeholder="Enter Account Number"
+                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
+              />
+            </div>
+
+            <div className="font-bold text-black">
+              IFSC Code <span className="text-red-600">*</span>
+            </div>
+            <div>
+              <input 
+                type="text" 
+                value={currentAccount.ifscCode}
+                onChange={(e) => handleCurrentAccountChange('ifscCode', e.target.value)}
+                placeholder="e.g. SBIN0000001"
+                className="w-[200px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
+              />
+            </div>
+
+            <div className="font-bold text-black pl-4">
+              Bank Name
+            </div>
+            <div>
+              <input 
+                type="text" 
+                value={currentAccount.bankName}
+                readOnly
+                placeholder="Auto-filled Bank Name"
+                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] bg-[#f0f0f0] uppercase focus:outline-none"
+              />
+            </div>
+
+            <div className="font-bold text-black">
+              Branch Name
+            </div>
+            <div className="col-span-3">
+              <input 
+                type="text" 
+                value={currentAccount.branchName}
+                readOnly
+                placeholder="Auto-filled Branch Name"
+                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] bg-[#f0f0f0] uppercase focus:outline-none"
+              />
+            </div>
+
+            <div className="font-bold text-black">
+              Order Amount (INR) <span className="text-red-600">*</span>
+            </div>
+            <div>
+              <input 
+                type="number" 
+                value={currentAccount.orderAmount}
+                onChange={(e) => handleCurrentAccountChange('orderAmount', e.target.value)}
+                placeholder="Order Amount (₹)"
+                className="w-[200px] border border-[#7f9db9] h-[24px] px-2 text-[12px] font-bold text-[#1e4676] focus:outline-none"
+              />
+            </div>
+            
+            <div className="font-bold text-black pl-4">
+              Confirm Order Amount (INR) <span className="text-red-600">*</span>
+            </div>
+            <div>
+              <input 
+                type="number" 
+                value={currentAccount.confirmOrderAmount}
+                onChange={(e) => handleCurrentAccountChange('confirmOrderAmount', e.target.value)}
+                placeholder="Confirm Order Amount (₹)"
+                className="w-[200px] border border-[#7f9db9] h-[24px] px-2 text-[12px] font-bold text-[#1e4676] focus:outline-none"
+              />
+            </div>
+
+            <div className="col-span-4 flex mt-2">
+              <button 
+                type="button" 
+                onClick={addAccount}
+                className="bg-[#eaf0f8] border-2 border-[#316ac5] hover:bg-[#d4e4fc] px-4 py-1 text-xs text-black font-bold active:bg-[#c4d4ec]"
+              >
+                + Add Account
+              </button>
+            </div>
+
+            {accounts.length > 0 && (
+              <div className="col-span-4 mt-4">
+                <div className="font-bold text-[#1e4676] mb-2">Added Accounts ({accounts.length})</div>
+                <div className="border border-[#7f9db9] overflow-hidden">
+                  <table className="w-full text-left text-[11px] border-collapse">
+                    <thead className="bg-[#f0f0f5] border-b border-[#7f9db9]">
+                      <tr>
+                        <th className="p-1.5 border-r border-[#7f9db9]">Client Name</th>
+                        <th className="p-1.5 border-r border-[#7f9db9]">Account Number</th>
+                        <th className="p-1.5 border-r border-[#7f9db9]">Amount</th>
+                        <th className="p-1.5 border-r border-[#7f9db9]">Bank (IFSC)</th>
+                        <th className="p-1.5 border-r border-[#7f9db9]">Branch</th>
+                        <th className="p-1.5 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {accounts.map((acc, idx) => (
+                        <tr key={idx} className="border-b border-[#e4e4e4] last:border-0 hover:bg-[#fafafa] bg-white">
+                          <td className="p-1.5 border-r border-[#e4e4e4]">{acc.clientName}</td>
+                          <td className="p-1.5 border-r border-[#e4e4e4]">{acc.accountNumber}</td>
+                          <td className="p-1.5 border-r border-[#e4e4e4]">₹{acc.orderAmount}</td>
+                          <td className="p-1.5 border-r border-[#e4e4e4]">{acc.bankName} ({acc.ifscCode})</td>
+                          <td className="p-1.5 border-r border-[#e4e4e4]">{acc.branchName}</td>
+                          <td className="p-1.5 text-center flex items-center justify-center gap-3">
+                            <button 
+                              type="button" 
+                              onClick={() => editAccount(idx)} 
+                              className="text-[#316ac5] hover:underline font-bold"
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => removeAccount(idx)} 
+                              className="text-red-600 hover:underline font-bold"
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+
           </div>
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 ml-4">
           <button 
             onClick={handleGo}
             className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-xs text-black font-bold active:border-t-[#8f8f9d] active:border-l-[#8f8f9d]"
@@ -172,46 +366,11 @@ export default function OrderEntryForm() {
             Clear
           </button>
         </div>
-
-        {/* Sample Orders Queue */}
-        <div className="border border-[#a0a0a0] flex-1 overflow-auto">
-          <div className="bg-[#d4d0c8] px-2 py-1 font-bold text-black border-b border-[#a0a0a0] text-[11px]">
-            Pending / Active Settlement Orders Queue
+              </div>
+            </div>
           </div>
-          <table className="w-full border-collapse text-[11px]">
-            <thead>
-              <tr className="bg-[#f0f0f5] border-b border-[#a0a0a0] text-left">
-                <th className="p-1.5 border-r border-[#a0a0a0]">Order Ref</th>
-                <th className="p-1.5 border-r border-[#a0a0a0]">Order Type</th>
-                <th className="p-1.5 border-r border-[#a0a0a0]">Client Name</th>
-                <th className="p-1.5 border-r border-[#a0a0a0]">Currency</th>
-                <th className="p-1.5 border-r border-[#a0a0a0]">Amount</th>
-                <th className="p-1.5 border-r border-[#a0a0a0]">Value Date</th>
-                <th className="p-1.5">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-[#e4e4e4] hover:bg-[#fafafa]">
-                <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#1e4676]">ORD-084201</td>
-                <td className="p-1.5 border-r border-[#e4e4e4]">REMITTANCE ORDER</td>
-                <td className="p-1.5 border-r border-[#e4e4e4] font-bold">IBRAHIM KALEEL N A</td>
-                <td className="p-1.5 border-r border-[#e4e4e4] font-bold">INR</td>
-                <td className="p-1.5 border-r border-[#e4e4e4] font-mono font-bold text-[#1e4676]">₹ 44,000.00</td>
-                <td className="p-1.5 border-r border-[#e4e4e4]">2026-10-07</td>
-                <td className="p-1.5 font-bold text-green-700">COMPLETED 👍</td>
-              </tr>
-              <tr className="border-b border-[#e4e4e4] hover:bg-[#fafafa]">
-                <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#1e4676]">ORD-084198</td>
-                <td className="p-1.5 border-r border-[#e4e4e4]">AGENT COLLECTION</td>
-                <td className="p-1.5 border-r border-[#e4e4e4] font-bold">AL-ANSARI EXCHANGE UAE</td>
-                <td className="p-1.5 border-r border-[#e4e4e4] font-bold">AED</td>
-                <td className="p-1.5 border-r border-[#e4e4e4] font-mono font-bold">12,500.00</td>
-                <td className="p-1.5 border-r border-[#e4e4e4]">2026-10-06</td>
-                <td className="p-1.5 font-bold text-blue-700">VERIFIED</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        )}
+
 
       </div>
 
@@ -226,7 +385,7 @@ export default function OrderEntryForm() {
                 </div>
                 <div className="text-[12px] text-black">
                   <div className="font-bold text-[#1e4676]">Order {orderRef} Registered Successfully.</div>
-                  <div>Client: <strong>{clientName}</strong> | Amount: {currency} {orderAmount}</div>
+                  <div>Client: <strong>{accounts[0]?.clientName}</strong> | Amount: {currency} {accounts[0]?.orderAmount}</div>
                 </div>
               </div>
             </div>

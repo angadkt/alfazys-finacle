@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import type { CreditEntry, UtrItem } from '../services/db';
 
@@ -46,7 +46,7 @@ export default function CreditEntryForm() {
   const [activeMainTab, setActiveMainTab] = useState<'stepper' | 'inquiry' | 'reports'>('stepper');
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [selectedFunction, setSelectedFunction] = useState<string>('A-ADD');
-  const [functionCodePassed, setFunctionCodePassed] = useState<boolean>(true);
+
 
   // Form State
   const [formData, setFormData] = useState({

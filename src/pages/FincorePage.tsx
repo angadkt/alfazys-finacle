@@ -22,8 +22,9 @@ export default function FincorePage() {
     "MODIFY RETAIL CIF",
     ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF MODIFICATION"] : []),
     "VIEW RETAIL CIF",
+    "ORDER ENTRY",
     "CREDIT ENTRY",
-    "ORDER ENTRY"
+    "AED COLLECTON"
   ];
 
   const handleShortcutSelect = (screen: string) => {
@@ -62,6 +63,7 @@ export default function FincorePage() {
                   className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] tracking-wide text-[#000080] ${activeScreen === item ? 'bg-[#316ac5] text-white' : ''}`}
                   onClick={() => {
                     setActiveScreen(item);
+                    setIsSidebarOpen(false);
                   }}
                 >
                   {/* File Icon */}

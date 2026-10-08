@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { dbService } from '../services/db';
 
 export default function CreateRetailCifForm() {
@@ -8,18 +8,29 @@ export default function CreateRetailCifForm() {
   const [cifId, setCifId] = useState('');
   const [selectedFunction, setSelectedFunction] = useState('');
   const [inputCifId, setInputCifId] = useState('');
+  const [documents, setDocuments] = useState<Record<string, string>>({});
+  const [previewDoc, setPreviewDoc] = useState<{url: string, label: string} | null>(null);
+
+  const handleFileUpload = (label: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setDocuments(prev => ({ ...prev, [label]: url }));
+      setPreviewDoc({ url, label });
+    }
+  };
 
   const [formData, setFormData] = useState({
-    title: 'Mr',
+    title: '',
     firstName: '',
     lastName: '',
     shortName: '',
-    gender: 'Male',
+    gender: '',
     nationality: '',
     contactNo: '',
-    ccy: 'INR',
-    branchOffice: 'UAE',
-    cifType: 'General',
+    ccy: '',
+    branchOffice: '',
+    cifType: '',
     uaeNo: '',
     email: '',
     indianNo: '',
@@ -49,8 +60,8 @@ export default function CreateRetailCifForm() {
     setCifId('');
     setStep('selection');
     setFormData({ 
-      title: 'Mr', firstName: '', lastName: '', shortName: '', gender: 'Male', 
-      nationality: '', contactNo: '', ccy: 'INR', branchOffice: 'UAE', cifType: 'General',
+      title: '', firstName: '', lastName: '', shortName: '', gender: '', 
+      nationality: '', contactNo: '', ccy: '', branchOffice: '', cifType: '',
       uaeNo: '', email: '', indianNo: '', city: '', country: '' 
     });
   };
@@ -175,6 +186,7 @@ export default function CreateRetailCifForm() {
               <div className="flex items-center">
                 <span className="w-32 font-semibold">Title</span>
                 <select value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
+                  <option value=""></option>
                   <option value="Mr">Mr.</option>
                   <option value="Mrs">Mrs.</option>
                 </select>
@@ -194,6 +206,7 @@ export default function CreateRetailCifForm() {
               <div className="flex items-center">
                 <span className="w-32 font-semibold">Gender</span>
                 <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
+                  <option value=""></option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
@@ -210,6 +223,7 @@ export default function CreateRetailCifForm() {
               <div className="flex items-center">
                 <span className="w-32 font-semibold">CCY</span>
                 <select value={formData.ccy} onChange={(e) => setFormData({...formData, ccy: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
+                  <option value=""></option>
                   <option value="INR">INR</option>
                   <option value="AED">AED</option>
                 </select>
@@ -217,6 +231,7 @@ export default function CreateRetailCifForm() {
               <div className="flex items-center">
                 <span className="w-32 font-semibold">Branch Office</span>
                 <select value={formData.branchOffice} onChange={(e) => setFormData({...formData, branchOffice: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
+                  <option value=""></option>
                   <option value="UAE">UAE</option>
                   <option value="INDIA">INDIA</option>
                 </select>
@@ -224,6 +239,7 @@ export default function CreateRetailCifForm() {
               <div className="flex items-center">
                 <span className="w-32 font-semibold">CIF Type</span>
                 <select value={formData.cifType} onChange={(e) => setFormData({...formData, cifType: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
+                  <option value=""></option>
                   <option value="Agent">Agent</option>
                   <option value="General">General</option>
                   <option value="Other">Other</option>
@@ -290,28 +306,53 @@ export default function CreateRetailCifForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                   {[
                     'Photo',
-                    'Passport 2 said / Adhaar',
+                    'Passport (Front)',
+                    'Passport (Back)',
+                    'Aadhaar (Front)',
+                    'Aadhaar (Back)',
                     'UAE ID / PAN',
                     'Signature'
                   ].map((label, idx) => (
                     <div key={idx} className="flex flex-col gap-1.5">
                       <span className="font-semibold text-black">{label}</span>
-                      <div className="flex items-center justify-between border border-[#a2b5cd] bg-white p-2 relative group hover:border-[#316ac5] transition-colors rounded-sm h-[46px]">
-                        <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" title=" " />
-                        <div className="flex items-center gap-2.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#316ac5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                          </svg>
-                          <div className="flex flex-col leading-tight">
-                            <span className="text-[#316ac5] font-semibold text-[11px]">Upload file</span>
-                            <span className="text-[9px] text-gray-500 mt-[1px]">JPG, PNG or PDF</span>
+                      <div className="flex items-center justify-between border border-[#a2b5cd] bg-white p-2 relative group hover:border-[#316ac5] transition-colors rounded-sm h-[46px] overflow-hidden">
+                        <input 
+                          type="file" 
+                          accept="image/*,.pdf"
+                          onChange={(e) => handleFileUpload(label, e)}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                          title=" " 
+                        />
+                        {documents[label] ? (
+                          <div 
+                            className="flex items-center gap-2 w-full h-full cursor-pointer"
+                            onClick={(e) => {
+                               e.preventDefault();
+                               e.stopPropagation();
+                               setPreviewDoc({ url: documents[label], label });
+                            }}
+                          >
+                            <img src={documents[label]} alt={label} className="h-8 w-8 object-cover rounded-sm border border-gray-300 flex-shrink-0" />
+                            <span className="text-[#316ac5] font-semibold text-[11px] truncate flex-1">Document uploaded</span>
                           </div>
-                        </div>
-                        <div className="bg-[#316ac5] border border-[#104080] px-3 py-1 text-white font-semibold text-[10px] rounded-sm shadow-sm group-hover:bg-[#104080] transition-colors">
-                          Browse
-                        </div>
+                        ) : (
+                          <div className="flex items-center gap-2.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#316ac5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                              <polyline points="17 8 12 3 7 8"></polyline>
+                              <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <div className="flex flex-col leading-tight">
+                              <span className="text-[#316ac5] font-semibold text-[11px]">Upload file</span>
+                              <span className="text-[9px] text-gray-500 mt-[1px]">JPG, PNG or PDF</span>
+                            </div>
+                          </div>
+                        )}
+                        {!documents[label] && (
+                          <div className="bg-[#316ac5] border border-[#104080] px-3 py-1 text-white font-semibold text-[10px] rounded-sm shadow-sm group-hover:bg-[#104080] transition-colors">
+                            Browse
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -492,6 +533,26 @@ export default function CreateRetailCifForm() {
             >
               Ok
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-[#104080] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="bg-[#eaf0f8] px-3 py-2 font-bold text-[#104080] border-b border-[#a2b5cd] flex justify-between items-center">
+              <span>Document Preview - {previewDoc.label}</span>
+              <button 
+                onClick={() => setPreviewDoc(null)} 
+                className="text-red-600 font-bold hover:underline cursor-pointer px-2"
+              >
+                Close (X)
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4 min-h-[400px]">
+              <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-full object-contain shadow-md" />
+            </div>
           </div>
         </div>
       )}
