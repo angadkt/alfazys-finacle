@@ -139,238 +139,241 @@ export default function OrderEntryForm() {
         </div>
 
         {isFormModalOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
-            <div className="bg-white border-2 border-[#104080] shadow-2xl flex flex-col max-h-[90vh] max-w-5xl w-full">
-              <div className="bg-[#eaf0f8] px-3 py-2 font-bold text-[#104080] border-b border-[#a2b5cd] text-[12px] flex items-center justify-between">
+          <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
+            <div className="bg-white shadow-2xl flex flex-col max-h-[90vh] max-w-6xl w-full rounded-md overflow-hidden">
+              <div className="bg-[#eef2f9] px-6 py-4 font-bold text-black border-b border-[#c4d4ec] text-[16px] flex items-center justify-between">
                 <span>Custom Order Entry Form</span>
-                <button onClick={() => setIsFormModalOpen(false)} className="text-red-600 font-bold hover:underline cursor-pointer">
+                <button onClick={() => setIsFormModalOpen(false)} className="text-[#a51a1a] font-bold hover:underline cursor-pointer text-[14px]">
                   Close (X)
                 </button>
               </div>
-              <div className="p-4 overflow-auto">
+              <div className="p-8 overflow-auto bg-white flex flex-col gap-6">
 
-        {/* Function Box */}
-        <div className="p-4 bg-[#eaf0f8] mb-4 w-fit min-w-[800px] text-[11px] ml-4">
-          <div className="grid grid-cols-[170px_1fr_170px_1fr] gap-x-4 gap-y-3 items-center">
-            
-            <div className="font-bold text-black">
-              Function Code <span className="text-red-600">*</span>
-            </div>
-            <div className="col-span-3">
-              <select 
-                value={selectedFunction}
-                onChange={(e) => setSelectedFunction(e.target.value)}
-                className="w-[240px] border border-[#7f9db9] bg-[#00a2e8] text-white focus:outline-none h-[24px] text-[11px] px-1 font-bold"
-              >
-                <option value="A-ADD" className="bg-white text-black">A-ADD (New Order Booking)</option>
-                <option value="V-VIEW" className="bg-white text-black">V-VIEW (Order Inquiry)</option>
-                <option value="M-MODIFY" className="bg-white text-black">M-MODIFY (Amend Order)</option>
-                <option value="X-CANCEL" className="bg-white text-black">X-CANCEL (Cancel Order)</option>
-              </select>
-            </div>
+                <div className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-12 gap-y-0 text-[13px]">
+                  
+                  {/* First Box Section */}
+                  <div className="col-span-4 grid grid-cols-subgrid gap-y-5 bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-6 px-6 -mx-6 mb-6">
+                    
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Function Code <span className="text-red-600">*</span>
+                    </div>
+                    <div className="col-span-3">
+                      <select 
+                        value={selectedFunction}
+                        onChange={(e) => setSelectedFunction(e.target.value)}
+                        className="w-[240px] border border-[#c4d4ec] bg-white text-black rounded-md focus:outline-none h-[36px] px-2"
+                      >
+                        <option value="A-ADD">A-ADD (New Order Booking)</option>
+                        <option value="V-VIEW">V-VIEW (Order Inquiry)</option>
+                        <option value="M-MODIFY">M-MODIFY (Amend Order)</option>
+                        <option value="X-CANCEL">X-CANCEL (Cancel Order)</option>
+                      </select>
+                    </div>
 
-            <div className="font-bold text-black">
-              Value Execution Date
-            </div>
-            <div>
-              <input 
-                type="date" 
-                defaultValue={new Date().toISOString().split('T')[0]}
-                className="w-[240px] border border-[#7f9db9] h-[24px] px-1 text-[11px] focus:outline-none"
-              />
-            </div>
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Value Execution Date
+                    </div>
+                    <div>
+                      <input 
+                        type="date" 
+                        defaultValue={new Date().toISOString().split('T')[0]}
+                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
+                      />
+                    </div>
 
-            <div className="font-bold text-black pl-4">
-              Agent / Customer
-            </div>
-            <div>
-              <input 
-                type="text" 
-                list="agent-customer-list"
-                value={agentOrCustomer}
-                onChange={(e) => setAgentOrCustomer(e.target.value)}
-                placeholder="Select Agent or Customer"
-                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
-              />
-              <datalist id="agent-customer-list">
-                {customers.map((c) => (
-                  <option key={c.id} value={`${c.name} (${c.id})`} />
-                ))}
-              </datalist>
-            </div>
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Agent / Customer
+                    </div>
+                    <div>
+                      <input 
+                        type="text" 
+                        list="agent-customer-list"
+                        value={agentOrCustomer}
+                        onChange={(e) => setAgentOrCustomer(e.target.value)}
+                        placeholder="SELECT AGENT OR CUSTOMER"
+                        className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
+                      />
+                      <datalist id="agent-customer-list">
+                        {customers.map((c) => (
+                          <option key={c.id} value={`${c.name} (${c.id})`} />
+                        ))}
+                      </datalist>
+                    </div>
+                  </div>
 
-            <div className="font-bold text-black">
-              Client / Beneficiary Name <span className="text-red-600">*</span>
-            </div>
-            <div>
-              <input 
-                type="text" 
-                value={currentAccount.clientName}
-                onChange={(e) => handleCurrentAccountChange('clientName', e.target.value)}
-                placeholder="Enter client name"
-                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
-              />
-            </div>
+                  {/* Second Box Section */}
+                  <div className="col-span-4 grid grid-cols-subgrid gap-y-5 bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-6 px-6 -mx-6 relative">
+                    <div className="absolute top-[-1px] left-[-1px] bg-[#1a4a8c] text-white text-[11px] font-medium px-3 py-1 rounded-tl-md rounded-br-md">Beneficiary Bank Details</div>
+                    
+                    <div className="font-medium text-black whitespace-nowrap mt-4">
+                      Client / Beneficiary Name <span className="text-red-600">*</span>
+                    </div>
+                    <div className="mt-4">
+                      <input 
+                        type="text" 
+                        value={currentAccount.clientName}
+                        onChange={(e) => handleCurrentAccountChange('clientName', e.target.value)}
+                        placeholder="ENTER CLIENT NAME"
+                        className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
+                      />
+                    </div>
 
-            <div className="font-bold text-black pl-4">
-              Account Number <span className="text-red-600">*</span>
-            </div>
-            <div>
-              <input 
-                type="text" 
-                value={currentAccount.accountNumber}
-                onChange={(e) => handleCurrentAccountChange('accountNumber', e.target.value)}
-                placeholder="Enter Account Number"
-                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
-              />
-            </div>
+                    <div className="font-medium text-black whitespace-nowrap mt-4">
+                      Account Number <span className="text-red-600">*</span>
+                    </div>
+                    <div className="mt-4">
+                      <input 
+                        type="text" 
+                        value={currentAccount.accountNumber}
+                        onChange={(e) => handleCurrentAccountChange('accountNumber', e.target.value)}
+                        placeholder="ENTER ACCOUNT NUMBER"
+                        className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
+                      />
+                    </div>
 
-            <div className="font-bold text-black">
-              IFSC Code <span className="text-red-600">*</span>
-            </div>
-            <div>
-              <input 
-                type="text" 
-                value={currentAccount.ifscCode}
-                onChange={(e) => handleCurrentAccountChange('ifscCode', e.target.value)}
-                placeholder="e.g. SBIN0000001"
-                className="w-[200px] border border-[#7f9db9] h-[24px] px-1 text-[11px] uppercase focus:outline-none"
-              />
-            </div>
+                    <div className="font-medium text-black whitespace-nowrap">
+                      IFSC Code <span className="text-red-600">*</span>
+                    </div>
+                    <div>
+                      <input 
+                        type="text" 
+                        value={currentAccount.ifscCode}
+                        onChange={(e) => handleCurrentAccountChange('ifscCode', e.target.value)}
+                        placeholder="E.G. SBIN0000001"
+                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
+                      />
+                    </div>
 
-            <div className="font-bold text-black pl-4">
-              Bank Name
-            </div>
-            <div>
-              <input 
-                type="text" 
-                value={currentAccount.bankName}
-                readOnly
-                placeholder="Auto-filled Bank Name"
-                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] bg-[#f0f0f0] uppercase focus:outline-none"
-              />
-            </div>
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Bank Name
+                    </div>
+                    <div>
+                      <input 
+                        type="text" 
+                        value={currentAccount.bankName}
+                        readOnly
+                        placeholder="AUTO-FILLED BANK NAME"
+                        className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-[#ebe9e1] uppercase focus:outline-none"
+                      />
+                    </div>
 
-            <div className="font-bold text-black">
-              Branch Name
-            </div>
-            <div className="col-span-3">
-              <input 
-                type="text" 
-                value={currentAccount.branchName}
-                readOnly
-                placeholder="Auto-filled Branch Name"
-                className="w-[320px] border border-[#7f9db9] h-[24px] px-1 text-[11px] bg-[#f0f0f0] uppercase focus:outline-none"
-              />
-            </div>
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Branch Name
+                    </div>
+                    <div className="col-span-3">
+                      <input 
+                        type="text" 
+                        value={currentAccount.branchName}
+                        readOnly
+                        placeholder="AUTO-FILLED BRANCH NAME"
+                        className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-[#ebe9e1] uppercase focus:outline-none"
+                      />
+                    </div>
 
-            <div className="font-bold text-black">
-              Order Amount (INR) <span className="text-red-600">*</span>
-            </div>
-            <div>
-              <input 
-                type="number" 
-                value={currentAccount.orderAmount}
-                onChange={(e) => handleCurrentAccountChange('orderAmount', e.target.value)}
-                placeholder="Order Amount (₹)"
-                className="w-[200px] border border-[#7f9db9] h-[24px] px-2 text-[12px] font-bold text-[#1e4676] focus:outline-none"
-              />
-            </div>
-            
-            <div className="font-bold text-black pl-4">
-              Confirm Order Amount (INR) <span className="text-red-600">*</span>
-            </div>
-            <div>
-              <input 
-                type="number" 
-                value={currentAccount.confirmOrderAmount}
-                onChange={(e) => handleCurrentAccountChange('confirmOrderAmount', e.target.value)}
-                placeholder="Confirm Order Amount (₹)"
-                className="w-[200px] border border-[#7f9db9] h-[24px] px-2 text-[12px] font-bold text-[#1e4676] focus:outline-none"
-              />
-            </div>
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Order Amount (INR) <span className="text-red-600">*</span>
+                    </div>
+                    <div>
+                      <input 
+                        type="number" 
+                        value={currentAccount.orderAmount}
+                        onChange={(e) => handleCurrentAccountChange('orderAmount', e.target.value)}
+                        placeholder="Order Amount (₹)"
+                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
+                      />
+                    </div>
+                    
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Confirm Order Amount (INR) <span className="text-red-600">*</span>
+                    </div>
+                    <div>
+                      <input 
+                        type="number" 
+                        value={currentAccount.confirmOrderAmount}
+                        onChange={(e) => handleCurrentAccountChange('confirmOrderAmount', e.target.value)}
+                        placeholder="Confirm Order Amount (₹)"
+                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
+                      />
+                    </div>
 
-            <div className="col-span-4 flex mt-2">
-              <button 
-                type="button" 
-                onClick={addAccount}
-                className="bg-[#eaf0f8] border-2 border-[#316ac5] hover:bg-[#d4e4fc] px-4 py-1 text-xs text-black font-bold active:bg-[#c4d4ec]"
-              >
-                + Add Account
-              </button>
-            </div>
-
-            {accounts.length > 0 && (
-              <div className="col-span-4 mt-4">
-                <div className="font-bold text-[#1e4676] mb-2">Added Accounts ({accounts.length})</div>
-                <div className="border border-[#7f9db9] overflow-hidden">
-                  <table className="w-full text-left text-[11px] border-collapse">
-                    <thead className="bg-[#f0f0f5] border-b border-[#7f9db9]">
-                      <tr>
-                        <th className="p-1.5 border-r border-[#7f9db9]">Client Name</th>
-                        <th className="p-1.5 border-r border-[#7f9db9]">Account Number</th>
-                        <th className="p-1.5 border-r border-[#7f9db9]">Amount</th>
-                        <th className="p-1.5 border-r border-[#7f9db9]">Bank (IFSC)</th>
-                        <th className="p-1.5 border-r border-[#7f9db9]">Branch</th>
-                        <th className="p-1.5 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {accounts.map((acc, idx) => (
-                        <tr key={idx} className="border-b border-[#e4e4e4] last:border-0 hover:bg-[#fafafa] bg-white">
-                          <td className="p-1.5 border-r border-[#e4e4e4]">{acc.clientName}</td>
-                          <td className="p-1.5 border-r border-[#e4e4e4]">{acc.accountNumber}</td>
-                          <td className="p-1.5 border-r border-[#e4e4e4]">₹{acc.orderAmount}</td>
-                          <td className="p-1.5 border-r border-[#e4e4e4]">{acc.bankName} ({acc.ifscCode})</td>
-                          <td className="p-1.5 border-r border-[#e4e4e4]">{acc.branchName}</td>
-                          <td className="p-1.5 text-center flex items-center justify-center gap-3">
-                            <button 
-                              type="button" 
-                              onClick={() => editAccount(idx)} 
-                              className="text-[#316ac5] hover:underline font-bold"
-                            >
-                              Edit
-                            </button>
-                            <button 
-                              type="button" 
-                              onClick={() => removeAccount(idx)} 
-                              className="text-red-600 hover:underline font-bold"
-                            >
-                              Remove
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    <div className="col-span-4 border-t border-[#c4d4ec] pt-6 flex mt-2">
+                      <button 
+                        type="button" 
+                        onClick={addAccount}
+                        className="bg-transparent border border-[#1a4a8c] text-[#1a4a8c] hover:bg-white px-4 py-2 rounded-md font-medium flex items-center gap-2"
+                      >
+                        + Add Account
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
 
+                {accounts.length > 0 && (
+                  <div className="mt-2">
+                    <div className="font-medium text-[#1e4676] mb-2 text-[14px]">Added Accounts ({accounts.length})</div>
+                    <div className="border border-[#c4d4ec] rounded-md overflow-hidden">
+                      <table className="w-full text-left text-[13px] border-collapse">
+                        <thead className="bg-[#eef2f9] border-b border-[#c4d4ec]">
+                          <tr>
+                            <th className="p-3 font-medium text-black">Client Name</th>
+                            <th className="p-3 font-medium text-black">Account Number</th>
+                            <th className="p-3 font-medium text-black">Amount</th>
+                            <th className="p-3 font-medium text-black">Bank (IFSC)</th>
+                            <th className="p-3 font-medium text-black">Branch</th>
+                            <th className="p-3 font-medium text-black text-center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {accounts.map((acc, idx) => (
+                            <tr key={idx} className="border-b border-[#e4e4e4] last:border-0 hover:bg-[#f9fafc] bg-white">
+                              <td className="p-3 border-r border-[#e4e4e4]">{acc.clientName}</td>
+                              <td className="p-3 border-r border-[#e4e4e4]">{acc.accountNumber}</td>
+                              <td className="p-3 border-r border-[#e4e4e4]">₹{acc.orderAmount}</td>
+                              <td className="p-3 border-r border-[#e4e4e4]">{acc.bankName} ({acc.ifscCode})</td>
+                              <td className="p-3 border-r border-[#e4e4e4]">{acc.branchName}</td>
+                              <td className="p-3 text-center flex items-center justify-center gap-4">
+                                <button 
+                                  type="button" 
+                                  onClick={() => editAccount(idx)} 
+                                  className="text-[#1a4a8c] hover:underline font-medium"
+                                >
+                                  Edit
+                                </button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => removeAccount(idx)} 
+                                  className="text-red-600 hover:underline font-medium"
+                                >
+                                  Remove
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="flex gap-2 mb-4 ml-4">
-          <button 
-            onClick={handleGo}
-            className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-xs text-black font-bold active:border-t-[#8f8f9d] active:border-l-[#8f8f9d]"
-          >
-            Create Order (Go)
-          </button>
-          <button 
-            onClick={handleClear}
-            className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-xs text-black active:border-t-[#8f8f9d] active:border-l-[#8f8f9d]"
-          >
-            Clear
-          </button>
-        </div>
+                {/* Buttons */}
+                <div className="flex gap-4 mt-2">
+                  <button 
+                    onClick={handleGo}
+                    className="bg-[#1a4a8c] text-white rounded-md px-6 py-2 shadow-sm font-medium hover:bg-[#153970]"
+                  >
+                    Create Order (Go)
+                  </button>
+                  <button 
+                    onClick={handleClear}
+                    className="bg-white border border-[#c4d4ec] text-[#1a4a8c] rounded-md px-6 py-2 font-medium shadow-sm hover:bg-[#f4f7fb]"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
-
 
       </div>
 
