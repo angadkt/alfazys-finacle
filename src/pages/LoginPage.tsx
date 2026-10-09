@@ -75,7 +75,7 @@ export default function LoginPage() {
       localStorage.setItem('infazys_finacle_login_time', loginTimeStr);
 
       toast.success(`Welcome back!`);
-      navigate('/solutions');
+      navigate('/dashboard');
 
     } catch (err: any) {
       setError('Invalid Email or Password.');

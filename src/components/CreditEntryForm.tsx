@@ -52,39 +52,24 @@ export default function CreditEntryForm() {
 
   // Form State
   const [formData, setFormData] = useState({
-    beneficiaryName: 'IBRAHIM KALEEL N A',
+    beneficiaryName: '',
     transactionDate: new Date().toISOString().split('T')[0],
-    accountNumber: '40617101127003',
-    ifscCode: 'KLGB0040617',
-    bankName: 'KERALA GRAMIN BANK',
-    branchName: 'KASARAGOD MAIN BRANCH',
+    accountNumber: '',
+    ifscCode: '',
+    bankName: '',
+    branchName: '',
     phone: '',
     email: '',
     paymentDate: new Date().toISOString().split('T')[0],
-    totalAmount: '44000',
+    totalAmount: '',
     paymentMode: 'Bank Transfer' as CreditEntry['paymentMode'],
-    companyBankAccount: 'KERALA GRAMIN BANK - TREASURY 4061001928',
-    purpose: 'Vendor Payout / Client Credit Settlement',
-    remarks: 'Settled via 2 UTR tranches'
+    companyBankAccount: '',
+    purpose: '',
+    remarks: ''
   });
 
   // UTR Items (Split settlement matching user requirement)
-  const [utrItems, setUtrItems] = useState<UtrItem[]>([
-    {
-      id: 'utr-1',
-      amount: 24000,
-      utrNumber: '005624886268',
-      status: 'Completed',
-      timestamp: '2026-10-07 10:14'
-    },
-    {
-      id: 'utr-2',
-      amount: 20000,
-      utrNumber: '293973571072',
-      status: 'Completed',
-      timestamp: '2026-10-07 10:28'
-    }
-  ]);
+  const [utrItems, setUtrItems] = useState<UtrItem[]>([]);
 
   // Entries list & filters
   const [entries, setEntries] = useState<CreditEntry[]>([]);
