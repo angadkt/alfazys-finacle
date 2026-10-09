@@ -40,18 +40,31 @@ export default function CreateRetailCifForm() {
   });
 
   const handleSubmit = async () => {
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      alert('Please fill in all mandatory fields (First Name and Last Name).');
+    if (
+      !formData.title ||
+      !formData.firstName.trim() ||
+      !formData.lastName.trim() ||
+      !formData.shortName.trim() ||
+      !formData.gender ||
+      !formData.nationality.trim() ||
+      !formData.contactNo.trim() ||
+      !formData.ccy ||
+      !formData.branchOffice ||
+      !formData.cifType
+    ) {
+      alert('Please fill in all mandatory fields in the Basic Info tab.');
       return;
     }
 
     const payload = {
-      first_name: formData.firstName || 'Unknown',
+      title: formData.title,
+      first_name: formData.firstName,
       last_name: formData.lastName,
       short_name: formData.shortName,
       gender: formData.gender,
       nationality: formData.nationality,
-      contact_number: formData.contactNo || formData.uaeNo || formData.indianNo || '0000000000',
+      contact_number: formData.contactNo,
+      ccy: formData.ccy,
       branch_id: formData.branchOffice === 'UAE' ? 1 : 2, 
       cif_type_id: formData.cifType === 'Agent' ? 1 : formData.cifType === 'Customer' ? 2 : formData.cifType === 'Supplier' ? 7 : 4,
       email: formData.email,
@@ -212,7 +225,7 @@ export default function CreateRetailCifForm() {
           {activeTab === 'Basic Info' && (
             <div className="grid grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
               <div className="flex items-center">
-                <span className="w-32 font-semibold">Title</span>
+                <span className="w-32 font-semibold">Title <span className="text-red-600">*</span></span>
                 <select value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                   <option value=""></option>
                   <option value="Mr">Mr.</option>
@@ -228,11 +241,11 @@ export default function CreateRetailCifForm() {
                 <input type="text" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
               </div>
               <div className="flex items-center">
-                <span className="w-32 font-semibold">Short Name</span>
+                <span className="w-32 font-semibold">Short Name <span className="text-red-600">*</span></span>
                 <input type="text" value={formData.shortName} onChange={(e) => setFormData({...formData, shortName: e.target.value})} className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
               </div>
               <div className="flex items-center">
-                <span className="w-32 font-semibold">Gender</span>
+                <span className="w-32 font-semibold">Gender <span className="text-red-600">*</span></span>
                 <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                   <option value=""></option>
                   <option value="Male">Male</option>
@@ -241,15 +254,15 @@ export default function CreateRetailCifForm() {
                 </select>
               </div>
               <div className="flex items-center">
-                <span className="w-32 font-semibold">Nationality</span>
+                <span className="w-32 font-semibold">Nationality <span className="text-red-600">*</span></span>
                 <input type="text" value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
               </div>
               <div className="flex items-center">
-                <span className="w-32 font-semibold">Contact No</span>
+                <span className="w-32 font-semibold">Contact No <span className="text-red-600">*</span></span>
                 <input type="text" value={formData.contactNo} onChange={(e) => setFormData({...formData, contactNo: e.target.value})} className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
               </div>
               <div className="flex items-center">
-                <span className="w-32 font-semibold">CCY</span>
+                <span className="w-32 font-semibold">CCY <span className="text-red-600">*</span></span>
                 <select value={formData.ccy} onChange={(e) => setFormData({...formData, ccy: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                   <option value=""></option>
                   <option value="INR">INR</option>
@@ -257,7 +270,7 @@ export default function CreateRetailCifForm() {
                 </select>
               </div>
               <div className="flex items-center">
-                <span className="w-32 font-semibold">Branch Office</span>
+                <span className="w-32 font-semibold">Branch Office <span className="text-red-600">*</span></span>
                 <select value={formData.branchOffice} onChange={(e) => setFormData({...formData, branchOffice: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                   <option value=""></option>
                   <option value="UAE">UAE</option>
@@ -265,7 +278,7 @@ export default function CreateRetailCifForm() {
                 </select>
               </div>
               <div className="flex items-center">
-                <span className="w-32 font-semibold">CIF Type</span>
+                <span className="w-32 font-semibold">CIF Type <span className="text-red-600">*</span></span>
                 <select value={formData.cifType} onChange={(e) => setFormData({...formData, cifType: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                   <option value=""></option>
                   <option value="Customer">Customer</option>
