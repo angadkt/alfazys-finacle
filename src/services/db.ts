@@ -12,25 +12,25 @@ export type UserRole = 'super_admin' | 'staff' | 'agent';
 
 export const mockUsers: Record<UserRole, User> = {
   super_admin: {
-    name: "Sarah Al-Fayed",
-    email: "sarah.alfayed@finacle.io",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120",
-    occupation: "Operations Manager & Checker (Admin)",
-    joinedDate: "2024-03-12"
+    name: "Admin User",
+    email: "admin@finacle.io",
+    avatar: "",
+    occupation: "Admin",
+    joinedDate: ""
   },
   staff: {
-    name: "David Miller",
-    email: "david.miller@finacle.io",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
-    occupation: "Branch Operations Specialist (Staff Maker)",
-    joinedDate: "2025-01-15"
+    name: "Staff User",
+    email: "staff@finacle.io",
+    avatar: "",
+    occupation: "Staff",
+    joinedDate: ""
   },
   agent: {
-    name: "Marcus Vance",
-    email: "marcus.vance@finacle.io",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120",
-    occupation: "Field Relationship Agent (Agent)",
-    joinedDate: "2025-06-20"
+    name: "Agent User",
+    email: "agent@finacle.io",
+    avatar: "",
+    occupation: "Agent",
+    joinedDate: ""
   }
 };
 
@@ -123,41 +123,7 @@ export interface CreditEntry {
 export const CreditEntry = {};
 export const UtrItem = {};
 
-export const initialCreditEntries: CreditEntry[] = [
-  {
-    id: "CE-40617101",
-    paymentDate: "2026-10-07",
-    beneficiaryName: "IBRAHIM KALEEL N A",
-    transactionDate: "IBRAHIM KALEEL N A",
-    accountNumber: "40617101127003",
-    ifscCode: "KLGB0040617",
-    bankName: "KERALA GRAMIN BANK",
-    totalAmount: 44000,
-    utrItems: [
-      {
-        id: "utr-01",
-        amount: 24000,
-        utrNumber: "005624886268",
-        status: "Completed",
-        timestamp: "2026-10-07 10:14"
-      },
-      {
-        id: "utr-02",
-        amount: 20000,
-        utrNumber: "293973571072",
-        status: "Completed",
-        timestamp: "2026-10-07 10:28"
-      }
-    ],
-    paymentMode: "Bank Transfer",
-    companyBankAccount: "KERALA GRAMIN BANK - TREASURY 4061001928",
-    purpose: "Vendor Payout / Client Credit Settlement",
-    remarks: "Completed 👍 - Settled across 2 UTR tranches",
-    status: "Completed",
-    createdBy: "UBSADMIN",
-    createdAt: "2026-10-07T10:30:00Z"
-  }
-];
+export const initialCreditEntries: CreditEntry[] = [];
 
 export interface DbSchema {
   user: User;

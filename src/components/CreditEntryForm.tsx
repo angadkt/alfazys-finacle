@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
+import api from '../services/api';
 import type { CreditEntry, UtrItem } from '../services/db';
 
 // Helper to convert number to Indian words
@@ -253,39 +254,58 @@ export default function CreditEntryForm() {
     setEditingId(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
       alert('Please correct validation errors across steps before submitting.');
       return;
     }
 
-    const entryData = {
-      paymentDate: formData.paymentDate,
-      beneficiaryName: formData.beneficiaryName.trim(),
-      transactionDate: formData.transactionDate,
-      accountNumber: formData.accountNumber.trim(),
-      ifscCode: formData.ifscCode.trim().toUpperCase(),
-      bankName: formData.bankName.trim(),
-      totalAmount: totalEnteredAmount,
-      utrItems: [...utrItems],
-      paymentMode: formData.paymentMode,
-      companyBankAccount: formData.companyBankAccount,
-      purpose: formData.purpose,
-      remarks: formData.remarks || 'Completed',
-      status: 'Completed' as const,
-      createdBy: 'UBSADMIN'
+    const apiPayload = {
+      party_id: formData.beneficiaryName.trim(), // mapping beneficiary to party_id
+      entry_date: formData.paymentDate,
+      aed_amount: totalEnteredAmount,
+      mode: formData.paymentMode,
+      account_id: formData.accountNumber.trim(),
+      customer_rate: 1, // Defaulting to 1 as it's required but not in UI
+      utr_number: utrItems.length > 0 ? utrItems[0].utrNumber : "",
+      note: formData.remarks || 'Completed'
     };
 
-    let savedEntry;
-    if (editingId) {
-      savedEntry = dbService.updateCreditEntry(editingId, entryData);
-      setEditingId(null);
-    } else {
-      savedEntry = dbService.addCreditEntry(entryData);
-    }
+    try {
+      await api.post('/records/credit', apiPayload);
+      
+      // Also save to local dbService to keep the UI tabs working since there's no GET endpoint yet
+      const entryData = {
+        paymentDate: formData.paymentDate,
+        beneficiaryName: formData.beneficiaryName.trim(),
+        transactionDate: formData.transactionDate,
+        accountNumber: formData.accountNumber.trim(),
+        ifscCode: formData.ifscCode.trim().toUpperCase(),
+        bankName: formData.bankName.trim(),
+        totalAmount: totalEnteredAmount,
+        utrItems: [...utrItems],
+        paymentMode: formData.paymentMode,
+        companyBankAccount: formData.companyBankAccount,
+        purpose: formData.purpose,
+        remarks: formData.remarks || 'Completed',
+        status: 'Completed' as const,
+        createdBy: dbService.getUserRole()?.toUpperCase() || 'USER'
+      };
+      
+      let savedEntry;
+      if (editingId) {
+        savedEntry = dbService.updateCreditEntry(editingId, entryData);
+        setEditingId(null);
+      } else {
+        savedEntry = dbService.addCreditEntry(entryData);
+      }
 
-    loadEntries();
-    setSubmittedEntry(savedEntry);
+      loadEntries();
+      setSubmittedEntry(savedEntry);
+      
+    } catch (err: any) {
+      alert('Error saving credit entry to server: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const handleCancelEntry = (id: string) => {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
+import api from '../services/api';
 import type { Customer } from '../services/db';
 
 export default function OrderEntryForm() {
@@ -68,14 +69,36 @@ export default function OrderEntryForm() {
     setCustomers(dbService.getCustomers());
   }, []);
 
-  const handleGo = () => {
+  const handleGo = async () => {
     if (accounts.length === 0) {
       alert('Please add at least one account detail.');
       return;
     }
-    const ref = `ORD-${Date.now().toString().slice(-6)}`;
-    setOrderRef(ref);
-    setIsSubmitted(true);
+    
+    // Using the first account for the API call for simplicity since the API schema only supports one account_id
+    const primaryAccount = accounts[0];
+    
+    const apiPayload = {
+      buyer_id: agentOrCustomer || "Unknown",
+      txn: "ORDER", 
+      order_date: new Date().toISOString().split('T')[0],
+      aed_amount: parseFloat(primaryAccount.orderAmount) || 0,
+      account_id: primaryAccount.accountNumber,
+      sale_rate: 1, // default
+      cost_rate: 1, // default
+      usdt_amount: 0, // default
+      inr_per_usdt: 0, // default
+      note: "Multiple accounts included"
+    };
+
+    try {
+      await api.post('/records/orders', apiPayload);
+      const ref = `ORD-${Date.now().toString().slice(-6)}`;
+      setOrderRef(ref);
+      setIsSubmitted(true);
+    } catch (err: any) {
+      alert('Error submitting order to server: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const handleClear = () => {

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import logoImg from '../assets/alfazys-logo-nobg.png';
 import finacleLogo from '../assets/finacle-logo.png';
 import { dbService } from '../services/db';
 import type { UserRole } from '../services/db';
+import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 
 export default function LoginPage() {
@@ -15,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('user');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleRoleChange = (role: UserRole) => {
     setError('');
@@ -30,7 +33,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -46,52 +49,41 @@ export default function LoginPage() {
       return;
     }
 
-    const trimmedUser = email.toLowerCase().trim();
-    const trimmedPass = password.toLowerCase().trim();
-
-    let resolvedRole: UserRole | null = null;
-
-    if (trimmedUser === 'admin' && (trimmedPass === 'admin' || trimmedPass === '••••••••••••')) {
-      resolvedRole = 'super_admin';
-    } else if (trimmedUser === 'user' && (trimmedPass === 'user' || trimmedPass === '••••••••••••')) {
-      resolvedRole = 'staff';
-    } else if (trimmedUser === 'agent' && (trimmedPass === 'agent' || trimmedPass === '••••••••••••')) {
-      resolvedRole = 'agent';
-    } else if (trimmedUser === 'david.miller@finacle.io' && (trimmedPass === '••••••••••••' || trimmedPass === 'user')) {
-      resolvedRole = 'staff';
-    } else if (trimmedUser === 'marcus.vance@finacle.io' && (trimmedPass === '••••••••••••' || trimmedPass === 'agent')) {
-      resolvedRole = 'agent';
-    } else if (trimmedUser === 'sarah.alfayed@finacle.io' && (trimmedPass === '••••••••••••' || trimmedPass === 'admin')) {
-      resolvedRole = 'super_admin';
-    }
-
-    if (!resolvedRole) {
-      setError('Invalid Email or Password.');
-      toast.error('Invalid Email or Password. Please try again.');
-      return;
-    }
-
     setLoading(true);
-    dbService.setUserRole(resolvedRole);
 
-    const loginTimeStr = new Date().toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    localStorage.setItem('infazys_finacle_login_time', loginTimeStr);
+    try {
+      const response = await api.post('/auth/login', {
+        email: email.toLowerCase().trim(),
+        password: password.trim()
+      });
 
-    setTimeout(() => {
+      // Assuming API returns { token, role }
+      const { token, role } = response.data;
+      
+      // Store token for axios
+      localStorage.setItem('infazys_token', token);
+      
+      // We still use active_role for frontend components that rely on it synchronously
+      const resolvedRole = role || 'staff'; 
+      localStorage.setItem('infazys_finacle_active_role', resolvedRole);
+
+      const loginTimeStr = new Date().toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      localStorage.setItem('infazys_finacle_login_time', loginTimeStr);
+
+      toast.success(`Welcome back!`);
+      navigate('/solutions');
+
+    } catch (err: any) {
+      setError('Invalid Email or Password.');
+      toast.error(err.response?.data?.message || 'Invalid Email or Password. Please try again.');
+    } finally {
       setLoading(false);
-      toast.success(`Welcome back, ${resolvedRole === 'super_admin' ? 'Administrator' : resolvedRole === 'staff' ? 'Staff Member' : 'Field Agent'}!`);
-      if (resolvedRole === 'staff') {
-        // According to user instruction, staff and admin both go to solutions
-        navigate('/solutions');
-      } else {
-        navigate('/solutions');
-      }
-    }, 800);
+    }
   };
 
   return (
@@ -166,14 +158,24 @@ export default function LoginPage() {
                 <label className="font-bold text-[15px] text-[#222222] mr-4 w-[75px] text-right" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
                   Password
                 </label>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-[240px] h-[30px] border border-[#888888] px-2 bg-white focus:outline-none text-sm text-[#111111]"
-                  style={{ fontFamily: 'Arial, sans-serif' }}
-                  required
-                />
+                <div className="relative w-[240px]">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full h-[30px] border border-[#888888] pl-2 pr-8 bg-white focus:outline-none text-sm text-[#111111]"
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 <button 
                   type="submit" 
                   disabled={loading}
