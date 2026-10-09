@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { dbService } from '../services/db';
+import api from '../services/api';
 
 export default function CreateRetailCifForm() {
   const [step, setStep] = useState('selection');
@@ -38,20 +39,42 @@ export default function CreateRetailCifForm() {
     country: ''
   });
 
-  const handleSubmit = () => {
-    const newCustomer = dbService.addCustomer({
-      name: `${formData.firstName} ${formData.lastName}`.trim() || 'New Customer',
+  const handleSubmit = async () => {
+    const payload = {
+      first_name: formData.firstName || 'Unknown',
+      last_name: formData.lastName,
+      short_name: formData.shortName,
+      gender: formData.gender,
+      nationality: formData.nationality,
+      contact_number: formData.contactNo || formData.uaeNo || formData.indianNo || '0000000000',
+      branch_id: formData.branchOffice === 'UAE' ? 1 : 2, 
+      cif_type_id: formData.cifType === 'Agent' ? 1 : formData.cifType === 'Customer' ? 2 : formData.cifType === 'Supplier' ? 7 : 4,
       email: formData.email,
-      phone: formData.contactNo || formData.uaeNo || formData.indianNo,
-      country: formData.country,
-      status: 'pending',
-      balance: 0,
-      shortName: formData.shortName,
-      city: formData.city
-    });
-    
-    setCifId(newCustomer.id);
-    setIsSubmitted(true);
+      indian_number: formData.indianNo,
+      whatsapp_number: '',
+      _profile: {
+        contacts: [],
+        addresses: [{
+          address_format: 'Structured',
+          address_type: 'PERMANENT',
+          house_no: '',
+          street_no: '',
+          street_name: '',
+          city: formData.city || 'Unknown',
+          state: 'Unknown',
+          country: formData.country || 'Unknown',
+          postal_code: '00000'
+        }]
+      }
+    };
+
+    try {
+      const res = await api.post('/records/parties', payload);
+      setCifId(res.data.record.cif_no || res.data.record.id);
+      setIsSubmitted(true);
+    } catch (err: any) {
+      alert('Error saving CIF: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const handleOk = () => {
@@ -240,6 +263,7 @@ export default function CreateRetailCifForm() {
                 <span className="w-32 font-semibold">CIF Type</span>
                 <select value={formData.cifType} onChange={(e) => setFormData({...formData, cifType: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                   <option value=""></option>
+                  <option value="Customer">Customer</option>
                   <option value="Agent">Agent</option>
                   <option value="Supplier">Supplier</option>
                   <option value="General">General</option>
