@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { dbService } from '../services/db';
+import api from '../services/api';
 
 export default function ViewRetailCif() {
   const [verifiedCifs, setVerifiedCifs] = useState<any[]>([]);
@@ -8,11 +8,14 @@ export default function ViewRetailCif() {
     loadVerifiedCifs();
   }, []);
 
-  const loadVerifiedCifs = () => {
-    const allCustomers = dbService.getCustomers();
-    // 'approved' means verified in our DB schema
-    const verified = allCustomers.filter(c => c.status === 'approved');
-    setVerifiedCifs(verified);
+  const loadVerifiedCifs = async () => {
+    try {
+      const res = await api.get('/records/parties');
+      const verified = res.data.records.filter((c: any) => c.status === 'verified');
+      setVerifiedCifs(verified);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -46,12 +49,12 @@ export default function ViewRetailCif() {
             ) : (
               verifiedCifs.map((cif) => (
                 <tr key={cif.id} className="border-b border-[#e4e4e4] text-[12px] hover:bg-[#f0f0f5]">
-                  <td className="p-2 border-r border-[#e4e4e4] font-semibold text-[#1e4676]">{cif.id}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.name}</td>
+                  <td className="p-2 border-r border-[#e4e4e4] font-semibold text-[#1e4676]">{cif.cif_no || cif.id}</td>
+                  <td className="p-2 border-r border-[#e4e4e4]">{cif.first_name} {cif.last_name}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.email || '-'}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.phone || '-'}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.issuedBy || '-'}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.verifiedBy || '-'}</td>
+                  <td className="p-2 border-r border-[#e4e4e4]">{cif.contact_number || '-'}</td>
+                  <td className="p-2 border-r border-[#e4e4e4]">{cif.created_by_name || '-'}</td>
+                  <td className="p-2 border-r border-[#e4e4e4]">{cif.verified_by_name || '-'}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">
                     <span className="text-green-600 font-semibold uppercase">Verified</span>
                   </td>

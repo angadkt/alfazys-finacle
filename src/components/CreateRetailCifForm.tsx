@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { dbService } from '../services/db';
+
 import api from '../services/api';
 
 export default function CreateRetailCifForm() {
@@ -40,6 +40,11 @@ export default function CreateRetailCifForm() {
   });
 
   const handleSubmit = async () => {
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      alert('Please fill in all mandatory fields (First Name and Last Name).');
+      return;
+    }
+
     const payload = {
       first_name: formData.firstName || 'Unknown',
       last_name: formData.lastName,
@@ -395,14 +400,14 @@ export default function CreateRetailCifForm() {
                 </div>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 p-2">
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">Address Format <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">Address Format</span>
                     <select className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                       <option>Structured</option>
                       <option>Free Text</option>
                     </select>
                   </div>
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">Address Type <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">Address Type</span>
                     <select className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                       <option>MAILING</option>
                       <option>PERMANENT</option>
@@ -411,7 +416,7 @@ export default function CreateRetailCifForm() {
                   </div>
                   
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">House No. <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">House No.</span>
                     <input type="text" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                   </div>
                   <div className="flex items-center">
@@ -424,7 +429,7 @@ export default function CreateRetailCifForm() {
                     <input type="text" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                   </div>
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">Street No. <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">Street No.</span>
                     <input type="text" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                   </div>
 
@@ -433,7 +438,7 @@ export default function CreateRetailCifForm() {
                     <input type="text" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                   </div>
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">Street Name <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">Street Name</span>
                     <input type="text" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                   </div>
 
@@ -447,28 +452,28 @@ export default function CreateRetailCifForm() {
                   </div>
 
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">City <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">City</span>
                     <input type="text" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                   </div>
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">State <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">State</span>
                     <input type="text" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                   </div>
 
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">Country <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">Country</span>
                     <div className="flex flex-1 gap-1">
                       <input type="text" className="w-8 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                       <input type="text" value={formData.country} onChange={(e) => setFormData({...formData, country: e.target.value})} className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                     </div>
                   </div>
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">Postal Code <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">Postal Code</span>
                     <input type="text" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
                   </div>
 
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">Address Valid From <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">Address Valid From</span>
                     <input type="date" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none text-[10px]" />
                   </div>
                   <div className="flex items-center">
@@ -495,7 +500,7 @@ export default function CreateRetailCifForm() {
                 </div>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 p-2">
                   <div className="flex items-center">
-                    <span className="w-36 font-semibold">Hold Mail Indicator <span className="text-red-600">*</span></span>
+                    <span className="w-36 font-semibold">Hold Mail Indicator</span>
                     <select className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                       <option>N</option>
                       <option>Y</option>
