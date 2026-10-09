@@ -241,6 +241,7 @@ export default function CreateRetailCifForm() {
                 <select value={formData.cifType} onChange={(e) => setFormData({...formData, cifType: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                   <option value=""></option>
                   <option value="Agent">Agent</option>
+                  <option value="Supplier">Supplier</option>
                   <option value="General">General</option>
                   <option value="Other">Other</option>
                 </select>

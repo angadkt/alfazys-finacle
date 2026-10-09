@@ -13,7 +13,7 @@ export default function Header({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const isFincoreActive = location.pathname.includes('/fincore') || location.pathname.includes('/dashboard');
+  const isFincoreActive = location.pathname.includes('/fincore');
   const [shortcutText, setShortcutText] = useState('');
 
   const handleLogout = () => {
