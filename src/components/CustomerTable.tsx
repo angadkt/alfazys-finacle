@@ -45,6 +45,8 @@ export default function CustomerTable({ customers, isAdmin, onApprove, onReject 
             <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Contact</th>
             <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Location</th>
             <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Status</th>
+            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Issued By</th>
+            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Verified By</th>
             <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6 text-center">
               {isAdmin ? 'Actions & Verification' : 'Actions'}
             </th>
@@ -108,6 +110,12 @@ export default function CustomerTable({ customers, isAdmin, onApprove, onReject 
                       {cust.status}
                     </span>
                   </td>
+                  <td className="py-4.5 px-6">
+                    <span className="text-xs font-semibold text-slate-700">{cust.issuedBy || '-'}</span>
+                  </td>
+                  <td className="py-4.5 px-6">
+                    <span className="text-xs font-semibold text-slate-700">{cust.verifiedBy || '-'}</span>
+                  </td>
                   <td className="py-4.5 px-6 text-center">
                     <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
                       {isAdmin && isPending && (
@@ -148,7 +156,7 @@ export default function CustomerTable({ customers, isAdmin, onApprove, onReject 
             })
           ) : (
             <tr>
-              <td colSpan={5} className="py-24 text-center">
+              <td colSpan={7} className="py-24 text-center">
                 <div className="flex flex-col items-center justify-center gap-4">
                   <div className="w-16 h-16 bg-slate-50 flex items-center justify-center rounded-full border border-slate-100">
                     <svg className="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

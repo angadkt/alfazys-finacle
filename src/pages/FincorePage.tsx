@@ -19,7 +19,6 @@ export default function FincorePage() {
     "ROLE PROFILE MAINTENANCE",
     "CREATE RETAIL CIF",
     ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF CREATION"] : []),
-    "MODIFY RETAIL CIF",
     ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF MODIFICATION"] : []),
     "VIEW RETAIL CIF",
     "ORDER ENTRY",

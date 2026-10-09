@@ -83,6 +83,8 @@ export interface Customer {
   phone: string;
   country: string;
   status: 'approved' | 'rejected' | 'pending';
+  issuedBy?: string;
+  verifiedBy?: string;
   balance: number;
   joinedDate: string;
   shortName?: string;
@@ -103,7 +105,7 @@ export interface CreditEntry {
   id: string;
   paymentDate: string;
   beneficiaryName: string;
-  accountHolderName: string;
+  transactionDate: string;
   accountNumber: string;
   ifscCode: string;
   bankName: string;
@@ -126,7 +128,7 @@ export const initialCreditEntries: CreditEntry[] = [
     id: "CE-40617101",
     paymentDate: "2026-10-07",
     beneficiaryName: "IBRAHIM KALEEL N A",
-    accountHolderName: "IBRAHIM KALEEL N A",
+    transactionDate: "IBRAHIM KALEEL N A",
     accountNumber: "40617101127003",
     ifscCode: "KLGB0040617",
     bankName: "KERALA GRAMIN BANK",

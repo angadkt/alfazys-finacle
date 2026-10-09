@@ -37,6 +37,8 @@ export default function VerifyRetailCif() {
               <th className="p-2 border-r border-[#a0a0a0]">Name</th>
               <th className="p-2 border-r border-[#a0a0a0]">Email</th>
               <th className="p-2 border-r border-[#a0a0a0]">Phone</th>
+              <th className="p-2 border-r border-[#a0a0a0]">Issued By</th>
+              <th className="p-2 border-r border-[#a0a0a0]">Verified By</th>
               <th className="p-2 border-r border-[#a0a0a0]">Status</th>
               <th className="p-2">Action</th>
             </tr>
@@ -44,7 +46,7 @@ export default function VerifyRetailCif() {
           <tbody>
             {pendingCifs.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-4 text-center text-[12px] text-gray-500">
+                <td colSpan={8} className="p-4 text-center text-[12px] text-gray-500">
                   No pending CIF requests to verify.
                 </td>
               </tr>
@@ -55,6 +57,8 @@ export default function VerifyRetailCif() {
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.name}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.email || '-'}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.phone || '-'}</td>
+                  <td className="p-2 border-r border-[#e4e4e4]">{cif.issuedBy || '-'}</td>
+                  <td className="p-2 border-r border-[#e4e4e4]">{cif.verifiedBy || '-'}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">
                     <span className="text-orange-600 font-semibold uppercase">{cif.status}</span>
                   </td>

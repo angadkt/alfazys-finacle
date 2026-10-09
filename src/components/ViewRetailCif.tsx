@@ -31,13 +31,15 @@ export default function ViewRetailCif() {
               <th className="p-2 border-r border-[#a0a0a0]">Name</th>
               <th className="p-2 border-r border-[#a0a0a0]">Email</th>
               <th className="p-2 border-r border-[#a0a0a0]">Phone</th>
+              <th className="p-2 border-r border-[#a0a0a0]">Issued By</th>
+              <th className="p-2 border-r border-[#a0a0a0]">Verified By</th>
               <th className="p-2 border-r border-[#a0a0a0]">Status</th>
             </tr>
           </thead>
           <tbody>
             {verifiedCifs.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-4 text-center text-[12px] text-gray-500">
+                <td colSpan={7} className="p-4 text-center text-[12px] text-gray-500">
                   No verified CIFs found.
                 </td>
               </tr>
@@ -48,6 +50,8 @@ export default function ViewRetailCif() {
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.name}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.email || '-'}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.phone || '-'}</td>
+                  <td className="p-2 border-r border-[#e4e4e4]">{cif.issuedBy || '-'}</td>
+                  <td className="p-2 border-r border-[#e4e4e4]">{cif.verifiedBy || '-'}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">
                     <span className="text-green-600 font-semibold uppercase">Verified</span>
                   </td>

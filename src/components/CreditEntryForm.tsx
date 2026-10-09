@@ -44,6 +44,7 @@ function numberToIndianWords(num: number): string {
 export default function CreditEntryForm() {
   // Navigation / Tab state
   const [activeMainTab, setActiveMainTab] = useState<'stepper' | 'inquiry' | 'reports'>('stepper');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [selectedFunction, setSelectedFunction] = useState<string>('A-ADD');
 
@@ -51,9 +52,8 @@ export default function CreditEntryForm() {
   // Form State
   const [formData, setFormData] = useState({
     beneficiaryName: 'IBRAHIM KALEEL N A',
-    accountHolderName: 'IBRAHIM KALEEL N A',
+    transactionDate: new Date().toISOString().split('T')[0],
     accountNumber: '40617101127003',
-    confirmAccountNumber: '40617101127003',
     ifscCode: 'KLGB0040617',
     bankName: 'KERALA GRAMIN BANK',
     branchName: 'KASARAGOD MAIN BRANCH',
@@ -117,21 +117,15 @@ export default function CreditEntryForm() {
     if (step === 1) {
       if (!formData.beneficiaryName.trim()) errors.beneficiaryName = 'Beneficiary Name is required';
       if (!formData.accountNumber.trim()) errors.accountNumber = 'Account Number is required';
-      if (!formData.confirmAccountNumber.trim()) errors.confirmAccountNumber = 'Confirm Account Number is required';
-      if (formData.accountNumber !== formData.confirmAccountNumber) {
-        errors.confirmAccountNumber = 'Account numbers do not match';
-      }
+
       if (!formData.ifscCode.trim()) errors.ifscCode = 'IFSC Code is required';
       if (!formData.bankName.trim()) errors.bankName = 'Bank Name is required';
+
+      if (!totalEnteredAmount || totalEnteredAmount <= 0) errors.totalAmount = 'Valid total amount is required';
+      if (!formData.paymentDate) errors.paymentDate = 'Payment Date is required';
     }
 
     if (step === 2) {
-      if (!totalEnteredAmount || totalEnteredAmount <= 0) errors.totalAmount = 'Valid total amount is required';
-      if (!formData.paymentDate) errors.paymentDate = 'Payment Date is required';
-      if (!formData.companyBankAccount) errors.companyBankAccount = 'Company Bank Account is required';
-    }
-
-    if (step === 3) {
       if (utrItems.length === 0) {
         errors.utr = 'At least one UTR record is required';
       }
@@ -157,7 +151,7 @@ export default function CreditEntryForm() {
   const handleNextStep = () => {
     if (validateStep(currentStep)) {
       setStepErrors({});
-      setCurrentStep(prev => Math.min(prev + 1, 4));
+      setCurrentStep(prev => Math.min(prev + 1, 3));
     }
   };
 
@@ -194,9 +188,8 @@ export default function CreditEntryForm() {
   const handleLoadUserSample = () => {
     setFormData({
       beneficiaryName: 'IBRAHIM KALEEL N A',
-      accountHolderName: 'IBRAHIM KALEEL N A',
+      transactionDate: new Date().toISOString().split('T')[0],
       accountNumber: '40617101127003',
-      confirmAccountNumber: '40617101127003',
       ifscCode: 'KLGB0040617',
       bankName: 'KERALA GRAMIN BANK',
       branchName: 'KASARAGOD MAIN BRANCH',
@@ -207,7 +200,7 @@ export default function CreditEntryForm() {
       paymentMode: 'Bank Transfer',
       companyBankAccount: 'KERALA GRAMIN BANK - TREASURY 4061001928',
       purpose: 'Vendor Payout / Client Credit Settlement',
-      remarks: 'Settled via 2 UTR tranches (Completed 👍)'
+      remarks: 'Settled via 2 UTR tranches (Completed)'
     });
     setUtrItems([
       {
@@ -231,9 +224,8 @@ export default function CreditEntryForm() {
   const handleClearForm = () => {
     setFormData({
       beneficiaryName: '',
-      accountHolderName: '',
+      transactionDate: new Date().toISOString().split('T')[0],
       accountNumber: '',
-      confirmAccountNumber: '',
       ifscCode: '',
       bankName: '',
       branchName: '',
@@ -268,7 +260,7 @@ export default function CreditEntryForm() {
     const newEntry = dbService.addCreditEntry({
       paymentDate: formData.paymentDate,
       beneficiaryName: formData.beneficiaryName.trim(),
-      accountHolderName: formData.accountHolderName.trim() || formData.beneficiaryName.trim(),
+      transactionDate: formData.transactionDate,
       accountNumber: formData.accountNumber.trim(),
       ifscCode: formData.ifscCode.trim().toUpperCase(),
       bankName: formData.bankName.trim(),
@@ -277,7 +269,7 @@ export default function CreditEntryForm() {
       paymentMode: formData.paymentMode,
       companyBankAccount: formData.companyBankAccount,
       purpose: formData.purpose,
-      remarks: formData.remarks || 'Completed 👍',
+      remarks: formData.remarks || 'Completed',
       status: 'Completed',
       createdBy: 'UBSADMIN'
     });
@@ -334,9 +326,8 @@ export default function CreditEntryForm() {
 
   const stepsList = [
     { num: 1, label: '1. Beneficiary & Bank Info' },
-    { num: 2, label: '2. Payment & Source Account' },
-    { num: 3, label: '3. UTR Split Settlement' },
-    { num: 4, label: '4. Verification & Ledger Post' }
+    { num: 2, label: '2. UTR Split Settlement' },
+    { num: 3, label: '3. Verification & Ledger Post' }
   ];
 
   return (
@@ -384,10 +375,11 @@ export default function CreditEntryForm() {
         </div>
       </div>
 
+
       {/* 2. Main Navigation Tabs (Classic Finacle 2004 Tabs) */}
-      <div className="flex border-b border-[#a0a0a0] bg-[#e4e4e4] px-2 pt-1 gap-1">
+      <div className="flex border-b border-[#a0a0a0] bg-[#e4e4e4] px-2 pt-1 gap-1 m-1">
         <button
-          onClick={() => setActiveMainTab('stepper')}
+          onClick={() => { setActiveMainTab('stepper'); setIsModalOpen(true); }}
           className={`px-4 py-1.5 text-[11px] font-bold border border-b-0 border-[#a0a0a0] rounded-t-sm select-none transition-none ${
             activeMainTab === 'stepper' 
               ? 'bg-white text-[#104080] shadow-[inset_0_2px_0_#104080]' 
@@ -399,7 +391,7 @@ export default function CreditEntryForm() {
         </button>
         <button
           onClick={() => {
-            setActiveMainTab('inquiry');
+            setActiveMainTab('inquiry'); setIsModalOpen(true);
             loadEntries();
           }}
           className={`px-4 py-1.5 text-[11px] font-bold border border-b-0 border-[#a0a0a0] rounded-t-sm select-none transition-none ${
@@ -413,7 +405,7 @@ export default function CreditEntryForm() {
         </button>
         <button
           onClick={() => {
-            setActiveMainTab('reports');
+            setActiveMainTab('reports'); setIsModalOpen(true);
             loadEntries();
           }}
           className={`px-4 py-1.5 text-[11px] font-bold border border-b-0 border-[#a0a0a0] rounded-t-sm select-none transition-none ${
@@ -426,6 +418,27 @@ export default function CreditEntryForm() {
           [ CREDIT ENTRY REPORTS & AUDIT (SRS 13.5) ]
         </button>
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
+          <div className="bg-[#e4e4e4] shadow-2xl flex flex-col h-[95vh] w-[95vw] max-w-[1400px] border-2 border-[#104080] rounded-[2px] overflow-hidden">
+            
+            {/* Window Title Bar */}
+            <div className="bg-[#104080] text-white px-2 py-1 flex items-center justify-between text-[11px] font-bold select-none cursor-move">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-white flex items-center justify-center">
+                  <div className="w-2 h-2 bg-[#104080]"></div>
+                </div>
+                FINCORE Credit Entry Management Module
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8]"
+              >
+                X
+              </button>
+            </div>
+
 
       {/* 3. Main Body */}
       <div className="flex-1 bg-white border border-[#a0a0a0] m-1 p-3 flex flex-col overflow-auto">
@@ -453,7 +466,7 @@ export default function CreditEntryForm() {
               </div>
 
               {/* Step Tabs Indicator */}
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 {stepsList.map(step => {
                   const isActive = currentStep === step.num;
                   const isDone = currentStep > step.num;
@@ -513,7 +526,7 @@ export default function CreditEntryForm() {
                   <span className="text-[11px] font-normal text-gray-600">* Indicates mandatory fields</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-10 gap-y-2.5 max-w-4xl text-[11px] p-1">
+                <div className="grid grid-cols-2 gap-x-10 gap-y-2.5 w-full text-[11px] p-1">
                   
                   {/* Beneficiary Name */}
                   <div className="flex items-center">
@@ -527,7 +540,7 @@ export default function CreditEntryForm() {
                         onChange={(e) => setFormData({ 
                           ...formData, 
                           beneficiaryName: e.target.value,
-                          accountHolderName: formData.accountHolderName === formData.beneficiaryName ? e.target.value : formData.accountHolderName
+                          transactionDate: formData.transactionDate
                         })}
                         placeholder="e.g. IBRAHIM KALEEL N A"
                         className="border border-[#7f9db9] px-2 h-[26px] focus:outline-none uppercase font-semibold text-[11px] w-full"
@@ -535,16 +548,16 @@ export default function CreditEntryForm() {
                     </div>
                   </div>
 
-                  {/* Account Holder Name */}
+                  {/* Transaction Date */}
                   <div className="flex items-center">
                     <span className="w-40 font-semibold text-black">
-                      Account Holder Name
+                      Transaction Date
                     </span>
                     <input 
-                      type="text" 
-                      value={formData.accountHolderName}
-                      onChange={(e) => setFormData({ ...formData, accountHolderName: e.target.value })}
-                      placeholder="Name registered with bank"
+                      type="date" 
+                      value={formData.transactionDate}
+                      onChange={(e) => setFormData({ ...formData, transactionDate: e.target.value })}
+                      
                       className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none uppercase text-[11px]"
                     />
                   </div>
@@ -563,19 +576,6 @@ export default function CreditEntryForm() {
                     />
                   </div>
 
-                  {/* Confirm Account Number */}
-                  <div className="flex items-center">
-                    <span className="w-40 font-semibold text-black">
-                      Confirm A/C Number <span className="text-red-600">*</span>
-                    </span>
-                    <input 
-                      type="text" 
-                      value={formData.confirmAccountNumber}
-                      onChange={(e) => setFormData({ ...formData, confirmAccountNumber: e.target.value })}
-                      placeholder="Re-enter to verify"
-                      className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none font-mono text-[12px]"
-                    />
-                  </div>
 
                   {/* IFSC Code */}
                   <div className="flex items-center">
@@ -618,21 +618,10 @@ export default function CreditEntryForm() {
                     />
                   </div>
 
-                  {/* Beneficiary Contact Phone */}
-                  <div className="flex items-center">
-                    <span className="w-40 font-semibold text-black">Contact Mobile</span>
-                    <input 
-                      type="text" 
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="Optional phone number"
-                      className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none text-[11px]"
-                    />
-                  </div>
                 </div>
 
                 {/* Info Note */}
-                <div className="mt-4 p-2 bg-[#f4f7f9] border border-[#a0a0a0] text-[11px] text-gray-700 max-w-4xl">
+                <div className="mt-4 p-2 bg-[#f4f7f9] border border-[#a0a0a0] text-[11px] text-gray-700 w-full">
                   <div className="font-bold text-[#1e4676] mb-0.5">ℹ Banking Validation Note:</div>
                   Beneficiary details are validated against standard Indian Banking IFSC clearing formats.
                   Once verified, the payout amount will be scheduled in Step 2.
@@ -648,7 +637,7 @@ export default function CreditEntryForm() {
                   <span className="text-[11px] font-normal text-gray-600">* Indicates mandatory fields</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-10 gap-y-2.5 max-w-4xl text-[11px] p-1">
+                <div className="grid grid-cols-2 gap-x-10 gap-y-2.5 w-full text-[11px] p-1">
                   
                   {/* Total Outgoing Amount */}
                   <div className="flex items-center">
@@ -690,70 +679,10 @@ export default function CreditEntryForm() {
                     </span>
                   </div>
 
-                  {/* Payment Mode */}
-                  <div className="flex items-center">
-                    <span className="w-44 font-semibold text-black">
-                      Payment Mode <span className="text-red-600">*</span>
-                    </span>
-                    <select 
-                      value={formData.paymentMode}
-                      onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value as any })}
-                      className="flex-1 border border-[#7f9db9] bg-white px-2 h-[26px] focus:outline-none text-[11px] font-semibold"
-                    >
-                      <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="RTGS">RTGS (Real Time Gross Settlement)</option>
-                      <option value="NEFT">NEFT (National Electronic Fund Transfer)</option>
-                      <option value="IMPS">IMPS (Immediate Payment Service)</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Cheque">Cheque</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  {/* Company Source Bank Account */}
-                  <div className="flex items-center">
-                    <span className="w-44 font-semibold text-black">
-                      Company Bank Account <span className="text-red-600">*</span>
-                    </span>
-                    <select 
-                      value={formData.companyBankAccount}
-                      onChange={(e) => setFormData({ ...formData, companyBankAccount: e.target.value })}
-                      className="flex-1 border border-[#7f9db9] bg-white px-2 h-[26px] focus:outline-none text-[11px] font-semibold text-[#1e4676]"
-                    >
-                      <option value="KERALA GRAMIN BANK - TREASURY 4061001928">KERALA GRAMIN BANK - TREASURY 4061001928</option>
-                      <option value="HDFC BANK - CORP SETTLEMENT 5020003182">HDFC BANK - CORP SETTLEMENT 5020003182</option>
-                      <option value="STATE BANK OF INDIA - CMS 3102948123">STATE BANK OF INDIA - CMS 3102948123</option>
-                      <option value="ADCB UAE - INR ESCROW 9912837102">ADCB UAE - INR ESCROW 9912837102</option>
-                    </select>
-                  </div>
-
-                  {/* Purpose / Description */}
-                  <div className="flex items-center">
-                    <span className="w-44 font-semibold text-black">Purpose / Description</span>
-                    <input 
-                      type="text" 
-                      value={formData.purpose}
-                      onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                      placeholder="e.g. Vendor Settlement / Customer Credit"
-                      className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none text-[11px]"
-                    />
-                  </div>
-
-                  {/* Internal Remarks */}
-                  <div className="flex items-center">
-                    <span className="w-44 font-semibold text-black">Remarks / Note</span>
-                    <input 
-                      type="text" 
-                      value={formData.remarks}
-                      onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                      placeholder="e.g. Approved by UBSADMIN"
-                      className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none text-[11px]"
-                    />
-                  </div>
                 </div>
 
                 {/* Accounting Impact Preview Box */}
-                <div className="mt-4 p-2 bg-[#f0f4f8] border border-[#8fa8c0] text-[11px] text-black max-w-4xl">
+                <div className="mt-4 p-2 bg-[#f0f4f8] border border-[#8fa8c0] text-[11px] text-black w-full">
                   <div className="font-bold text-[#1e4676] mb-1">
                     SRS 13.3 Accounting Impact Notification:
                   </div>
@@ -763,180 +692,177 @@ export default function CreditEntryForm() {
             )}
 
             {/* STEP 3: UTR & Settlement Breakdown */}
-            {currentStep === 3 && (
-              <div className="flex-1 flex flex-col">
-                <div className="bg-[#eaf0f8] px-2 py-1 font-bold text-[#104080] border-y border-[#a2b5cd] mb-2 text-[12px] flex items-center justify-between">
-                  <span>Step 3: UTR Numbers & Split Settlement Allocation (User Requirement)</span>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => {
-                        setUtrItems([
-                          { id: 'u1', amount: 24000, utrNumber: '005624886268', status: 'Completed', timestamp: '2026-10-07 10:14' },
-                          { id: 'u2', amount: 20000, utrNumber: '293973571072', status: 'Completed', timestamp: '2026-10-07 10:28' }
-                        ]);
-                        setFormData({ ...formData, totalAmount: '44000' });
-                      }}
-                      className="bg-[#d4d0c8] border border-gray-500 px-2 py-0.5 text-[10px] text-black hover:bg-[#eaeaea] font-bold"
-                    >
-                      Preset: 24,000 + 20,000 Split
-                    </button>
-                    <button 
-                      onClick={handleAddUtrRow}
-                      className="bg-[#316ac5] text-white px-2 py-0.5 text-[10px] font-bold border border-[#1e4676] hover:bg-[#2055a4]"
-                    >
-                      + Add UTR Row
-                    </button>
-                  </div>
-                </div>
-
-                {/* Allocation Balance Banner */}
-                <div className={`p-2 border mb-3 flex items-center justify-between text-[11px] ${
-                  Math.abs(remainingUtrBalance) < 0.01 
-                    ? 'bg-[#e2f0d9] border-[#a9d18e] text-[#276a3c]' 
-                    : 'bg-[#fff2cc] border-[#ffe599] text-[#b25900]'
-                }`}>
-                  <div className="flex items-center gap-4">
-                    <div>
-                      Total Target Amount: <strong className="text-[12px]">₹ {totalEnteredAmount.toLocaleString()}</strong>
+            {currentStep === 2 && (
+              <div className="bg-[#f8f9fa] border border-[#a0a0a0] p-4 flex flex-col h-full">
+                    <div className="flex items-center gap-2 mb-3 self-end">
+                      <button 
+                        onClick={() => {
+                          setUtrItems([
+                            { id: 'u1', amount: 24000, utrNumber: '005624886268', status: 'Completed', timestamp: '2026-10-07 10:14' },
+                            { id: 'u2', amount: 20000, utrNumber: '293973571072', status: 'Completed', timestamp: '2026-10-07 10:28' }
+                          ]);
+                          setFormData({ ...formData, totalAmount: '44000' });
+                        }}
+                        className="bg-[#d4d0c8] border border-gray-500 px-3 py-1 text-[11px] text-black hover:bg-[#eaeaea] font-bold"
+                      >
+                        Preset: 24,000 + 20,000 Split
+                      </button>
+                      <button 
+                        onClick={handleAddUtrRow}
+                        className="bg-[#316ac5] text-white px-3 py-1 text-[11px] font-bold border border-[#1e4676] hover:bg-[#2055a4]"
+                      >
+                        + Add UTR Row
+                      </button>
                     </div>
-                    <div>
-                      Sum of Entered UTRs: <strong className="text-[12px]">₹ {totalUtrAllocated.toLocaleString()}</strong>
+
+                    {/* Allocation Balance Banner */}
+                    <div className={`p-3 border mb-4 flex items-center justify-between text-[11px] ${
+                      Math.abs(remainingUtrBalance) < 0.01 
+                        ? 'bg-[#e2f0d9] border-[#a9d18e] text-[#276a3c]' 
+                        : 'bg-[#fff2cc] border-[#ffe599] text-[#b25900]'
+                    }`}>
+                      <div className="flex items-center gap-6">
+                        <div>
+                          Total Target Amount: <strong className="text-[13px]">₹ {totalEnteredAmount.toLocaleString()}</strong>
+                        </div>
+                        <div>
+                          Sum of Entered UTRs: <strong className="text-[13px]">₹ {totalUtrAllocated.toLocaleString()}</strong>
+                        </div>
+                        <div>
+                          Difference Remaining: <strong className={`text-[13px] ${remainingUtrBalance !== 0 ? 'text-red-600' : 'text-green-700'}`}>
+                            ₹ {remainingUtrBalance.toLocaleString()}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="font-bold flex items-center gap-1">
+                        {Math.abs(remainingUtrBalance) < 0.01 ? (
+                          <span className="flex items-center gap-1 bg-[#276a3c] text-white px-3 py-1 text-[11px]">
+                            ✓ 100% BALANCED & READY (Completed)
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 text-[11px]">
+                            ⚠ Discrepancy of ₹ {remainingUtrBalance.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      Difference Remaining: <strong className={`text-[12px] ${remainingUtrBalance !== 0 ? 'text-red-600' : 'text-green-700'}`}>
-                        ₹ {remainingUtrBalance.toLocaleString()}
-                      </strong>
+
+                    {/* UTR Table */}
+                    <div className="border border-[#a0a0a0] bg-white overflow-hidden shadow-sm">
+                      <table className="w-full border-collapse text-[11px]">
+                        <thead>
+                          <tr className="bg-[#d4d0c8] border-b border-[#a0a0a0] text-left text-black">
+                            <th className="p-2.5 border-r border-[#a0a0a0] w-12 text-center">Tranche</th>
+                            <th className="p-2.5 border-r border-[#a0a0a0] w-48">Amount (INR) *</th>
+                            <th className="p-2.5 border-r border-[#a0a0a0]">UTR Number (Bank Ref) *</th>
+                            <th className="p-2.5 border-r border-[#a0a0a0] w-36">Status</th>
+                            <th className="p-2.5 border-r border-[#a0a0a0] w-40">Timestamp</th>
+                            <th className="p-2.5 w-20 text-center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {utrItems.map((item, index) => (
+                            <tr key={item.id || index} className="border-b border-[#e4e4e4] hover:bg-[#f9fafb]">
+                              <td className="p-2 border-r border-[#e4e4e4] text-center font-bold text-[#1e4676]">
+                                #{index + 1}
+                              </td>
+                              <td className="p-2 border-r border-[#e4e4e4]">
+                                <div className="flex items-center">
+                                  <span className="bg-[#f0f0f0] border border-r-0 border-[#7f9db9] px-2 h-[26px] flex items-center text-[11px] text-gray-700">₹</span>
+                                  <input 
+                                    type="number" 
+                                    value={item.amount || ''}
+                                    onChange={(e) => handleUtrChange(index, 'amount', parseFloat(e.target.value) || 0)}
+                                    placeholder="Amount"
+                                    className="w-full border border-[#7f9db9] px-2 h-[26px] focus:outline-none font-bold text-[#1e4676]"
+                                  />
+                                </div>
+                              </td>
+                              <td className="p-2 border-r border-[#e4e4e4]">
+                                <input 
+                                  type="text" 
+                                  value={item.utrNumber}
+                                  onChange={(e) => handleUtrChange(index, 'utrNumber', e.target.value)}
+                                  placeholder="e.g. 005624886268 or 293973571072"
+                                  className="w-full border border-[#7f9db9] px-2 h-[26px] focus:outline-none font-mono font-bold text-black"
+                                />
+                              </td>
+                              <td className="p-2 border-r border-[#e4e4e4]">
+                                <select 
+                                  value={item.status}
+                                  onChange={(e) => handleUtrChange(index, 'status', e.target.value)}
+                                  className="w-full border border-[#7f9db9] bg-white px-1 h-[26px] focus:outline-none text-[11px] font-semibold text-green-700"
+                                >
+                                  <option value="Completed">Completed</option>
+                                  <option value="Pending">Pending</option>
+                                  <option value="Failed">Failed</option>
+                                </select>
+                              </td>
+                              <td className="p-2 border-r border-[#e4e4e4] text-gray-600 text-[10px]">
+                                {item.timestamp || 'Auto on save'}
+                              </td>
+                              <td className="p-2 text-center">
+                                <button 
+                                  onClick={() => handleRemoveUtrRow(index)}
+                                  disabled={utrItems.length <= 1}
+                                  title="Delete UTR row"
+                                  className={`px-3 py-1 text-[10px] border font-bold ${
+                                    utrItems.length <= 1 
+                                      ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed' 
+                                      : 'bg-[#ffebee] text-[#c62828] border-[#ef9a9a] hover:bg-[#ffcdd2]'
+                                  }`}
+                                >
+                                  Remove
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-[#e4e9f0] font-bold text-black border-t border-[#a0a0a0]">
+                            <td className="p-2.5 text-center" colSpan={1}>Total</td>
+                            <td className="p-2.5 text-[#1e4676] font-mono text-[13px]">₹ {totalUtrAllocated.toLocaleString()}</td>
+                            <td className="p-2.5 text-gray-700" colSpan={4}>
+                              {utrItems.length} linked UTR transaction(s) entered
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
                     </div>
-                  </div>
 
-                  <div className="font-bold flex items-center gap-1">
-                    {Math.abs(remainingUtrBalance) < 0.01 ? (
-                      <span className="flex items-center gap-1 bg-[#276a3c] text-white px-2 py-0.5 text-[10px]">
-                        ✓ 100% BALANCED & READY (Completed 👍)
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 bg-red-600 text-white px-2 py-0.5 text-[10px]">
-                        ⚠ Discrepancy of ₹ {remainingUtrBalance.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* UTR Table */}
-                <div className="border border-[#a0a0a0] bg-white overflow-hidden shadow-sm">
-                  <table className="w-full border-collapse text-[11px]">
-                    <thead>
-                      <tr className="bg-[#d4d0c8] border-b border-[#a0a0a0] text-left text-black">
-                        <th className="p-2 border-r border-[#a0a0a0] w-12 text-center">Tranche</th>
-                        <th className="p-2 border-r border-[#a0a0a0] w-44">Amount (INR) *</th>
-                        <th className="p-2 border-r border-[#a0a0a0]">UTR Number (Bank Ref) *</th>
-                        <th className="p-2 border-r border-[#a0a0a0] w-36">Status</th>
-                        <th className="p-2 border-r border-[#a0a0a0] w-40">Timestamp</th>
-                        <th className="p-2 w-20 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {utrItems.map((item, index) => (
-                        <tr key={item.id || index} className="border-b border-[#e4e4e4] hover:bg-[#f9fafb]">
-                          <td className="p-2 border-r border-[#e4e4e4] text-center font-bold text-[#1e4676]">
-                            #{index + 1}
-                          </td>
-                          <td className="p-2 border-r border-[#e4e4e4]">
-                            <div className="flex items-center">
-                              <span className="bg-[#f0f0f0] border border-r-0 border-[#7f9db9] px-1.5 h-[24px] flex items-center text-[10px] text-gray-700">₹</span>
-                              <input 
-                                type="number" 
-                                value={item.amount || ''}
-                                onChange={(e) => handleUtrChange(index, 'amount', parseFloat(e.target.value) || 0)}
-                                placeholder="Amount"
-                                className="w-full border border-[#7f9db9] px-2 h-[24px] focus:outline-none font-bold text-[#1e4676]"
-                              />
-                            </div>
-                          </td>
-                          <td className="p-2 border-r border-[#e4e4e4]">
-                            <input 
-                              type="text" 
-                              value={item.utrNumber}
-                              onChange={(e) => handleUtrChange(index, 'utrNumber', e.target.value)}
-                              placeholder="e.g. 005624886268 or 293973571072"
-                              className="w-full border border-[#7f9db9] px-2 h-[24px] focus:outline-none font-mono font-bold text-black"
-                            />
-                          </td>
-                          <td className="p-2 border-r border-[#e4e4e4]">
-                            <select 
-                              value={item.status}
-                              onChange={(e) => handleUtrChange(index, 'status', e.target.value)}
-                              className="w-full border border-[#7f9db9] bg-white px-1 h-[24px] focus:outline-none text-[11px] font-semibold text-green-700"
-                            >
-                              <option value="Completed">Completed 👍</option>
-                              <option value="Pending">Pending</option>
-                              <option value="Failed">Failed</option>
-                            </select>
-                          </td>
-                          <td className="p-2 border-r border-[#e4e4e4] text-gray-600 text-[10px]">
-                            {item.timestamp || 'Auto on save'}
-                          </td>
-                          <td className="p-2 text-center">
-                            <button 
-                              onClick={() => handleRemoveUtrRow(index)}
-                              disabled={utrItems.length <= 1}
-                              title="Delete UTR row"
-                              className={`px-2 py-0.5 text-[10px] border ${
-                                utrItems.length <= 1 
-                                  ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed' 
-                                  : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
-                              }`}
-                            >
-                              Remove
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="bg-[#f2f4f7] font-bold text-black border-t border-[#a0a0a0]">
-                        <td className="p-2 text-center" colSpan={1}>Total</td>
-                        <td className="p-2 text-[#1e4676] font-mono text-[12px]">₹ {totalUtrAllocated.toLocaleString()}</td>
-                        <td className="p-2 text-gray-600" colSpan={4}>
-                          {utrItems.length} linked UTR transaction(s) entered
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-
-                {/* Example helper banner */}
-                <div className="mt-3 p-2 bg-[#fdfdfd] border border-dashed border-[#a0a0a0] flex items-center justify-between text-[11px]">
-                  <div>
-                    <span className="font-bold text-[#1e4676]">Client Reference Example:</span>
-                    <span className="ml-2 font-mono text-gray-800">44,000 Total | 24,000-005624886268 | 20,000-293973571072 (Completed 👍)</span>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      if (remainingUtrBalance > 0) {
-                        setUtrItems([
-                          ...utrItems,
-                          {
-                            id: `utr-${Date.now()}`,
-                            amount: remainingUtrBalance,
-                            utrNumber: '',
-                            status: 'Completed',
-                            timestamp: new Date().toLocaleString()
+                    {/* Example helper banner */}
+                    <div className="mt-4 p-3 bg-white border border-dashed border-[#a0a0a0] flex items-center justify-between text-[11px] shadow-sm">
+                      <div>
+                        <span className="font-bold text-[#1e4676]">Client Reference Example:</span>
+                        <span className="ml-2 font-mono text-gray-800">44,000 Total | 24,000-005624886268 | 20,000-293973571072 (Completed)</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          if (remainingUtrBalance > 0) {
+                            setUtrItems([
+                              ...utrItems,
+                              {
+                                id: `utr-${Date.now()}`,
+                                amount: remainingUtrBalance,
+                                utrNumber: '',
+                                status: 'Completed',
+                                timestamp: new Date().toLocaleString()
+                              }
+                            ]);
                           }
-                        ]);
-                      }
-                    }}
-                    disabled={remainingUtrBalance <= 0}
-                    className="text-[#104080] underline font-bold disabled:text-gray-400"
-                  >
-                    + Allocate remaining balance (₹{Math.max(0, remainingUtrBalance).toLocaleString()})
-                  </button>
-                </div>
+                        }}
+                        disabled={remainingUtrBalance <= 0}
+                        className="text-[#104080] underline font-bold disabled:text-gray-400 text-[12px]"
+                      >
+                        + Allocate remaining balance (₹{Math.max(0, remainingUtrBalance).toLocaleString()})
+                      </button>
+                    </div>
               </div>
             )}
 
-            {/* STEP 4: Verification & Ledger Post */}
-            {currentStep === 4 && (
+            {/* STEP 3: Verification & Ledger Post */}
+            {currentStep === 3 && (
               <div className="flex-1 flex flex-col">
                 <div className="bg-[#eaf0f8] px-2 py-1 font-bold text-[#104080] border-y border-[#a2b5cd] mb-3 text-[12px] flex items-center justify-between">
                   <span>Step 4: Review Payment Voucher & FINCORE Accounting Posting</span>
@@ -1014,7 +940,7 @@ export default function CreditEntryForm() {
                           <td className="p-1.5 border-r border-[#e4e4e4] font-bold">{i + 1}</td>
                           <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#1e4676]">₹ {u.amount.toLocaleString()}</td>
                           <td className="p-1.5 border-r border-[#e4e4e4] font-mono font-bold">{u.utrNumber}</td>
-                          <td className="p-1.5 border-r border-[#e4e4e4] text-green-700 font-bold">{u.status} 👍</td>
+                          <td className="p-1.5 border-r border-[#e4e4e4] text-green-700 font-bold">{u.status}</td>
                           <td className="p-1.5 text-gray-600 text-[10px]">{u.timestamp}</td>
                         </tr>
                       ))}
@@ -1071,7 +997,7 @@ export default function CreditEntryForm() {
                   </button>
                 )}
 
-                {currentStep < 4 ? (
+                {currentStep < 3 ? (
                   <button
                     onClick={handleNextStep}
                     className="bg-[#316ac5] text-white border-t-2 border-l-2 border-[#6ba4f8] border-b-2 border-r-2 border-b-[#103b78] border-r-[#103b78] hover:bg-[#2055a4] px-5 py-1 text-xs font-bold flex items-center gap-1 active:border-t-[#103b78] active:border-l-[#103b78]"
@@ -1174,13 +1100,15 @@ export default function CreditEntryForm() {
                     <th className="p-2 border-r border-[#a0a0a0]">Linked UTR(s)</th>
                     <th className="p-2 border-r border-[#a0a0a0] w-24">Mode</th>
                     <th className="p-2 border-r border-[#a0a0a0] w-24 text-center">Status</th>
+                    <th className="p-2 border-r border-[#a0a0a0] text-center">Issued By</th>
+                    <th className="p-2 border-r border-[#a0a0a0] text-center">Verified By</th>
                     <th className="p-2 w-28 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredEntries.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="p-6 text-center text-gray-500 italic">
+                      <td colSpan={12} className="p-6 text-center text-gray-500 italic">
                         No credit entry records matched your criteria.
                       </td>
                     </tr>
@@ -1229,8 +1157,14 @@ export default function CreditEntryForm() {
                                 ? 'bg-red-100 text-red-800 border-red-300'
                                 : 'bg-yellow-100 text-yellow-800 border-yellow-300'
                           }`}>
-                            {entry.status} {entry.status === 'Completed' && '👍'}
+                            {entry.status} {entry.status === 'Completed' && ''}
                           </span>
+                        </td>
+                        <td className="p-2 border-r border-[#e4e4e4] text-center text-gray-700">
+                          {entry.createdBy || '-'}
+                        </td>
+                        <td className="p-2 border-r border-[#e4e4e4] text-center text-gray-700">
+                          -
                         </td>
                         <td className="p-2 text-center">
                           <div className="flex items-center justify-center gap-1">
@@ -1332,7 +1266,8 @@ export default function CreditEntryForm() {
                     <th className="p-1.5 border-r border-[#a0a0a0]">Target Bank & IFSC</th>
                     <th className="p-1.5 border-r border-[#a0a0a0]">Source Treasury Account</th>
                     <th className="p-1.5 border-r border-[#a0a0a0]">Entry ID</th>
-                    <th className="p-1.5">Created By</th>
+                    <th className="p-1.5 border-r border-[#a0a0a0]">Issued By</th>
+                    <th className="p-1.5">Verified By</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1345,7 +1280,8 @@ export default function CreditEntryForm() {
                         <td className="p-1.5 border-r border-[#e4e4e4]">{entry.bankName} ({entry.ifscCode})</td>
                         <td className="p-1.5 border-r border-[#e4e4e4]">{entry.companyBankAccount}</td>
                         <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#1e4676]">{entry.id}</td>
-                        <td className="p-1.5">{entry.createdBy}</td>
+                        <td className="p-1.5 border-r border-[#e4e4e4]">{entry.createdBy || '-'}</td>
+                        <td className="p-1.5">-</td>
                       </tr>
                     ))
                   )}
@@ -1357,6 +1293,10 @@ export default function CreditEntryForm() {
 
       </div>
 
+
+          </div>
+        </div>
+      )}
       {/* ===================== MODAL: SUCCESS CONFIRMATION (Classic 2004 Finacle Dialog) ===================== */}
       {submittedEntry && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -1386,7 +1326,7 @@ export default function CreditEntryForm() {
                   <div>Beneficiary: <strong>{submittedEntry.beneficiaryName}</strong> (A/C: {submittedEntry.accountNumber})</div>
                   <div>Bank: <strong>{submittedEntry.bankName}</strong> ({submittedEntry.ifscCode})</div>
                   <div className="text-green-800 font-bold mt-1">
-                    Total Amount: ₹ {submittedEntry.totalAmount.toLocaleString()} • Status: Completed 👍
+                    Total Amount: ₹ {submittedEntry.totalAmount.toLocaleString()} • Status: Completed
                   </div>
                   <div className="mt-1 text-[11px] bg-white border border-[#a0a0a0] p-1.5 font-mono">
                     Linked UTR(s):
@@ -1456,7 +1396,7 @@ export default function CreditEntryForm() {
                 <div className="text-right text-[11px]">
                   <div className="font-bold text-black">ENTRY REF: {selectedVoucher.id}</div>
                   <div className="text-gray-600">Date: {selectedVoucher.paymentDate}</div>
-                  <div className="text-green-700 font-bold uppercase">STATUS: {selectedVoucher.status} 👍</div>
+                  <div className="text-green-700 font-bold uppercase">STATUS: {selectedVoucher.status}</div>
                 </div>
               </div>
 
