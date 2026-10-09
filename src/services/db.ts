@@ -244,6 +244,11 @@ export const dbService = {
     localStorage.setItem('infazys_finacle_active_role', role);
   },
 
+  // Clear user session
+  clearUserSession: (): void => {
+    localStorage.removeItem('infazys_finacle_active_role');
+  },
+
   // Get user profile based on role
   getUser: (): User => {
     const role = (localStorage.getItem('infazys_finacle_active_role') as UserRole) || 'super_admin';
@@ -460,6 +465,18 @@ export const dbService = {
     db.creditEntries[index].status = 'Cancelled';
     saveDb(db);
     return db.creditEntries[index];
+  },
+
+  deleteCreditEntry: (id: string): boolean => {
+    const db = getDb();
+    if (!db.creditEntries) return false;
+    const initialLength = db.creditEntries.length;
+    db.creditEntries = db.creditEntries.filter(e => e.id !== id);
+    if (db.creditEntries.length !== initialLength) {
+      saveDb(db);
+      return true;
+    }
+    return false;
   },
 
   // Reset database to default mock JSON state

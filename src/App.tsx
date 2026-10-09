@@ -5,6 +5,7 @@ import CustomersPage from './pages/CustomersPage';
 import CustomerViewPage from './pages/CustomerViewPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import FincorePage from './pages/FincorePage';
+import SolutionsDashboard from './pages/SolutionsDashboard';
 import { ToastProvider } from './contexts/ToastContext';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/" element={<LoginPage />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
+          <Route path="/solutions" element={<SolutionsDashboard />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/customers/new" element={<Navigate to="/customers" replace />} />

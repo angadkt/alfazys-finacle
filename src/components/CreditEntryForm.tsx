@@ -95,6 +95,7 @@ export default function CreditEntryForm() {
   const [submittedEntry, setSubmittedEntry] = useState<CreditEntry | null>(null);
   const [selectedVoucher, setSelectedVoucher] = useState<CreditEntry | null>(null);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadEntries();
@@ -249,6 +250,7 @@ export default function CreditEntryForm() {
     ]);
     setCurrentStep(1);
     setStepErrors({});
+    setEditingId(null);
   };
 
   const handleSubmit = () => {
@@ -257,7 +259,7 @@ export default function CreditEntryForm() {
       return;
     }
 
-    const newEntry = dbService.addCreditEntry({
+    const entryData = {
       paymentDate: formData.paymentDate,
       beneficiaryName: formData.beneficiaryName.trim(),
       transactionDate: formData.transactionDate,
@@ -270,12 +272,20 @@ export default function CreditEntryForm() {
       companyBankAccount: formData.companyBankAccount,
       purpose: formData.purpose,
       remarks: formData.remarks || 'Completed',
-      status: 'Completed',
+      status: 'Completed' as const,
       createdBy: 'UBSADMIN'
-    });
+    };
+
+    let savedEntry;
+    if (editingId) {
+      savedEntry = dbService.updateCreditEntry(editingId, entryData);
+      setEditingId(null);
+    } else {
+      savedEntry = dbService.addCreditEntry(entryData);
+    }
 
     loadEntries();
-    setSubmittedEntry(newEntry);
+    setSubmittedEntry(savedEntry);
   };
 
   const handleCancelEntry = (id: string) => {
@@ -283,6 +293,34 @@ export default function CreditEntryForm() {
       dbService.cancelCreditEntry(id);
       loadEntries();
     }
+  };
+
+  const handleDeleteEntry = (id: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete Credit Entry ${id}?`)) {
+      dbService.deleteCreditEntry(id);
+      loadEntries();
+    }
+  };
+
+  const handleEditEntry = (entry: any) => {
+    setFormData(prev => ({
+      ...prev,
+      beneficiaryName: entry.beneficiaryName,
+      accountNumber: entry.accountNumber,
+      ifscCode: entry.ifscCode,
+      bankName: entry.bankName,
+      totalAmount: entry.totalAmount.toString(),
+      paymentMode: entry.paymentMode,
+      companyBankAccount: entry.companyBankAccount,
+      purpose: entry.purpose,
+      remarks: entry.remarks,
+      paymentDate: entry.paymentDate,
+      transactionDate: entry.transactionDate || prev.transactionDate
+    }));
+    setUtrItems(entry.utrItems);
+    setActiveMainTab('stepper');
+    setCurrentStep(1);
+    setEditingId(entry.id);
   };
 
   const handleExportCsv = () => {
@@ -1076,8 +1114,8 @@ export default function CreditEntryForm() {
                 </button>
                 <button 
                   onClick={() => {
+                    handleClearForm();
                     setActiveMainTab('stepper');
-                    setCurrentStep(1);
                   }}
                   className="bg-[#316ac5] text-white border border-[#1e4676] px-3 py-1 text-[11px] font-bold hover:bg-[#2055a4]"
                 >
@@ -1167,23 +1205,29 @@ export default function CreditEntryForm() {
                           -
                         </td>
                         <td className="p-2 text-center">
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-2">
                             <button 
-                              onClick={() => setSelectedVoucher(entry)}
-                              title="View Payment Advice Voucher"
-                              className="bg-[#e4e4f0] border border-gray-400 hover:bg-[#d4d0c8] px-1.5 py-0.5 text-[10px] text-[#000080] font-bold"
+                              onClick={() => handleEditEntry(entry)}
+                              title="Edit Entry"
+                              className="text-[#1a4a8c] hover:underline font-bold text-[11px]"
                             >
-                              Voucher
+                              Edit
                             </button>
-                            {entry.status !== 'Cancelled' && (
-                              <button 
-                                onClick={() => handleCancelEntry(entry.id)}
-                                title="Void / Cancel Entry (Audit Retained)"
-                                className="bg-[#fff0f0] border border-red-300 hover:bg-red-100 px-1 py-0.5 text-[10px] text-red-700"
-                              >
-                                Void
-                              </button>
-                            )}
+                            <button 
+                              onClick={() => handleCancelEntry(entry.id)}
+                              title="Cancel/Void Entry"
+                              className="text-orange-600 hover:underline font-bold text-[11px]"
+                              disabled={entry.status === 'Cancelled'}
+                            >
+                              Cancel
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteEntry(entry.id)}
+                              title="Delete Entry"
+                              className="text-red-600 hover:underline font-bold text-[11px]"
+                            >
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>

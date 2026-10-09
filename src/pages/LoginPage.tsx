@@ -85,11 +85,11 @@ export default function LoginPage() {
     setTimeout(() => {
       setLoading(false);
       toast.success(`Welcome back, ${resolvedRole === 'super_admin' ? 'Administrator' : resolvedRole === 'staff' ? 'Staff Member' : 'Field Agent'}!`);
-      
       if (resolvedRole === 'staff') {
-        navigate('/change-password');
+        // According to user instruction, staff and admin both go to solutions
+        navigate('/solutions');
       } else {
-        navigate('/dashboard');
+        navigate('/solutions');
       }
     }, 800);
   };
