@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import logoImg from '../assets/alfazys-logo-nobg.png';
 import finacleLogo from '../assets/finacle-logo.png';
-import { dbService } from '../services/db';
 import type { UserRole } from '../services/db';
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';

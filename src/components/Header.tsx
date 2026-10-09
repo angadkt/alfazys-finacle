@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import finacleLogo from '../assets/finacle-logo.png';
 
 export default function Header({ 
@@ -12,6 +12,8 @@ export default function Header({
   onShortcutSelect?: (screen: string) => void;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isFincoreActive = location.pathname.includes('/fincore') || location.pathname.includes('/dashboard');
   const [shortcutText, setShortcutText] = useState('');
 
   const handleLogout = () => {
@@ -63,7 +65,7 @@ export default function Header({
             <span className="text-[#1e4676] font-semibold">Solution:</span>
             <select 
               className="border border-gray-300 rounded-md bg-white text-gray-700 text-[11px] w-[180px] py-1 px-2 focus:outline-none focus:ring-1 focus:ring-[#1e4676] focus:border-[#1e4676] transition-colors" 
-              defaultValue="Select"
+              value={isFincoreActive ? 'FINCORE' : 'Select'}
               onChange={(e) => {
                 if (e.target.value === 'FINCORE') {
                   navigate('/fincore');
