@@ -357,17 +357,6 @@ export default function CreditEntryForm() {
     }
   };
 
-  const handleCancelEntry = async (id: string) => {
-    if (window.confirm(`Are you sure you want to Cancel/Void Credit Entry ${id}? (Per SRS 13.4, audit history will be preserved)`)) {
-      try {
-        await api.patch(`/records/credit/${id}`, { status: 'rejected', rejection_reason: 'Cancelled by user' });
-        loadEntries();
-      } catch (err: any) {
-        alert('Error cancelling entry: ' + (err.response?.data?.message || err.message));
-      }
-    }
-  };
-
   const handleDeleteEntry = async (id: string) => {
     if (window.confirm(`Are you sure you want to permanently delete Credit Entry ${id}?`)) {
       try {

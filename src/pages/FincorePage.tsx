@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import CreateRetailCifForm from '../components/CreateRetailCifForm';
 import VerifyRetailCif from '../components/VerifyRetailCif';
@@ -13,7 +12,6 @@ export default function FincorePage() {
   const [activeScreen, setActiveScreen] = useState<string>('DASHBOARD');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const userRole = dbService.getUserRole();
-  const navigate = useNavigate();
 
   const menuItems = [
     "DASHBOARD",

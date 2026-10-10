@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { dbService } from '../services/db';
 import api from '../services/api';
-import type { Customer } from '../services/db';
 
 export default function OrderEntryForm() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
