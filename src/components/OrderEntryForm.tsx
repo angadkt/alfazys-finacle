@@ -76,7 +76,11 @@ export default function OrderEntryForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [orderRef, setOrderRef] = useState('');
   const [agentOrCustomer, setAgentOrCustomer] = useState('');
+  const [transactionThrough, setTransactionThrough] = useState('');
   const [customers, setCustomers] = useState<any[]>([]);
+
+  const activeRole = localStorage.getItem('infazys_finacle_active_role');
+  const isAdmin = activeRole === 'super_admin' || activeRole === 'admin';
 
   // View Orders State
   const [fetchedOrders, setFetchedOrders] = useState<any[]>([]);
@@ -139,6 +143,8 @@ export default function OrderEntryForm() {
       txn: "gateway", 
       order_date: new Date().toISOString().split('T')[0],
       account_id: null,
+      transaction_through: transactionThrough.trim() || null,
+      payment_status: "Pending",
       accounts: accounts, // Send all beneficiary accounts array!
       note: "Order marking the sale yet to happen"
     };
@@ -148,6 +154,7 @@ export default function OrderEntryForm() {
       const ref = `ORD-${Date.now().toString().slice(-6)}`;
       setOrderRef(ref);
       setIsSubmitted(true);
+      fetchOrders(1, searchQuery);
     } catch (err: any) {
       alert('Error submitting order to server: ' + (err.response?.data?.message || err.message));
     }
@@ -164,6 +171,7 @@ export default function OrderEntryForm() {
       bankName: '',
       branchName: ''
     });
+    setTransactionThrough('');
     setSelectedFunction('A-ADD');
   };
 
@@ -247,9 +255,12 @@ export default function OrderEntryForm() {
                     <th className="p-2 border border-[#a0a0a0]">Sale Rate</th>
                     <th className="p-2 border border-[#a0a0a0]">AED Amount</th>
                     <th className="p-2 border border-[#a0a0a0]">INR Value</th>
+                    <th className="p-2 border border-[#a0a0a0]">Txn Through</th>
                     <th className="p-2 border border-[#a0a0a0]">Issued By</th>
                     <th className="p-2 border border-[#a0a0a0]">Verified By</th>
-                    <th className="p-2 border border-[#a0a0a0]">Status</th>
+                    <th className="p-2 border border-[#a0a0a0]">Verification Status</th>
+                    <th className="p-2 border border-[#a0a0a0]">Payment Status</th>
+                    <th className="p-2 border border-[#a0a0a0]">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -319,20 +330,69 @@ export default function OrderEntryForm() {
                             <>₹ {o.inr_value}</>
                           )}
                         </td>
-                        <td className="p-2 border border-[#c4d4ec]">{o.created_by_name || '-'}</td>
-                        <td className="p-2 border border-[#c4d4ec]">{o.verified_by_name || '-'}</td>
+                        <td className="p-2 border border-[#c4d4ec] text-[11px] font-semibold text-gray-700">
+                          {o.transaction_through || '-'}
+                        </td>
+                        <td className="p-2 border border-[#c4d4ec]">{o.created_by_name || 'Admin'}</td>
+                        <td className="p-2 border border-[#c4d4ec]">{o.verified_by_name || (o.status === 'verified' ? 'Admin' : '-')}</td>
                         <td className="p-2 border border-[#c4d4ec]">
-                          <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold ${
+                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
                             o.status === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                           }`}>
                             {o.status}
                           </span>
                         </td>
+                        <td className="p-2 border border-[#c4d4ec]">
+                          <select
+                            value={o.payment_status || 'Pending'}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value;
+                              try {
+                                await api.patch(`/records/orders/${o.id}`, { payment_status: newStatus });
+                                setFetchedOrders(prev => prev.map(item => item.id === o.id ? { ...item, payment_status: newStatus } : item));
+                              } catch (err: any) {
+                                alert('Failed to update payment status: ' + (err.response?.data?.message || err.message));
+                              }
+                            }}
+                            className={`text-[11px] font-bold rounded px-2 py-1 border cursor-pointer focus:outline-none ${
+                              (o.payment_status || 'Pending').toLowerCase() === 'paid' ? 'bg-green-100 text-green-800 border-green-300' :
+                              (o.payment_status || 'Pending').toLowerCase() === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                              (o.payment_status || 'Pending').toLowerCase() === 'partial' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                              'bg-gray-100 text-gray-800 border-gray-300'
+                            }`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Partial">Partial</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                        <td className="p-2 border border-[#c4d4ec] text-center">
+                          {isAdmin && o.status === 'pending' ? (
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Verify order ${o.order_no}?`)) {
+                                  try {
+                                    await api.patch(`/records/orders/${o.id}`, { status: 'verified' });
+                                    fetchOrders(currentPage, searchQuery);
+                                  } catch (err: any) {
+                                    alert('Failed to verify order: ' + (err.response?.data?.message || err.message));
+                                  }
+                                }
+                              }}
+                              className="bg-[#1a4a8c] hover:bg-[#153970] text-white text-[11px] font-bold px-2.5 py-1 rounded shadow-sm"
+                            >
+                              Verify
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 text-[11px]">-</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   }) : (
                     <tr>
-                      <td colSpan={11} className="p-4 text-center text-gray-500 italic border border-[#c4d4ec]">No orders found.</td>
+                      <td colSpan={14} className="p-4 text-center text-gray-500 italic border border-[#c4d4ec]">No orders found.</td>
                     </tr>
                   )}
                 </tbody>
@@ -422,6 +482,19 @@ export default function OrderEntryForm() {
                           <option key={c.id} value={`${c.name} (${c.id})`} />
                         ))}
                       </datalist>
+                    </div>
+
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Transaction Through
+                    </div>
+                    <div>
+                      <input 
+                        type="text" 
+                        value={transactionThrough}
+                        onChange={(e) => setTransactionThrough(e.target.value)}
+                        placeholder="TRANSACTION THROUGH (OPTIONAL)"
+                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
+                      />
                     </div>
                   </div>
 

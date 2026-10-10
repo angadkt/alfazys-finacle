@@ -47,7 +47,12 @@ export default function Header({
         
         {/* Left Side Navigation Info */}
         <div className="flex items-center h-full">
-          <div className="text-[#1e4676] font-semibold">User: UBSADMIN</div>
+          <div className="text-[#1e4676] font-semibold flex items-center gap-1.5">
+            <span>User: {localStorage.getItem('infazys_user_name') || (localStorage.getItem('infazys_finacle_active_role') === 'super_admin' ? 'UBSADMIN' : 'STAFF')}</span>
+            <span className="text-[9px] bg-[#1e4676] text-white px-1.5 py-0.2 rounded uppercase font-bold">
+              {localStorage.getItem('infazys_finacle_active_role') === 'super_admin' ? 'ADMIN' : 'STAFF'}
+            </span>
+          </div>
           <div className="w-[1px] h-4 bg-gray-300 mx-5"></div>
           <div className="flex items-center gap-2 text-[#1e4676] font-semibold">
             Time Zone: GMT

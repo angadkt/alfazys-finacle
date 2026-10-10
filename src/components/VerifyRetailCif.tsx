@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import api from '../services/api';
 import { dbService } from '../services/db';
 
 export default function VerifyRetailCif() {
@@ -8,17 +9,43 @@ export default function VerifyRetailCif() {
     loadPendingCifs();
   }, []);
 
-  const loadPendingCifs = () => {
+  const loadPendingCifs = async () => {
+    try {
+      const res = await api.get('/records/parties');
+      if (res.data?.records) {
+        const pending = res.data.records.filter((c: any) => c.status === 'pending');
+        const formatted = pending.map((c: any) => ({
+          id: c.cif_no || c.id,
+          realId: c.id,
+          name: `${c.first_name} ${c.last_name || ''}`.trim(),
+          email: c.email,
+          phone: c.contact_number,
+          issuedBy: c.created_by_name || 'Staff',
+          verifiedBy: c.verified_by_name || '-',
+          status: c.status
+        }));
+        setPendingCifs(formatted);
+        return;
+      }
+    } catch (e) {
+      console.warn('Falling back to local customers:', e);
+    }
     const allCustomers = dbService.getCustomers();
     const pending = allCustomers.filter(c => c.status === 'pending');
     setPendingCifs(pending);
   };
 
-  const handleVerify = (id: string) => {
-    // In our DB schema 'approved' acts as 'verified'
-    dbService.updateCustomer(id, { status: 'approved' });
-    alert(`CIF ID ${id} has been verified successfully.`);
-    loadPendingCifs();
+  const handleVerify = async (cif: any) => {
+    try {
+      const targetId = cif.realId || cif.id;
+      await api.patch(`/records/parties/${targetId}`, { status: 'verified' });
+      alert(`CIF ${cif.id} has been verified successfully.`);
+      loadPendingCifs();
+    } catch (err: any) {
+      dbService.updateCustomer(cif.id, { status: 'approved' });
+      alert(`CIF ${cif.id} has been verified successfully.`);
+      loadPendingCifs();
+    }
   };
 
   return (
@@ -64,7 +91,7 @@ export default function VerifyRetailCif() {
                   </td>
                   <td className="p-2">
                     <button 
-                      onClick={() => handleVerify(cif.id)}
+                      onClick={() => handleVerify(cif)}
                       className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2 py-0.5 text-xs text-black active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white"
                     >
                       Verify

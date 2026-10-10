@@ -56,14 +56,18 @@ export default function LoginPage() {
         password: password.trim()
       });
 
-      // Assuming API returns { token, role }
-      const { token, role } = response.data;
+      // API returns { token, user: { id, fullName, email, role } }
+      const { token, user } = response.data;
+      const role = user?.role || response.data.role || 'staff';
       
       // Store token for axios
       localStorage.setItem('infazys_token', token);
+      if (user?.fullName) {
+        localStorage.setItem('infazys_user_name', user.fullName);
+      }
       
-      // We still use active_role for frontend components that rely on it synchronously
-      const resolvedRole = role || 'staff'; 
+      // Map 'admin' from backend to 'super_admin' in frontend role state
+      const resolvedRole = (role === 'admin' || role === 'super_admin') ? 'super_admin' : role; 
       localStorage.setItem('infazys_finacle_active_role', resolvedRole);
 
       const loginTimeStr = new Date().toLocaleString(undefined, {

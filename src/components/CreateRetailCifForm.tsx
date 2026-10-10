@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import api from '../services/api';
 
@@ -11,6 +11,21 @@ export default function CreateRetailCifForm() {
   const [inputCifId, setInputCifId] = useState('');
   const [documents, setDocuments] = useState<Record<string, string>>({});
   const [previewDoc, setPreviewDoc] = useState<{url: string, label: string} | null>(null);
+  const [cifTypesList, setCifTypesList] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchCifTypes = async () => {
+      try {
+        const res = await api.get('/masters/cif_types');
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setCifTypesList(res.data);
+        }
+      } catch (err) {
+        console.warn('Could not load cif_types from masters:', err);
+      }
+    };
+    fetchCifTypes();
+  }, []);
 
   const handleFileUpload = (label: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,7 +81,19 @@ export default function CreateRetailCifForm() {
       contact_number: formData.contactNo,
       ccy: formData.ccy,
       branch_id: formData.branchOffice === 'UAE' ? 1 : 2, 
-      cif_type_id: formData.cifType === 'Agent' ? 1 : formData.cifType === 'Customer' ? 2 : formData.cifType === 'Supplier' ? 7 : 4,
+      cif_type_id: (() => {
+        const val = formData.cifType.trim().toUpperCase();
+        const matched = cifTypesList.find(ct => ct.name.trim().toUpperCase() === val);
+        if (matched) return Number(matched.id);
+        if (val === 'AGENT') return 1;
+        if (val === 'CUSTOMER') return 2;
+        if (val === 'EMPLOYEE') return 3;
+        if (val === 'OTHER') return 4;
+        if (val === 'GENERAL') return 5;
+        if (val === 'SERVICER') return 6;
+        if (val === 'SUPPLIER') return 7;
+        return 4;
+      })(),
       email: formData.email,
       indian_number: formData.indianNo,
       whatsapp_number: '',
@@ -281,11 +308,21 @@ export default function CreateRetailCifForm() {
                 <span className="w-32 font-semibold">CIF Type <span className="text-red-600">*</span></span>
                 <select value={formData.cifType} onChange={(e) => setFormData({...formData, cifType: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
                   <option value=""></option>
-                  <option value="Customer">Customer</option>
-                  <option value="Agent">Agent</option>
-                  <option value="Supplier">Supplier</option>
-                  <option value="General">General</option>
-                  <option value="Other">Other</option>
+                  {cifTypesList.length > 0 ? (
+                    cifTypesList.map(t => (
+                      <option key={t.id} value={t.name.charAt(0).toUpperCase() + t.name.slice(1).toLowerCase()}>
+                        {t.name.charAt(0).toUpperCase() + t.name.slice(1).toLowerCase()}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Customer">Customer</option>
+                      <option value="Agent">Agent</option>
+                      <option value="Supplier">Supplier</option>
+                      <option value="General">General</option>
+                      <option value="Other">Other</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>
