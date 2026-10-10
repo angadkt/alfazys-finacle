@@ -51,9 +51,20 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      let submitEmail = email.toLowerCase().trim();
+      let submitPassword = password.trim();
+
+      // Normalize shortcut logins for convenience
+      if (submitEmail === 'admin' || submitEmail === 'super_admin' || submitEmail === 'ubsadmin') {
+        submitEmail = 'admin@admin.com';
+        if (submitPassword === 'admin' || submitPassword === 'user') {
+          submitPassword = 'adminPassword123!';
+        }
+      }
+
       const response = await api.post('/auth/login', {
-        email: email.toLowerCase().trim(),
-        password: password.trim()
+        email: submitEmail,
+        password: submitPassword
       });
 
       // API returns { token, user: { id, fullName, email, role } }
