@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { dbService } from '../services/db';
 import api from '../services/api';
 import type { CreditEntry, UtrItem } from '../services/db';
 
@@ -69,7 +68,15 @@ export default function CreditEntryForm() {
   });
 
   // UTR Items (Split settlement matching user requirement)
-  const [utrItems, setUtrItems] = useState<UtrItem[]>([]);
+  const [utrItems, setUtrItems] = useState<UtrItem[]>([
+    {
+      id: `utr-${Date.now()}`,
+      amount: 0,
+      utrNumber: '',
+      status: 'Completed',
+      timestamp: new Date().toLocaleString()
+    }
+  ]);
 
   // Entries list & filters
   const [entries, setEntries] = useState<CreditEntry[]>([]);
@@ -87,15 +94,63 @@ export default function CreditEntryForm() {
     loadEntries();
   }, []);
 
-  const loadEntries = () => {
-    const data = dbService.getCreditEntries();
-    setEntries(data);
+  const loadEntries = async () => {
+    try {
+      const res = await api.get('/records/credit');
+      const data = res.data.records.map((r: any) => ({
+        id: r.id,
+        receiptNo: r.receipt_no || `RC-${r.id}`,
+        paymentDate: r.entry_date ? r.entry_date.split('T')[0] : '',
+        beneficiaryName: r.beneficiary_name || '',
+        transactionDate: r.entry_date ? r.entry_date.split('T')[0] : '',
+        accountNumber: r.account_number || '',
+        ifscCode: r.ifsc_code || '',
+        bankName: r.bank_name || '',
+        totalAmount: r.aed_amount,
+        utrItems: typeof r.utrs_data === 'string' ? JSON.parse(r.utrs_data) : (r.utrs_data || [{ utrNumber: r.utr_number, amount: r.aed_amount }]),
+        paymentMode: r.mode === 'bank_transfer' ? 'Bank Transfer' : 'Cash',
+        companyBankAccount: 'KERALA GRAMIN BANK - TREASURY 4061001928',
+        purpose: r.note || '',
+        remarks: r.note || 'Completed',
+        status: r.status,
+        createdBy: r.created_by_name ? r.created_by_name.toUpperCase() : 'USER',
+        verifiedBy: r.verified_by_name ? r.verified_by_name.toUpperCase() : '-',
+        timestamp: r.created_at,
+      }));
+      setEntries(data);
+    } catch (err) {
+      console.error("Failed to load credit entries", err);
+    }
   };
 
   // UTR calculations
   const totalEnteredAmount = parseFloat(formData.totalAmount) || 0;
   const totalUtrAllocated = utrItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   const remainingUtrBalance = totalEnteredAmount - totalUtrAllocated;
+
+  useEffect(() => {
+    const fetchBankDetails = async () => {
+      const ifsc = formData.ifscCode.trim();
+      if (ifsc.length === 11) {
+        try {
+          const res = await fetch(`https://ifsc.razorpay.com/${ifsc}`);
+          if (res.ok) {
+            const data = await res.json();
+            setFormData(prev => ({
+              ...prev,
+              bankName: data.BANK || prev.bankName,
+              branchName: data.BRANCH || prev.branchName
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch bank details from IFSC", err);
+        }
+      }
+    };
+    
+    const timeoutId = setTimeout(fetchBankDetails, 400);
+    return () => clearTimeout(timeoutId);
+  }, [formData.ifscCode]);
 
   // Step Validation
   const validateStep = (step: number): boolean => {
@@ -107,12 +162,11 @@ export default function CreditEntryForm() {
 
       if (!formData.ifscCode.trim()) errors.ifscCode = 'IFSC Code is required';
       if (!formData.bankName.trim()) errors.bankName = 'Bank Name is required';
-
-      if (!totalEnteredAmount || totalEnteredAmount <= 0) errors.totalAmount = 'Valid total amount is required';
-      if (!formData.paymentDate) errors.paymentDate = 'Payment Date is required';
     }
 
     if (step === 2) {
+      if (!totalEnteredAmount || totalEnteredAmount <= 0) errors.totalAmount = 'Valid total amount is required';
+      if (!formData.paymentDate) errors.paymentDate = 'Payment Date is required';
       if (utrItems.length === 0) {
         errors.utr = 'At least one UTR record is required';
       }
@@ -245,22 +299,39 @@ export default function CreditEntryForm() {
       return;
     }
 
+    const dbMode = formData.paymentMode === 'Bank Transfer' ? 'bank_transfer' : 'cash';
+
     const apiPayload = {
-      party_id: formData.beneficiaryName.trim(), // mapping beneficiary to party_id
+      party_id: null,
       entry_date: formData.paymentDate,
       aed_amount: totalEnteredAmount,
-      mode: formData.paymentMode,
-      account_id: formData.accountNumber.trim(),
-      customer_rate: 1, // Defaulting to 1 as it's required but not in UI
+      mode: dbMode,
+      account_id: null,
+      customer_rate: 1, 
       utr_number: utrItems.length > 0 ? utrItems[0].utrNumber : "",
-      note: formData.remarks || 'Completed'
+      beneficiary_name: formData.beneficiaryName.trim(),
+      account_number: formData.accountNumber.trim(),
+      ifsc_code: formData.ifscCode.trim().toUpperCase(),
+      bank_name: formData.bankName.trim(),
+      branch_name: formData.branchName.trim(),
+      utrs_data: utrItems,
+      note: formData.remarks || formData.purpose || 'Completed'
     };
 
     try {
-      await api.post('/records/credit', apiPayload);
+      let savedRecord;
+      if (editingId) {
+        const res = await api.patch(`/records/credit/${editingId}`, apiPayload);
+        savedRecord = res.data.record;
+        setEditingId(null);
+      } else {
+        const res = await api.post('/records/credit', apiPayload);
+        savedRecord = res.data.record;
+      }
       
-      // Also save to local dbService to keep the UI tabs working since there's no GET endpoint yet
-      const entryData = {
+      const savedEntry = {
+        id: savedRecord.id,
+        receiptNo: savedRecord.receipt_no || `RC-${savedRecord.id}`,
         paymentDate: formData.paymentDate,
         beneficiaryName: formData.beneficiaryName.trim(),
         transactionDate: formData.transactionDate,
@@ -273,17 +344,10 @@ export default function CreditEntryForm() {
         companyBankAccount: formData.companyBankAccount,
         purpose: formData.purpose,
         remarks: formData.remarks || 'Completed',
-        status: 'Completed' as const,
-        createdBy: dbService.getUserRole()?.toUpperCase() || 'USER'
+        status: savedRecord.status || 'Completed',
+        createdBy: 'USER',
+        createdAt: savedRecord.created_at || new Date().toISOString()
       };
-      
-      let savedEntry;
-      if (editingId) {
-        savedEntry = dbService.updateCreditEntry(editingId, entryData);
-        setEditingId(null);
-      } else {
-        savedEntry = dbService.addCreditEntry(entryData);
-      }
 
       loadEntries();
       setSubmittedEntry(savedEntry);
@@ -293,17 +357,25 @@ export default function CreditEntryForm() {
     }
   };
 
-  const handleCancelEntry = (id: string) => {
+  const handleCancelEntry = async (id: string) => {
     if (window.confirm(`Are you sure you want to Cancel/Void Credit Entry ${id}? (Per SRS 13.4, audit history will be preserved)`)) {
-      dbService.cancelCreditEntry(id);
-      loadEntries();
+      try {
+        await api.patch(`/records/credit/${id}`, { status: 'rejected', rejection_reason: 'Cancelled by user' });
+        loadEntries();
+      } catch (err: any) {
+        alert('Error cancelling entry: ' + (err.response?.data?.message || err.message));
+      }
     }
   };
 
-  const handleDeleteEntry = (id: string) => {
+  const handleDeleteEntry = async (id: string) => {
     if (window.confirm(`Are you sure you want to permanently delete Credit Entry ${id}?`)) {
-      dbService.deleteCreditEntry(id);
-      loadEntries();
+      try {
+        await api.delete(`/records/credit/${id}`);
+        loadEntries();
+      } catch (err: any) {
+        alert('Error deleting entry: ' + (err.response?.data?.message || err.message));
+      }
     }
   };
 
@@ -352,6 +424,41 @@ export default function CreditEntryForm() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+  const handleDownloadReceipt = (entry: any) => {
+    const receiptContent = `===========================================
+FINCORE - CREDIT ENTRY RECEIPT
+===========================================
+Entry No    : ${entry.id}
+Date        : ${entry.paymentDate}
+Status      : ${entry.status.toUpperCase()}
+-------------------------------------------
+BENEFICIARY DETAILS
+Name        : ${entry.beneficiaryName}
+Account No  : ${entry.accountNumber}
+Bank        : ${entry.bankName}
+IFSC Code   : ${entry.ifscCode}
+-------------------------------------------
+PAYMENT DETAILS
+Amount      : Rs. ${entry.totalAmount.toLocaleString()}
+Payment Mode: ${entry.paymentMode}
+Linked UTRs :
+${entry.utrItems.map((u: any) => `  - ${u.utrNumber} (Rs. ${u.amount.toLocaleString()})`).join('\n') || '  None'}
+-------------------------------------------
+Issued By   : ${entry.createdBy}
+Verified By : ${entry.verifiedBy || 'Pending'}
+===========================================
+Generated on: ${new Date().toLocaleString()}`;
+
+    const blob = new Blob([receiptContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Receipt_${entry.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // Filtering
@@ -447,14 +554,11 @@ export default function CreditEntryForm() {
           [ VIEW & INQUIRE ALL ENTRIES ({entries.length}) ]
         </button>
         <button
-          onClick={() => {
-            setActiveMainTab('reports'); setIsModalOpen(true);
-            loadEntries();
-          }}
-          className={`px-4 py-1.5 text-[11px] font-bold border border-b-0 border-[#a0a0a0] rounded-t-sm select-none transition-none ${
+          disabled={true}
+          className={`px-4 py-1.5 text-[11px] font-bold border border-b-0 border-[#a0a0a0] rounded-t-sm select-none transition-none opacity-50 cursor-not-allowed ${
             activeMainTab === 'reports' 
               ? 'bg-white text-[#104080] shadow-[inset_0_2px_0_#104080]' 
-              : 'bg-[#d4d0c8] text-black hover:bg-[#eaeaea]'
+              : 'bg-[#d4d0c8] text-black'
           }`}
           style={{ marginBottom: '-1px' }}
         >
@@ -585,7 +689,7 @@ export default function CreditEntryForm() {
                           beneficiaryName: e.target.value,
                           transactionDate: formData.transactionDate
                         })}
-                        placeholder="e.g. IBRAHIM KALEEL N A"
+                        placeholder=""
                         className="border border-[#7f9db9] px-2 h-[26px] focus:outline-none uppercase font-semibold text-[11px] w-full"
                       />
                     </div>
@@ -614,7 +718,7 @@ export default function CreditEntryForm() {
                       type="text" 
                       value={formData.accountNumber}
                       onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                      placeholder="e.g. 40617101127003"
+                      placeholder=""
                       className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none font-mono text-[12px] font-bold text-[#1e4676]"
                     />
                   </div>
@@ -629,7 +733,7 @@ export default function CreditEntryForm() {
                       type="text" 
                       value={formData.ifscCode}
                       onChange={(e) => setFormData({ ...formData, ifscCode: e.target.value.toUpperCase() })}
-                      placeholder="e.g. KLGB0040617"
+                      placeholder=""
                       maxLength={11}
                       className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none uppercase font-mono font-bold text-[#1e4676] text-[12px]"
                     />
@@ -644,7 +748,7 @@ export default function CreditEntryForm() {
                       type="text" 
                       value={formData.bankName}
                       onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                      placeholder="e.g. KERALA GRAMIN BANK"
+                      placeholder=""
                       className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none uppercase font-semibold text-[11px]"
                     />
                   </div>
@@ -656,7 +760,7 @@ export default function CreditEntryForm() {
                       type="text" 
                       value={formData.branchName}
                       onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
-                      placeholder="e.g. Kasaragod Main Branch"
+                      placeholder=""
                       className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none text-[11px]"
                     />
                   </div>
@@ -695,7 +799,7 @@ export default function CreditEntryForm() {
                         type="number" 
                         value={formData.totalAmount}
                         onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
-                        placeholder="e.g. 44000"
+                        placeholder=""
                         className="flex-1 border border-[#7f9db9] px-2 h-[26px] focus:outline-none font-bold text-[#1e4676] text-[13px]"
                       />
                     </div>
@@ -827,7 +931,7 @@ export default function CreditEntryForm() {
                                   type="text" 
                                   value={item.utrNumber}
                                   onChange={(e) => handleUtrChange(index, 'utrNumber', e.target.value)}
-                                  placeholder="e.g. 005624886268 or 293973571072"
+                                  placeholder=""
                                   className="w-full border border-[#7f9db9] px-2 h-[26px] focus:outline-none font-mono font-bold text-black"
                                 />
                               </td>
@@ -1200,14 +1304,14 @@ export default function CreditEntryForm() {
                                 ? 'bg-red-100 text-red-800 border-red-300'
                                 : 'bg-yellow-100 text-yellow-800 border-yellow-300'
                           }`}>
-                            {entry.status} {entry.status === 'Completed' && ''}
+                            {entry.status}
                           </span>
                         </td>
                         <td className="p-2 border-r border-[#e4e4e4] text-center text-gray-700">
                           {entry.createdBy || '-'}
                         </td>
                         <td className="p-2 border-r border-[#e4e4e4] text-center text-gray-700">
-                          -
+                          {entry.verifiedBy || '-'}
                         </td>
                         <td className="p-2 text-center">
                           <div className="flex items-center justify-center gap-2">
@@ -1219,12 +1323,11 @@ export default function CreditEntryForm() {
                               Edit
                             </button>
                             <button 
-                              onClick={() => handleCancelEntry(entry.id)}
-                              title="Cancel/Void Entry"
-                              className="text-orange-600 hover:underline font-bold text-[11px]"
-                              disabled={entry.status === 'Cancelled'}
+                              onClick={() => handleDownloadReceipt(entry)}
+                              title="Download Receipt"
+                              className="text-green-600 hover:underline font-bold text-[11px]"
                             >
-                              Cancel
+                              Receipt
                             </button>
                             <button 
                               onClick={() => handleDeleteEntry(entry.id)}
@@ -1330,7 +1433,7 @@ export default function CreditEntryForm() {
                         <td className="p-1.5 border-r border-[#e4e4e4]">{entry.companyBankAccount}</td>
                         <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#1e4676]">{entry.id}</td>
                         <td className="p-1.5 border-r border-[#e4e4e4]">{entry.createdBy || '-'}</td>
-                        <td className="p-1.5">-</td>
+                        <td className="p-1.5">{entry.verifiedBy || '-'}</td>
                       </tr>
                     ))
                   )}

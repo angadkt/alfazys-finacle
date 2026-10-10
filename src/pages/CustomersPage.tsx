@@ -182,7 +182,7 @@ export default function CustomersPage() {
             
             {/* DASHBOARD */}
             <div 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/fincore')}
               className="flex items-center h-16 px-3 rounded-2xl transition hover:bg-slate-50 group/item cursor-pointer"
             >
               <span className="flex-shrink-0 bg-[#f0f7ff] text-[#2563eb] p-2 rounded-2xl flex items-center justify-center group-hover/item:bg-blue-100/50 transition">

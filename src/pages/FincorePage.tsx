@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import CreateRetailCifForm from '../components/CreateRetailCifForm';
 import VerifyRetailCif from '../components/VerifyRetailCif';
@@ -9,11 +10,13 @@ import OrderEntryForm from '../components/OrderEntryForm';
 import { dbService } from '../services/db';
 
 export default function FincorePage() {
-  const [activeScreen, setActiveScreen] = useState<string>('CREDIT ENTRY');
+  const [activeScreen, setActiveScreen] = useState<string>('DASHBOARD');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const userRole = dbService.getUserRole();
+  const navigate = useNavigate();
 
   const menuItems = [
+    "DASHBOARD",
     "USER PROFILE MAINTENANCE",
     "EMPLOYEE FILE MAINTENANCE",
     "ROLE PROFILE MAINTENANCE",

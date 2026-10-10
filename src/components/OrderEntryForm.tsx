@@ -18,15 +18,30 @@ export default function OrderEntryForm() {
     branchName: ''
   });
 
-  const handleCurrentAccountChange = (field: keyof typeof currentAccount, value: string) => {
-    const updated = { ...currentAccount, [field]: value };
+  const handleCurrentAccountChange = async (field: keyof typeof currentAccount, value: string) => {
+    let updated = { ...currentAccount, [field]: value };
+    
     if (field === 'ifscCode') {
-      if (value.length >= 4) {
-        updated.bankName = 'STATE BANK OF INDIA';
-        updated.branchName = 'MUMBAI MAIN BRANCH';
+      // IFSC is always 11 characters long
+      if (value.length === 11) {
+        try {
+          const res = await fetch(`https://ifsc.razorpay.com/${value}`);
+          if (res.ok) {
+            const data = await res.json();
+            updated = {
+              ...updated,
+              bankName: data.BANK || 'UNKNOWN BANK',
+              branchName: data.BRANCH || 'UNKNOWN BRANCH'
+            };
+          } else {
+            updated = { ...updated, bankName: 'INVALID IFSC', branchName: 'INVALID IFSC' };
+          }
+        } catch (e) {
+          console.error(e);
+          updated = { ...updated, bankName: 'ERROR FETCHING', branchName: 'ERROR FETCHING' };
+        }
       } else {
-        updated.bankName = '';
-        updated.branchName = '';
+        updated = { ...updated, bankName: '', branchName: '' };
       }
     }
     setCurrentAccount(updated);
@@ -63,11 +78,53 @@ export default function OrderEntryForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [orderRef, setOrderRef] = useState('');
   const [agentOrCustomer, setAgentOrCustomer] = useState('');
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+
+  // View Orders State
+  const [fetchedOrders, setFetchedOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchOrders = async (page = currentPage, search = searchQuery) => {
+    setLoadingOrders(true);
+    try {
+      const res = await api.get(`/records/orders?page=${page}&limit=20&search=${encodeURIComponent(search)}`);
+      setFetchedOrders(res.data.records || []);
+      setCurrentPage(res.data.page || 1);
+      setTotalPages(Math.ceil((res.data.total || 0) / (res.data.limit || 20)) || 1);
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
 
   useEffect(() => {
-    setCustomers(dbService.getCustomers());
+    const loadCustomers = async () => {
+      try {
+        const res = await api.get('/records/parties');
+        const verified = res.data.records.filter((c: any) => c.status === 'verified');
+        const formatted = verified.map((c: any) => ({
+          id: c.cif_no || c.id,
+          internal_id: c.id,
+          name: `${c.first_name} ${c.last_name}`.trim() || 'UNKNOWN'
+        }));
+        setCustomers(formatted);
+      } catch (err) {
+        console.error('Failed to load customers:', err);
+      }
+    };
+    loadCustomers();
   }, []);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      fetchOrders(currentPage, searchQuery);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchQuery, currentPage]);
 
   const handleGo = async () => {
     if (accounts.length === 0) {
@@ -75,20 +132,17 @@ export default function OrderEntryForm() {
       return;
     }
     
-    // Using the first account for the API call for simplicity since the API schema only supports one account_id
-    const primaryAccount = accounts[0];
-    
+    const selectedCustomer = customers.find(c => `${c.name} (${c.id})` === agentOrCustomer);
+    const party_id = selectedCustomer ? selectedCustomer.internal_id : parseInt(agentOrCustomer);
+
     const apiPayload = {
-      buyer_id: agentOrCustomer || "Unknown",
-      txn: "ORDER", 
+      party_id: party_id || null,
+      buyer_id: null, // Servicer is unassigned initially 
+      txn: "gateway", 
       order_date: new Date().toISOString().split('T')[0],
-      aed_amount: parseFloat(primaryAccount.orderAmount) || 0,
-      account_id: primaryAccount.accountNumber,
-      sale_rate: 1, // default
-      cost_rate: 1, // default
-      usdt_amount: 0, // default
-      inr_per_usdt: 0, // default
-      note: "Multiple accounts included"
+      account_id: null,
+      accounts: accounts, // Send all beneficiary accounts array!
+      note: "Order marking the sale yet to happen"
     };
 
     try {
@@ -153,13 +207,161 @@ export default function OrderEntryForm() {
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span 
             className="cursor-pointer hover:underline tracking-wide"
-            onClick={() => setIsFormModalOpen(true)}
+            onClick={() => { setIsFormModalOpen(true); }}
           >
             Add Order Entry
           </span>
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span className="cursor-pointer hover:underline tracking-wide">View Orders</span>
+          <span 
+            className="cursor-pointer hover:underline tracking-wide"
+            onClick={() => { fetchOrders(currentPage, searchQuery); }}
+          >
+            Refresh Orders
+          </span>
         </div>
+
+        <div className="p-4 bg-white overflow-auto flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-[#1e4676]">Fetched Orders List</h3>
+              <input 
+                type="text" 
+                placeholder="Search orders by ID, Agent, Client or Account..." 
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="border border-[#c4d4ec] px-3 py-1 rounded-md text-xs focus:outline-none focus:border-[#1e4676] w-72"
+              />
+            </div>
+            {loadingOrders ? (
+              <div className="text-gray-500">Loading orders...</div>
+            ) : (
+              <>
+              <table className="w-full text-left border-collapse text-[12px]">
+                <thead>
+                  <tr className="bg-[#1e4676] text-white">
+                    <th className="p-2 border border-[#a0a0a0]">Order No</th>
+                    <th className="p-2 border border-[#a0a0a0]">Date</th>
+                    <th className="p-2 border border-[#a0a0a0]">Agent/Customer</th>
+                    <th className="p-2 border border-[#a0a0a0]">Beneficiary Name</th>
+                    <th className="p-2 border border-[#a0a0a0]">Beneficiary Account</th>
+                    <th className="p-2 border border-[#a0a0a0]">Sale Rate</th>
+                    <th className="p-2 border border-[#a0a0a0]">AED Amount</th>
+                    <th className="p-2 border border-[#a0a0a0]">INR Value</th>
+                    <th className="p-2 border border-[#a0a0a0]">Issued By</th>
+                    <th className="p-2 border border-[#a0a0a0]">Verified By</th>
+                    <th className="p-2 border border-[#a0a0a0]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fetchedOrders.length > 0 ? fetchedOrders.map((o: any) => {
+                    let recs = o.receivers_data;
+                    if (typeof recs === 'string') {
+                      try { recs = JSON.parse(recs); } catch { recs = []; }
+                    }
+                    const hasMultiple = Array.isArray(recs) && recs.length > 0;
+                    
+                    return (
+                      <tr key={o.id} className="hover:bg-[#f0f4f8]">
+                        <td className="p-2 border border-[#c4d4ec] font-bold text-blue-800">{o.order_no}</td>
+                        <td className="p-2 border border-[#c4d4ec]">{(o.order_date || '').split('T')[0]}</td>
+                        <td className="p-2 border border-[#c4d4ec]">{o.party_name || o.party_id || 'N/A'}</td>
+                        <td className="p-2 border border-[#c4d4ec]">
+                          {hasMultiple ? recs.map((acc: any, idx: number) => (
+                            <div key={idx} className={idx > 0 ? "border-t border-dashed border-[#c4d4ec] mt-1 pt-1" : ""}>
+                              {acc.clientName || '-'}
+                            </div>
+                          )) : o.receiver_name}
+                        </td>
+                        <td className="p-2 border border-[#c4d4ec]">
+                          {hasMultiple ? recs.map((acc: any, idx: number) => (
+                            <div key={idx} className={idx > 0 ? "border-t border-dashed border-[#c4d4ec] mt-1 pt-1" : ""}>
+                              {acc.accountNumber || '-'} <span className="text-gray-500 text-[10px]">({acc.bankName || 'N/A'})</span>
+                            </div>
+                          )) : o.receiver_account}
+                        </td>
+                        <td className="p-2 border border-[#c4d4ec]">
+                          {hasMultiple ? recs.map((acc: any, idx: number) => (
+                            <div key={idx} className={idx > 0 ? "border-t border-dashed border-[#c4d4ec] mt-1 pt-1" : ""}>
+                              {acc.confirmOrderAmount || o.sale_rate || '-'}
+                            </div>
+                          )) : (o.sale_rate || '-')}
+                        </td>
+                        <td className="p-2 border border-[#c4d4ec] font-medium text-emerald-700">
+                          {hasMultiple && recs.length > 1 ? (
+                            <>
+                              <div className="font-bold text-emerald-800 mb-1">Total: {o.aed_amount ? parseFloat(o.aed_amount).toFixed(2) : '-'}</div>
+                              {recs.map((acc: any, idx: number) => {
+                                const aed = acc.orderAmount && acc.confirmOrderAmount 
+                                  ? (parseFloat(acc.orderAmount) / parseFloat(acc.confirmOrderAmount)).toFixed(2)
+                                  : '-';
+                                return (
+                                  <div key={idx} className="text-emerald-700 text-[10px] border-t border-dashed border-[#c4d4ec] pt-1 mt-1">
+                                    {aed}
+                                  </div>
+                                );
+                              })}
+                            </>
+                          ) : (
+                            <>{o.aed_amount ? parseFloat(o.aed_amount).toFixed(2) : '-'}</>
+                          )}
+                        </td>
+                        <td className="p-2 border border-[#c4d4ec] font-medium">
+                          {hasMultiple && recs.length > 1 ? (
+                            <>
+                              <div className="font-bold text-black mb-1">Total: ₹ {o.inr_value}</div>
+                              {recs.map((acc: any, idx: number) => (
+                                <div key={idx} className="text-gray-600 text-[10px] border-t border-dashed border-[#c4d4ec] pt-1 mt-1">
+                                  ₹ {acc.orderAmount}
+                                </div>
+                              ))}
+                            </>
+                          ) : (
+                            <>₹ {o.inr_value}</>
+                          )}
+                        </td>
+                        <td className="p-2 border border-[#c4d4ec]">{o.created_by_name || '-'}</td>
+                        <td className="p-2 border border-[#c4d4ec]">{o.verified_by_name || '-'}</td>
+                        <td className="p-2 border border-[#c4d4ec]">
+                          <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold ${
+                            o.status === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {o.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  }) : (
+                    <tr>
+                      <td colSpan={11} className="p-4 text-center text-gray-500 italic border border-[#c4d4ec]">No orders found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              
+              {!loadingOrders && totalPages > 1 && (
+                <div className="flex items-center justify-end gap-4 mt-4 text-[12px] text-[#1e4676]">
+                  <button 
+                    disabled={currentPage === 1} 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className="disabled:opacity-50 hover:underline font-bold"
+                  >
+                    &laquo; Previous
+                  </button>
+                  <span>Page {currentPage} of {totalPages}</span>
+                  <button 
+                    disabled={currentPage === totalPages} 
+                    onClick={() => setCurrentPage(p => Math.max(1, Math.min(totalPages, p + 1)))}
+                    className="disabled:opacity-50 hover:underline font-bold"
+                  >
+                    Next &raquo;
+                  </button>
+                </div>
+              )}
+              </>
+            )}
+          </div>
 
         {isFormModalOpen && (
           <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
@@ -211,6 +413,7 @@ export default function OrderEntryForm() {
                       <input 
                         type="text" 
                         list="agent-customer-list"
+                        autoComplete="off"
                         value={agentOrCustomer}
                         onChange={(e) => setAgentOrCustomer(e.target.value)}
                         placeholder="SELECT AGENT OR CUSTOMER"
@@ -294,28 +497,45 @@ export default function OrderEntryForm() {
                     </div>
 
                     <div className="font-medium text-black whitespace-nowrap">
-                      Order Amount (INR) <span className="text-red-600">*</span>
+                      Confirmed INR <span className="text-red-600">*</span>
                     </div>
                     <div>
                       <input 
                         type="number" 
                         value={currentAccount.orderAmount}
                         onChange={(e) => handleCurrentAccountChange('orderAmount', e.target.value)}
-                        placeholder="Order Amount (₹)"
+                        placeholder="Confirmed INR"
                         className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
                       />
                     </div>
                     
                     <div className="font-medium text-black whitespace-nowrap">
-                      Confirm Order Amount (INR) <span className="text-red-600">*</span>
+                      Sale Rate (AED) <span className="text-red-600">*</span>
                     </div>
                     <div>
                       <input 
                         type="number" 
                         value={currentAccount.confirmOrderAmount}
                         onChange={(e) => handleCurrentAccountChange('confirmOrderAmount', e.target.value)}
-                        placeholder="Confirm Order Amount (₹)"
+                        placeholder="Sale Rate (AED)"
                         className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="font-medium text-black whitespace-nowrap">
+                      Confirmed AED
+                    </div>
+                    <div>
+                      <input 
+                        type="text" 
+                        value={
+                          currentAccount.orderAmount && currentAccount.confirmOrderAmount && parseFloat(currentAccount.confirmOrderAmount) !== 0
+                            ? (parseFloat(currentAccount.orderAmount) / parseFloat(currentAccount.confirmOrderAmount)).toFixed(2)
+                            : ''
+                        }
+                        readOnly
+                        placeholder="Confirmed AED"
+                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-[#ebe9e1] focus:outline-none"
                       />
                     </div>
 

@@ -117,6 +117,7 @@ export interface CreditEntry {
   remarks: string;
   status: 'Completed' | 'Pending' | 'Cancelled';
   createdBy: string;
+  verifiedBy?: string;
   createdAt: string;
 }
 
