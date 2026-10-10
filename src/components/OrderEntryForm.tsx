@@ -702,7 +702,6 @@ export default function OrderEntryForm() {
                 </div>
                 <div className="text-[12px] text-black">
                   <div className="font-bold text-[#1e4676]">Order {orderRef} Registered Successfully.</div>
-                  <div>Client: <strong>{accounts[0]?.clientName}</strong> | Amount: {currency} {accounts[0]?.orderAmount}</div>
                 </div>
               </div>
             </div>
