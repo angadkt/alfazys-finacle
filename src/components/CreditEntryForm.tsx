@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, FileSpreadsheet, FileText } from 'lucide-react';
 import api from '../services/api';
 import type { CreditEntry, UtrItem } from '../services/db';
+import { exportCreditToExcel, exportCreditToPdf } from '../utils/exportCredit';
 
 // Helper to convert number to Indian words
 function numberToIndianWords(num: number): string {
@@ -87,6 +88,7 @@ export default function CreditEntryForm() {
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterDate, setFilterDate] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
 
   // Modals & UI status
   const [submittedEntry, setSubmittedEntry] = useState<CreditEntry | null>(null);
@@ -402,30 +404,44 @@ export default function CreditEntryForm() {
     setIsFormModalOpen(true);
   };
 
-  const handleExportCsv = () => {
-    const headers = ['Entry Number,Payment Date,Beneficiary Name,Account Number,IFSC,Bank Name,Total Amount,Payment Mode,Bank Account,UTR Numbers,Status'];
-    const rows = entries.map(e => [
-      e.id,
-      e.paymentDate,
-      `"${e.beneficiaryName}"`,
-      `"${e.accountNumber}"`,
-      e.ifscCode,
-      `"${e.bankName}"`,
-      e.totalAmount,
-      e.paymentMode,
-      `"${e.companyBankAccount}"`,
-      `"${e.utrItems.map(u => `${u.utrNumber}(₹${u.amount})`).join('; ')}"`,
-      e.status
-    ].join(','));
+  const handleExportExcel = () => {
+    if (filteredEntries.length === 0) {
+      alert('No credit entries match the active filters to export.');
+      return;
+    }
+    setIsExporting('excel');
+    try {
+      exportCreditToExcel(filteredEntries, {
+        filterDate,
+        filterMode,
+        filterStatus,
+        searchQuery
+      });
+    } catch (err: any) {
+      alert('Failed to export Excel: ' + err.message);
+    } finally {
+      setIsExporting(null);
+    }
+  };
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Finacle_Credit_Entries_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportPdf = () => {
+    if (filteredEntries.length === 0) {
+      alert('No credit entries match the active filters to export.');
+      return;
+    }
+    setIsExporting('pdf');
+    try {
+      exportCreditToPdf(filteredEntries, {
+        filterDate,
+        filterMode,
+        filterStatus,
+        searchQuery
+      });
+    } catch (err: any) {
+      alert('Failed to export PDF: ' + err.message);
+    } finally {
+      setIsExporting(null);
+    }
   };
   const handleDownloadReceipt = (entry: any) => {
     const receiptContent = `===========================================
@@ -656,12 +672,25 @@ Generated on: ${new Date().toLocaleString()}`;
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 border-l border-[#c4d4ec] pl-2">
                 <button 
-                  onClick={handleExportCsv}
-                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2.5 py-1 text-[11px] font-bold text-black"
+                  onClick={handleExportExcel}
+                  disabled={isExporting !== null || filteredEntries.length === 0}
+                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] px-2.5 py-1 text-[11px] font-bold text-[#1e6e38] flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Export Filtered Credit Entries to Excel (.xlsx)"
                 >
-                  📥 Export to Excel / CSV
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-[#2e7d32]" />
+                  <span>{isExporting === 'excel' ? 'Exporting...' : 'Excel'}</span>
+                </button>
+
+                <button 
+                  onClick={handleExportPdf}
+                  disabled={isExporting !== null || filteredEntries.length === 0}
+                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] px-2.5 py-1 text-[11px] font-bold text-[#b91c1c] flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Export Filtered Credit Entries to PDF (.pdf)"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#d32f2f]" />
+                  <span>{isExporting === 'pdf' ? 'Generating...' : 'PDF'}</span>
                 </button>
               </div>
             </div>
@@ -796,12 +825,22 @@ Generated on: ${new Date().toLocaleString()}`;
           <div className="flex-1 flex flex-col text-[11px]">
             <div className="bg-[#eaf0f8] px-2 py-1 font-bold text-[#104080] border-y border-[#a2b5cd] mb-3 text-[12px] flex items-center justify-between">
               <span>Section 13.5 — Outgoing Credit Entry Financial Reporting & Audit Trail</span>
-              <button 
-                onClick={handleExportCsv}
-                className="bg-[#e4e4f0] border border-gray-400 px-2 py-0.5 text-[11px] font-bold text-black"
-              >
-                Export Complete Audit Sheet
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleExportExcel}
+                  className="bg-[#e4e4f0] border border-gray-400 px-2 py-0.5 text-[11px] font-bold text-[#1e6e38] flex items-center gap-1 hover:bg-[#d4d0c8]"
+                >
+                  <FileSpreadsheet className="w-3 h-3 text-[#2e7d32]" />
+                  Excel Audit Sheet
+                </button>
+                <button 
+                  onClick={handleExportPdf}
+                  className="bg-[#e4e4f0] border border-gray-400 px-2 py-0.5 text-[11px] font-bold text-[#b91c1c] flex items-center gap-1 hover:bg-[#d4d0c8]"
+                >
+                  <FileText className="w-3 h-3 text-[#d32f2f]" />
+                  PDF Audit Sheet
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-4 gap-3 mb-4">

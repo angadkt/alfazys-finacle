@@ -309,17 +309,39 @@ export default function OrderEntryForm() {
   };
 
   const getOrdersForExport = async () => {
-    if (fetchedOrders.length === 0) return [];
-    if (totalPages <= 1) return fetchedOrders;
     try {
-      let url = `/records/orders?page=1&limit=1000&search=${encodeURIComponent(searchQuery)}`;
-      if (filterDate) url += `&date=${encodeURIComponent(filterDate)}`;
-      if (filterAgent) url += `&party_id=${encodeURIComponent(filterAgent)}`;
-      const res = await api.get(url);
-      let records = res.data.records || [];
-      if (filterDate) records = records.filter((o: any) => (o.order_date || '').startsWith(filterDate));
-      if (filterAgent) records = records.filter((o: any) => String(o.party_id) === String(filterAgent));
-      return records.length > 0 ? records : fetchedOrders;
+      let page = 1;
+      let allRecords: any[] = [];
+      let totalRecords = 0;
+      let calculatedTotalPages = 1;
+
+      do {
+        let url = `/records/orders?page=${page}&limit=100&export=true&search=${encodeURIComponent(searchQuery)}`;
+        if (filterDate) url += `&date=${encodeURIComponent(filterDate)}`;
+        if (filterAgent) url += `&party_id=${encodeURIComponent(filterAgent)}`;
+
+        const res = await api.get(url);
+        const batch = res.data.records || [];
+        totalRecords = res.data.total || batch.length;
+        calculatedTotalPages = Math.ceil(totalRecords / (res.data.limit || 100)) || 1;
+
+        allRecords.push(...batch);
+        page++;
+      } while (page <= calculatedTotalPages && allRecords.length < totalRecords);
+
+      if (allRecords.length === 0 && fetchedOrders.length > 0) {
+        return fetchedOrders;
+      }
+
+      // Ensure active date and agent filters are matched
+      if (filterDate) {
+        allRecords = allRecords.filter((o: any) => (o.order_date || '').startsWith(filterDate));
+      }
+      if (filterAgent) {
+        allRecords = allRecords.filter((o: any) => String(o.party_id) === String(filterAgent));
+      }
+
+      return allRecords.length > 0 ? allRecords : fetchedOrders;
     } catch (err) {
       console.error('Export fetch error, using current view:', err);
       return fetchedOrders;

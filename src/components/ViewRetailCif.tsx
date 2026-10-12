@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 import api from '../services/api';
+import { exportCifsToExcel, exportCifsToPdf } from '../utils/exportCif';
 
 export default function ViewRetailCif() {
   const [verifiedCifs, setVerifiedCifs] = useState<any[]>([]);
   const [selectedCif, setSelectedCif] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
 
   useEffect(() => {
     loadVerifiedCifs();
@@ -47,6 +50,36 @@ export default function ViewRetailCif() {
            phone.toLowerCase().includes(term);
   });
 
+  const handleExportExcel = () => {
+    if (filteredCifs.length === 0) {
+      alert('No CIF records available to export.');
+      return;
+    }
+    setIsExporting('excel');
+    try {
+      exportCifsToExcel(filteredCifs, { searchQuery: searchTerm });
+    } catch (err: any) {
+      alert('Failed to export Excel: ' + err.message);
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const handleExportPdf = () => {
+    if (filteredCifs.length === 0) {
+      alert('No CIF records available to export.');
+      return;
+    }
+    setIsExporting('pdf');
+    try {
+      exportCifsToPdf(filteredCifs, { searchQuery: searchTerm });
+    } catch (err: any) {
+      alert('Failed to export PDF: ' + err.message);
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
       <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
@@ -57,15 +90,38 @@ export default function ViewRetailCif() {
       <div className="flex justify-between items-end mb-4">
         <h2 className="text-[18px] font-bold text-[#1e4676] m-0">View Verified Retail CIFs</h2>
         
-        <div className="flex items-center space-x-2">
-          <label className="text-[12px] font-semibold text-[#1e4676]">Search:</label>
-          <input 
-            type="text" 
-            placeholder="Search by ID, Name, Phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border border-[#a0a0a0] px-2 py-1 text-[12px] w-64 focus:outline-none focus:border-[#1e4676]"
-          />
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] font-semibold text-[#1e4676]">Search:</label>
+            <input 
+              type="text" 
+              placeholder="Search by ID, Name, Phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border border-[#a0a0a0] px-2 py-1 text-[12px] w-64 focus:outline-none focus:border-[#1e4676]"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 border-l border-[#c4d4ec] pl-2">
+            <button 
+              onClick={handleExportExcel}
+              disabled={isExporting !== null || filteredCifs.length === 0}
+              className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2 py-1 text-[11px] font-bold text-[#1e6e38] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              title="Export Verified CIFs to Excel"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-[#2e7d32]" />
+              <span>{isExporting === 'excel' ? 'Exporting...' : 'Excel'}</span>
+            </button>
+            <button 
+              onClick={handleExportPdf}
+              disabled={isExporting !== null || filteredCifs.length === 0}
+              className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2 py-1 text-[11px] font-bold text-[#b91c1c] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              title="Export Verified CIFs to PDF"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#d32f2f]" />
+              <span>{isExporting === 'pdf' ? 'Generating...' : 'PDF'}</span>
+            </button>
+          </div>
         </div>
       </div>
       
