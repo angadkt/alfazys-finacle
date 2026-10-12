@@ -97,12 +97,37 @@ export default function OrderEntryForm() {
   const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
 
   // Dynamic summary calculations for filtered orders
-  const { totalAed, totalInr, orderCount } = useMemo(() => {
+  const { 
+    totalAed, 
+    clearedAed, 
+    unclearedAed, 
+    totalInr, 
+    clearedInr, 
+    unclearedInr, 
+    orderCount,
+    clearedOrderCount,
+    unclearedOrderCount
+  } = useMemo(() => {
     let aedSum = 0;
+    let clearedAedSum = 0;
+    let unclearedAedSum = 0;
+
     let inrSum = 0;
+    let clearedInrSum = 0;
+    let unclearedInrSum = 0;
+
+    let clearedCount = 0;
+    let unclearedCount = 0;
 
     for (const o of fetchedOrders) {
       if (!o) continue;
+
+      const isPaid = (o.payment_status || '').toLowerCase() === 'paid';
+      if (isPaid) {
+        clearedCount++;
+      } else {
+        unclearedCount++;
+      }
 
       // Safe numeric calculation for AED amount
       let aed = 0;
@@ -129,6 +154,11 @@ export default function OrderEntryForm() {
         }
       }
       aedSum += aed;
+      if (isPaid) {
+        clearedAedSum += aed;
+      } else {
+        unclearedAedSum += aed;
+      }
 
       // Safe numeric calculation for INR value
       let inr = 0;
@@ -151,12 +181,23 @@ export default function OrderEntryForm() {
         }
       }
       inrSum += inr;
+      if (isPaid) {
+        clearedInrSum += inr;
+      } else {
+        unclearedInrSum += inr;
+      }
     }
 
     return {
       totalAed: aedSum,
+      clearedAed: clearedAedSum,
+      unclearedAed: unclearedAedSum,
       totalInr: inrSum,
-      orderCount: fetchedOrders.length
+      clearedInr: clearedInrSum,
+      unclearedInr: unclearedInrSum,
+      orderCount: fetchedOrders.length,
+      clearedOrderCount: clearedCount,
+      unclearedOrderCount: unclearedCount
     };
   }, [fetchedOrders]);
 
@@ -563,49 +604,162 @@ export default function OrderEntryForm() {
               </div>
             </div>
 
-            {/* Dynamic Summary Cards: Total AED & Total INR */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-              {/* Card 1: Total AED */}
-              <div className="bg-[#f4f9f5] border border-[#b7dfbe] rounded-md p-3.5 flex flex-col justify-between shadow-xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#1e7e34]"></span>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#1e6e38]">Total AED</span>
-                  </div>
-                  <span className="text-[11px] font-semibold text-[#1e6e38] bg-[#e1f3e4] border border-[#c3e6cb] px-2 py-0.5 rounded-full">
-                    {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
+            {/* Unified Summary Card (6 Cards Container) */}
+            <div className="bg-[#f8fafc] border border-[#c4d4ec] rounded-md p-3 mb-4 shadow-2xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-3 border-b border-[#d8e2ef]">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[#1e4676]"></span>
+                  <span className="text-[11px] font-extrabold text-[#1e4676] uppercase tracking-wider">
+                    Order Settlement & Clearance Overview
+                  </span>
+                  <span className="text-[10.5px] text-gray-500 hidden sm:inline">
+                    • Dynamic AED & INR reconciliation
                   </span>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-[13px] font-bold text-[#145523]">AED</span>
-                  <span className="text-[22px] sm:text-[24px] font-extrabold text-[#145523] tracking-tight font-mono">
-                    {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <div className="flex items-center gap-2 text-[10.5px]">
+                  <span className="bg-[#f0f4f9] text-[#1e4676] border border-[#c4d4ec] font-bold px-2 py-0.5 rounded">
+                    Total: {orderCount}
                   </span>
-                </div>
-                <div className="text-[10.5px] text-[#285e33] mt-1.5 font-medium">
-                  Combined AED volume across {orderCount} matching {orderCount === 1 ? 'order' : 'orders'}
+                  <span className="bg-[#edf7ed] text-[#1e6e38] border border-[#c3e6cb] font-bold px-2 py-0.5 rounded">
+                    Cleared: {clearedOrderCount}
+                  </span>
+                  <span className="bg-[#fff8ee] text-[#b45309] border border-[#fde68a] font-bold px-2 py-0.5 rounded">
+                    Uncleared: {unclearedOrderCount}
+                  </span>
                 </div>
               </div>
 
-              {/* Card 2: Total INR */}
-              <div className="bg-[#f0f4f9] border border-[#c4d4ec] rounded-md p-3.5 flex flex-col justify-between shadow-xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#1e4676]"></span>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#1e4676]">Total INR</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {/* 1. Total AED */}
+                <div className="bg-[#f4f9f5] border border-[#b7dfbe] rounded-md p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#1e7e34]"></span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#1e6e38]">Total AED</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#1e6e38] bg-[#e1f3e4] border border-[#c3e6cb] px-2 py-0.5 rounded-full">
+                      {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
+                    </span>
                   </div>
-                  <span className="text-[11px] font-semibold text-[#1e4676] bg-[#e0ebf7] border border-[#bcd2ee] px-2 py-0.5 rounded-full">
-                    {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
-                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[12px] font-bold text-[#145523]">AED</span>
+                    <span className="text-[20px] font-extrabold text-[#145523] tracking-tight font-mono">
+                      {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#285e33] mt-1 font-medium">
+                    Combined AED volume across {orderCount} {orderCount === 1 ? 'order' : 'orders'}
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-[14px] font-bold text-[#0d2a4a]">₹</span>
-                  <span className="text-[22px] sm:text-[24px] font-extrabold text-[#0d2a4a] tracking-tight font-mono">
-                    {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
+
+                {/* 2. Cleared AED */}
+                <div className="bg-[#edf7ed] border border-[#a3d9a5] rounded-md p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#0f5132]"></span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f5132]">Cleared AED</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#0f5132] bg-[#d1e7dd] border border-[#badbcc] px-2 py-0.5 rounded-full">
+                      {clearedOrderCount} Paid
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[12px] font-bold text-[#0f5132]">AED</span>
+                    <span className="text-[20px] font-extrabold text-[#0f5132] tracking-tight font-mono">
+                      {clearedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#0f5132] mt-1 font-medium">
+                    Paid & settled AED amount
+                  </div>
                 </div>
-                <div className="text-[10.5px] text-[#2c5282] mt-1.5 font-medium">
-                  Combined INR value across {orderCount} matching {orderCount === 1 ? 'order' : 'orders'}
+
+                {/* 3. Uncleared AED */}
+                <div className="bg-[#fef9ec] border border-[#fae29c] rounded-md p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#b45309]"></span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#b45309]">Uncleared AED</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+                      {unclearedOrderCount} Pending
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[12px] font-bold text-[#92400e]">AED</span>
+                    <span className="text-[20px] font-extrabold text-[#92400e] tracking-tight font-mono">
+                      {unclearedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#92400e] mt-1 font-medium">
+                    Pending / partial AED payment
+                  </div>
+                </div>
+
+                {/* 4. Total INR */}
+                <div className="bg-[#f0f4f9] border border-[#c4d4ec] rounded-md p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#1e4676]"></span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#1e4676]">Total INR</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#1e4676] bg-[#e0ebf7] border border-[#bcd2ee] px-2 py-0.5 rounded-full">
+                      {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[13px] font-bold text-[#0d2a4a]">₹</span>
+                    <span className="text-[20px] font-extrabold text-[#0d2a4a] tracking-tight font-mono">
+                      {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#2c5282] mt-1 font-medium">
+                    Combined INR value across {orderCount} {orderCount === 1 ? 'order' : 'orders'}
+                  </div>
+                </div>
+
+                {/* 5. Cleared INR */}
+                <div className="bg-[#eaf1fb] border border-[#abc6ea] rounded-md p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#1a4a8c]"></span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#1a4a8c]">Cleared INR</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#1a4a8c] bg-[#dbe8f9] border border-[#b8d4f6] px-2 py-0.5 rounded-full">
+                      {clearedOrderCount} Paid
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[13px] font-bold text-[#103567]">₹</span>
+                    <span className="text-[20px] font-extrabold text-[#103567] tracking-tight font-mono">
+                      {clearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#1a4a8c] mt-1 font-medium">
+                    Paid & settled INR value
+                  </div>
+                </div>
+
+                {/* 6. Uncleared INR */}
+                <div className="bg-[#fef7ee] border border-[#fed7aa] rounded-md p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#c2410c]"></span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#c2410c]">Uncleared INR</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#c2410c] bg-[#ffedd5] border border-[#fed7aa] px-2 py-0.5 rounded-full">
+                      {unclearedOrderCount} Pending
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[13px] font-bold text-[#9a3412]">₹</span>
+                    <span className="text-[20px] font-extrabold text-[#9a3412] tracking-tight font-mono">
+                      {unclearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#9a3412] mt-1 font-medium">
+                    Pending / partial INR payment
+                  </div>
                 </div>
               </div>
             </div>
