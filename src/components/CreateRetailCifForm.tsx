@@ -6,6 +6,7 @@ export default function CreateRetailCifForm() {
   const [step, setStep] = useState('selection');
   const [activeTab, setActiveTab] = useState('Basic Info');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [cifId, setCifId] = useState('');
   const [selectedFunction, setSelectedFunction] = useState('');
   const [inputCifId, setInputCifId] = useState('');
@@ -113,12 +114,15 @@ export default function CreateRetailCifForm() {
       }
     };
 
+    setIsSubmitting(true);
     try {
       const res = await api.post('/records/parties', payload);
       setCifId(res.data.record.cif_no || res.data.record.id);
       setIsSubmitted(true);
     } catch (err: any) {
       alert('Error saving CIF: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -586,9 +590,12 @@ export default function CreateRetailCifForm() {
           </button>
           <button 
             onClick={handleSubmit}
-            className="bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white"
+            disabled={isSubmitting}
+            className={`bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white ${
+              isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Submit
+            {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
           <button className="bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white">
             Close
@@ -597,44 +604,50 @@ export default function CreateRetailCifForm() {
       </div>
 
       {isSubmitted && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
-          <div className="bg-white p-4 shadow-2xl w-full max-w-xl flex flex-col" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
-            <div className="border border-[#8f8f9d] p-[2px] bg-[#f0f0f5]">
-              <div className="border border-[#8f8f9d] bg-white p-4 flex items-center gap-4">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white font-serif italic font-bold text-sm shadow-sm border border-[#00a8ff]">
-                  i
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40"></div>
+          <div className="absolute inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+            <div className="bg-white p-4 shadow-2xl w-full max-w-xl flex flex-col mt-4" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
+              <div className="border border-[#8f8f9d] p-[2px] bg-[#f0f0f5]">
+                <div className="border border-[#8f8f9d] bg-white p-4 flex items-center gap-4">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white font-serif italic font-bold text-sm shadow-sm border border-[#00a8ff]">
+                    i
+                  </div>
+                  <span className="text-[14px] text-black">CIF ID {cifId} Created Successfully.</span>
                 </div>
-                <span className="text-[14px] text-black">CIF ID {cifId} Created Successfully.</span>
               </div>
+              <button 
+                onClick={handleOk}
+                className="mt-2 self-start bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-sm font-semibold text-black"
+              >
+                Ok
+              </button>
             </div>
-            <button 
-              onClick={handleOk}
-              className="mt-2 self-start bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-sm font-semibold text-black"
-            >
-              Ok
-            </button>
           </div>
-        </div>
+        </>
       )}
 
       {/* Document Preview Modal */}
       {previewDoc && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div className="bg-[#eaf0f8] px-3 py-2 font-bold text-[#104080] border-b border-[#a2b5cd] flex justify-between items-center">
-              <span>Document Preview - {previewDoc.label}</span>
-              <button 
-                onClick={() => setPreviewDoc(null)} 
-                className="text-red-600 font-bold hover:underline cursor-pointer px-2"
-              >
-                Close (X)
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4 min-h-[400px]">
-              <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-full object-contain shadow-md" />
+        <>
+          <div className="fixed inset-0 bg-black/60 z-[90]"></div>
+          <div className="absolute inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto">
+            <div className="bg-white border-2 border-[#104080] shadow-2xl w-full max-w-4xl max-h-[calc(100%-2rem)] flex flex-col mt-2">
+              <div className="bg-[#eaf0f8] px-3 py-2 font-bold text-[#104080] border-b border-[#a2b5cd] flex justify-between items-center">
+                <span>Document Preview - {previewDoc.label}</span>
+                <button 
+                  onClick={() => setPreviewDoc(null)} 
+                  className="text-red-600 font-bold hover:underline cursor-pointer px-2"
+                >
+                  Close (X)
+                </button>
+              </div>
+              <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4 min-h-[400px]">
+                <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-full object-contain shadow-md" />
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
       </div>
     </div>

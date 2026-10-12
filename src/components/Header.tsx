@@ -117,6 +117,8 @@ export default function Header({
             <button className="px-2 py-0.5 hover:bg-[#e4e9f0] tracking-wide" onClick={onMenuClick}>Menu</button>
             <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
             <button className="px-2 py-0.5 hover:bg-[#e4e9f0] tracking-wide">CCY Converter</button>
+            <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
+            <button className="px-2 py-0.5 hover:bg-[#e4e9f0] tracking-wide">Profit Calculator</button>
           </div>
         </div>
       )}

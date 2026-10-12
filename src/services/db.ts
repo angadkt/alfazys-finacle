@@ -103,6 +103,7 @@ export interface UtrItem {
 
 export interface CreditEntry {
   id: string;
+  receiptNo?: string;
   paymentDate: string;
   beneficiaryName: string;
   transactionDate: string;
@@ -118,7 +119,8 @@ export interface CreditEntry {
   status: 'Completed' | 'Pending' | 'Cancelled';
   createdBy: string;
   verifiedBy?: string;
-  createdAt: string;
+  createdAt?: string;
+  timestamp?: string;
 }
 
 export const CreditEntry = {};

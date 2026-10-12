@@ -24,7 +24,8 @@ export default function FincorePage() {
     "VIEW RETAIL CIF",
     "ORDER ENTRY",
     "CREDIT ENTRY",
-    "AED COLLECTON"
+    "AED COLLECTON",
+    "PROFIT CALCULATOR"
   ];
 
   const handleShortcutSelect = (screen: string) => {

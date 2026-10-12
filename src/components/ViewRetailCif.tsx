@@ -52,7 +52,7 @@ export default function ViewRetailCif() {
       <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
         <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide">view retail cif</h4>
       </div>
-      <div className="flex-1 flex flex-col p-4">
+      <div className="flex-1 flex flex-col p-4 relative overflow-hidden">
       
       <div className="flex justify-between items-end mb-4">
         <h2 className="text-[18px] font-bold text-[#1e4676] m-0">View Verified Retail CIFs</h2>
@@ -116,8 +116,10 @@ export default function ViewRetailCif() {
 
       {/* CIF Details Modal */}
       {selectedCif && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#e4e4e4] border-2 border-[#a0a0a0] w-[650px] shadow-2xl flex flex-col font-sans max-h-[90vh]">
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedCif(null)}></div>
+          <div className="absolute inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+            <div className="bg-[#e4e4e4] border-2 border-[#a0a0a0] w-[650px] shadow-2xl flex flex-col font-sans max-h-[calc(100%-2rem)] mt-2">
             <div className="bg-[#1e4676] text-white px-3 py-2 flex justify-between items-center">
               <h3 className="text-sm font-bold m-0 tracking-wide">CIF Details - {selectedCif.cif_no || selectedCif.id}</h3>
               <button onClick={() => setSelectedCif(null)} className="text-white hover:text-gray-300 text-lg leading-none font-bold">&times;</button>
@@ -197,7 +199,8 @@ export default function ViewRetailCif() {
             </div>
           </div>
         </div>
-      )}
+      </>
+    )}
     </div>
   );
 }

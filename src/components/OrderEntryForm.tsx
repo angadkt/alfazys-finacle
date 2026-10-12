@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { FileSpreadsheet, FileText } from 'lucide-react';
+import { exportOrdersToExcel, exportOrdersToPdf } from '../utils/exportOrders';
 
 export default function OrderEntryForm() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [selectedFunction, setSelectedFunction] = useState('A-ADD');
-  const [currency] = useState('INR');
   const [accounts, setAccounts] = useState<any[]>([]);
   const [currentAccount, setCurrentAccount] = useState({
     clientName: '',
@@ -73,7 +74,10 @@ export default function OrderEntryForm() {
     setCurrentAccount(accToEdit);
     removeAccount(index);
   };
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verifyingOrderId, setVerifyingOrderId] = useState<string | null>(null);
   const [orderRef, setOrderRef] = useState('');
   const [agentOrCustomer, setAgentOrCustomer] = useState('');
   const [transactionThrough, setTransactionThrough] = useState('');
@@ -86,14 +90,36 @@ export default function OrderEntryForm() {
   const [fetchedOrders, setFetchedOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [filterAgent, setFilterAgent] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
 
-  const fetchOrders = async (page = currentPage, search = searchQuery) => {
+  const fetchOrders = async (
+    page = currentPage, 
+    search = searchQuery,
+    date = filterDate,
+    agent = filterAgent
+  ) => {
     setLoadingOrders(true);
     try {
-      const res = await api.get(`/records/orders?page=${page}&limit=20&search=${encodeURIComponent(search)}`);
-      setFetchedOrders(res.data.records || []);
+      let url = `/records/orders?page=${page}&limit=20&search=${encodeURIComponent(search)}`;
+      if (date) url += `&date=${encodeURIComponent(date)}`;
+      if (agent) url += `&party_id=${encodeURIComponent(agent)}`;
+
+      const res = await api.get(url);
+      let records = res.data.records || [];
+
+      // Fallback client-side filter
+      if (date) {
+        records = records.filter((o: any) => (o.order_date || '').startsWith(date));
+      }
+      if (agent) {
+        records = records.filter((o: any) => String(o.party_id) === String(agent));
+      }
+
+      setFetchedOrders(records);
       setCurrentPage(res.data.page || 1);
       setTotalPages(Math.ceil((res.data.total || 0) / (res.data.limit || 20)) || 1);
     } catch (err) {
@@ -123,12 +149,43 @@ export default function OrderEntryForm() {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchOrders(currentPage, searchQuery);
+      fetchOrders(currentPage, searchQuery, filterDate, filterAgent);
     }, 400);
     return () => clearTimeout(handler);
-  }, [searchQuery, currentPage]);
+  }, [searchQuery, filterDate, filterAgent, currentPage]);
+
+  const handleDeleteOrder = async (id: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete Order ${id}?`)) {
+      try {
+        await api.delete(`/records/orders/${id}`);
+        fetchOrders(currentPage, searchQuery);
+      } catch (err: any) {
+        alert('Error deleting order: ' + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  const handleEditOrder = (o: any) => {
+    setEditingOrderId(o.id);
+    let recs = o.receivers_data;
+    if (typeof recs === 'string') {
+      try { recs = JSON.parse(recs); } catch { recs = []; }
+    }
+    setAccounts(Array.isArray(recs) ? recs : []);
+    
+    if (o.party_name && o.party_id) {
+       setAgentOrCustomer(`${o.party_name} (${o.party_id})`);
+    } else {
+       setAgentOrCustomer(o.party_id ? String(o.party_id) : '');
+    }
+    
+    setTransactionThrough(o.transaction_through || '');
+    setSelectedFunction('A-ADD');
+    setIsFormModalOpen(true);
+  };
 
   const handleGo = async () => {
+    if (isSubmitting) return;
     if (accounts.length === 0) {
       alert('Please add at least one account detail.');
       return;
@@ -139,24 +196,35 @@ export default function OrderEntryForm() {
 
     const apiPayload = {
       party_id: party_id || null,
-      buyer_id: null, // Servicer is unassigned initially 
+      buyer_id: null, 
       txn: "gateway", 
       order_date: new Date().toISOString().split('T')[0],
       account_id: null,
       transaction_through: transactionThrough.trim() || null,
       payment_status: "Pending",
-      accounts: accounts, // Send all beneficiary accounts array!
+      accounts: accounts,
       note: "Order marking the sale yet to happen"
     };
 
+    setIsSubmitting(true);
     try {
-      await api.post('/records/orders', apiPayload);
-      const ref = `ORD-${Date.now().toString().slice(-6)}`;
-      setOrderRef(ref);
-      setIsSubmitted(true);
-      fetchOrders(1, searchQuery);
+      if (editingOrderId) {
+        await api.put(`/records/orders/${editingOrderId}`, apiPayload);
+        setEditingOrderId(null);
+        fetchOrders(currentPage, searchQuery);
+        setIsFormModalOpen(false);
+      } else {
+        await api.post('/records/orders', apiPayload);
+        const ref = `ORD-${Date.now().toString().slice(-6)}`;
+        setOrderRef(ref);
+        setIsFormModalOpen(false);
+        setIsSubmitted(true);
+        fetchOrders(1, searchQuery);
+      }
     } catch (err: any) {
       alert('Error submitting order to server: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -173,6 +241,67 @@ export default function OrderEntryForm() {
     });
     setTransactionThrough('');
     setSelectedFunction('A-ADD');
+    setEditingOrderId(null);
+  };
+
+  const getOrdersForExport = async () => {
+    if (fetchedOrders.length === 0) return [];
+    if (totalPages <= 1) return fetchedOrders;
+    try {
+      let url = `/records/orders?page=1&limit=1000&search=${encodeURIComponent(searchQuery)}`;
+      if (filterDate) url += `&date=${encodeURIComponent(filterDate)}`;
+      if (filterAgent) url += `&party_id=${encodeURIComponent(filterAgent)}`;
+      const res = await api.get(url);
+      let records = res.data.records || [];
+      if (filterDate) records = records.filter((o: any) => (o.order_date || '').startsWith(filterDate));
+      if (filterAgent) records = records.filter((o: any) => String(o.party_id) === String(filterAgent));
+      return records.length > 0 ? records : fetchedOrders;
+    } catch (err) {
+      console.error('Export fetch error, using current view:', err);
+      return fetchedOrders;
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    if (fetchedOrders.length === 0) {
+      alert('No orders available to export.');
+      return;
+    }
+    setIsExporting('excel');
+    try {
+      const orders = await getOrdersForExport();
+      const selectedCustomer = customers.find(c => String(c.internal_id) === String(filterAgent));
+      exportOrdersToExcel(orders, {
+        filterDate,
+        filterAgent: selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.id})` : filterAgent,
+        searchQuery
+      });
+    } catch (err: any) {
+      alert('Failed to generate Excel file: ' + err.message);
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (fetchedOrders.length === 0) {
+      alert('No orders available to export.');
+      return;
+    }
+    setIsExporting('pdf');
+    try {
+      const orders = await getOrdersForExport();
+      const selectedCustomer = customers.find(c => String(c.internal_id) === String(filterAgent));
+      exportOrdersToPdf(orders, {
+        filterDate,
+        filterAgent: selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.id})` : filterAgent,
+        searchQuery
+      });
+    } catch (err: any) {
+      alert('Failed to generate PDF file: ' + err.message);
+    } finally {
+      setIsExporting(null);
+    }
   };
 
   return (
@@ -194,7 +323,7 @@ export default function OrderEntryForm() {
           <select 
             value={selectedFunction} 
             onChange={(e) => setSelectedFunction(e.target.value)}
-            className="border border-[#7f9db9] bg-white text-black px-1 h-[22px] text-[11px]"
+            className="border border-[#7f9db9] bg-white text-black px-1 pr-6 h-[22px] text-[11px]"
           >
             <option value="A-ADD">A-ADD (Create New Order)</option>
             <option value="V-VIEW">V-VIEW (Inquire Orders)</option>
@@ -204,8 +333,10 @@ export default function OrderEntryForm() {
         </div>
       </div>
 
-      {/* Main Workspace */}
-      <div className="flex-1 bg-white border border-[#a0a0a0] m-1 pr-3 pb-3 flex flex-col overflow-auto">
+      {/* Main Workspace Area under Header Bar */}
+      <div className="flex-1 relative flex flex-col overflow-hidden">
+        {/* Main Workspace */}
+        <div className="flex-1 bg-white border border-[#a0a0a0] m-1 pr-3 pb-3 flex flex-col overflow-auto">
         
         {/* Navigator Bar */}
         <div className="flex items-center gap-2 px-2 py-1 bg-[#f8f9fa] border-y border-[#a0a0a0] text-[#1e4676] font-bold text-[11px] w-fit">
@@ -227,18 +358,123 @@ export default function OrderEntryForm() {
         </div>
 
         <div className="p-4 bg-white overflow-auto flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-[#1e4676]">Fetched Orders List</h3>
-              <input 
-                type="text" 
-                placeholder="Search orders by ID, Agent, Client or Account..." 
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="border border-[#c4d4ec] px-3 py-1 rounded-md text-xs focus:outline-none focus:border-[#1e4676] w-72"
-              />
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h3 className="font-bold text-[#1e4676] text-sm tracking-wide">Fetched Orders List</h3>
+              
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Date Filter */}
+                <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
+                  <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
+                  <input 
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => {
+                      setFilterDate(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
+                  />
+                  {filterDate && (
+                    <button 
+                      onClick={() => { setFilterDate(''); setCurrentPage(1); }}
+                      className="text-gray-400 hover:text-red-500 font-bold text-xs ml-0.5"
+                      title="Clear Date"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+
+                {/* Agent / Customer Filter */}
+                <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
+                  <span className="text-[#1e4676] font-bold text-[11px]">Agent:</span>
+                  <select
+                    value={filterAgent}
+                    onChange={(e) => {
+                      setFilterAgent(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676] max-w-[180px]"
+                  >
+                    <option value="">All Agents / Customers</option>
+                    {customers.map((c) => (
+                      <option key={c.internal_id} value={c.internal_id}>
+                        {c.name} ({c.id})
+                      </option>
+                    ))}
+                  </select>
+                  {filterAgent && (
+                    <button 
+                      onClick={() => { setFilterAgent(''); setCurrentPage(1); }}
+                      className="text-gray-400 hover:text-red-500 font-bold text-xs ml-0.5"
+                      title="Clear Agent Filter"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+
+                {/* Search input */}
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="Search orders by ID, Agent, Client or Account..." 
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="border border-[#c4d4ec] pl-3 pr-6 py-1 rounded text-xs focus:outline-none focus:border-[#1e4676] w-64 sm:w-72"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => { setSearchQuery(''); setCurrentPage(1); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+                      title="Clear Search"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+
+                {/* Reset Filters */}
+                {(filterDate || filterAgent || searchQuery) && (
+                  <button
+                    onClick={() => {
+                      setFilterDate('');
+                      setFilterAgent('');
+                      setSearchQuery('');
+                      setCurrentPage(1);
+                    }}
+                    className="border border-[#c4d4ec] bg-white hover:bg-[#f0f4f8] text-[#1a4a8c] hover:text-[#133564] px-2.5 py-1 rounded text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+
+                {/* Export Options */}
+                <div className="flex items-center gap-1.5 border-l border-[#c4d4ec] pl-2 ml-0.5">
+                  <button
+                    onClick={handleDownloadExcel}
+                    disabled={isExporting !== null || loadingOrders || fetchedOrders.length === 0}
+                    className="flex items-center gap-1.5 border border-[#c4d4ec] bg-white hover:bg-[#edf7ed] text-[#1e6e38] disabled:opacity-50 disabled:cursor-not-allowed px-2.5 py-1 rounded text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                    title="Download Orders as Excel (.xlsx)"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-[#2e7d32]" />
+                    <span>{isExporting === 'excel' ? 'Exporting...' : 'Excel'}</span>
+                  </button>
+
+                  <button
+                    onClick={handleDownloadPdf}
+                    disabled={isExporting !== null || loadingOrders || fetchedOrders.length === 0}
+                    className="flex items-center gap-1.5 border border-[#c4d4ec] bg-white hover:bg-[#fdf2f2] text-[#b91c1c] disabled:opacity-50 disabled:cursor-not-allowed px-2.5 py-1 rounded text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                    title="Download Orders as PDF (.pdf)"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-[#d32f2f]" />
+                    <span>{isExporting === 'pdf' ? 'Generating...' : 'PDF'}</span>
+                  </button>
+                </div>
+              </div>
             </div>
             {loadingOrders ? (
               <div className="text-gray-500">Loading orders...</div>
@@ -354,7 +590,7 @@ export default function OrderEntryForm() {
                                 alert('Failed to update payment status: ' + (err.response?.data?.message || err.message));
                               }
                             }}
-                            className={`text-[11px] font-bold rounded px-2 py-1 border cursor-pointer focus:outline-none ${
+                            className={`text-[11px] font-bold rounded px-2 pr-6 py-1 border cursor-pointer focus:outline-none ${
                               (o.payment_status || 'Pending').toLowerCase() === 'paid' ? 'bg-green-100 text-green-800 border-green-300' :
                               (o.payment_status || 'Pending').toLowerCase() === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-300' :
                               (o.payment_status || 'Pending').toLowerCase() === 'partial' ? 'bg-blue-100 text-blue-800 border-blue-300' :
@@ -368,25 +604,43 @@ export default function OrderEntryForm() {
                           </select>
                         </td>
                         <td className="p-2 border border-[#c4d4ec] text-center">
-                          {isAdmin && o.status === 'pending' ? (
-                            <button
-                              onClick={async () => {
-                                if (confirm(`Verify order ${o.order_no}?`)) {
-                                  try {
-                                    await api.patch(`/records/orders/${o.id}`, { status: 'verified' });
-                                    fetchOrders(currentPage, searchQuery);
-                                  } catch (err: any) {
-                                    alert('Failed to verify order: ' + (err.response?.data?.message || err.message));
+                          <div className="flex items-center justify-center gap-2">
+                            {isAdmin && o.status === 'pending' && (
+                              <button
+                                disabled={verifyingOrderId === o.id}
+                                onClick={async () => {
+                                  if (confirm(`Verify order ${o.order_no}?`)) {
+                                    setVerifyingOrderId(o.id);
+                                    try {
+                                      await api.patch(`/records/orders/${o.id}`, { status: 'verified' });
+                                      fetchOrders(currentPage, searchQuery);
+                                    } catch (err: any) {
+                                      alert('Failed to verify order: ' + (err.response?.data?.message || err.message));
+                                    } finally {
+                                      setVerifyingOrderId(null);
+                                    }
                                   }
-                                }
-                              }}
-                              className="bg-[#1a4a8c] hover:bg-[#153970] text-white text-[11px] font-bold px-2.5 py-1 rounded shadow-sm"
+                                }}
+                                className={`bg-[#1a4a8c] hover:bg-[#153970] text-white text-[11px] font-bold px-2.5 py-1 rounded shadow-sm ${
+                                  verifyingOrderId === o.id ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                              >
+                                {verifyingOrderId === o.id ? 'Verifying...' : 'Verify'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleEditOrder(o)}
+                              className="text-[#1a4a8c] hover:underline font-bold text-[11px]"
                             >
-                              Verify
+                              Edit
                             </button>
-                          ) : (
-                            <span className="text-gray-400 text-[11px]">-</span>
-                          )}
+                            <button
+                              onClick={() => handleDeleteOrder(o.id)}
+                              className="text-red-600 hover:underline font-bold text-[11px]"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -422,20 +676,22 @@ export default function OrderEntryForm() {
           </div>
 
         {isFormModalOpen && (
-          <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
-            <div className="bg-white shadow-2xl flex flex-col max-h-[90vh] max-w-6xl w-full rounded-md overflow-hidden">
+          <>
+            <div className="fixed inset-0 bg-black/40 z-30" onClick={() => setIsFormModalOpen(false)}></div>
+            <div className="absolute inset-0 z-40 flex items-start justify-center p-2 sm:p-3 overflow-y-auto">
+              <div className="bg-white shadow-2xl flex flex-col max-h-[calc(100%-1rem)] max-w-4xl w-full rounded-md overflow-hidden mt-1">
               <div className="bg-[#eef2f9] px-6 py-4 font-bold text-black border-b border-[#c4d4ec] text-[16px] flex items-center justify-between">
                 <span>Custom Order Entry Form</span>
                 <button onClick={() => setIsFormModalOpen(false)} className="text-[#a51a1a] font-bold hover:underline cursor-pointer text-[14px]">
                   Close (X)
                 </button>
               </div>
-              <div className="p-8 overflow-auto bg-white flex flex-col gap-6">
+              <div className="p-6 overflow-auto bg-white flex flex-col gap-6">
 
-                <div className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-12 gap-y-0 text-[13px]">
+                <div className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-6 gap-y-0 text-[13px]">
                   
                   {/* First Box Section */}
-                  <div className="col-span-4 grid grid-cols-subgrid gap-y-5 bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-6 px-6 -mx-6 mb-6">
+                  <div className="col-span-4 grid grid-cols-subgrid gap-y-3 bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-4 px-6 -mx-6 mb-4">
                     
                     <div className="font-medium text-black whitespace-nowrap">
                       Function Code <span className="text-red-600">*</span>
@@ -444,7 +700,7 @@ export default function OrderEntryForm() {
                       <select 
                         value={selectedFunction}
                         onChange={(e) => setSelectedFunction(e.target.value)}
-                        className="w-[240px] border border-[#c4d4ec] bg-white text-black rounded-md focus:outline-none h-[36px] px-2"
+                        className="w-[240px] border border-[#c4d4ec] bg-white text-black rounded-md focus:outline-none h-[36px] px-2 pr-8"
                       >
                         <option value="A-ADD">A-ADD (New Order Booking)</option>
                         <option value="V-VIEW">V-VIEW (Order Inquiry)</option>
@@ -474,7 +730,6 @@ export default function OrderEntryForm() {
                         autoComplete="off"
                         value={agentOrCustomer}
                         onChange={(e) => setAgentOrCustomer(e.target.value)}
-                        placeholder="SELECT AGENT OR CUSTOMER"
                         className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
                       />
                       <datalist id="agent-customer-list">
@@ -488,42 +743,47 @@ export default function OrderEntryForm() {
                       Transaction Through
                     </div>
                     <div>
-                      <input 
-                        type="text" 
+                      <select 
                         value={transactionThrough}
                         onChange={(e) => setTransactionThrough(e.target.value)}
-                        placeholder="TRANSACTION THROUGH (OPTIONAL)"
-                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
-                      />
+                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none"
+                      >
+                        <option value=""></option>
+                        <option value="CDM">CDM</option>
+                        <option value="BNK SLP">BNK SLP</option>
+                        <option value="FINAC">FINAC</option>
+                        <option value="BY CASH">BY CASH</option>
+                        <option value="MOB TRF">MOB TRF</option>
+                        <option value="UPI">UPI</option>
+                        <option value="COR NET">COR NET</option>
+                      </select>
                     </div>
                   </div>
 
                   {/* Second Box Section */}
-                  <div className="col-span-4 grid grid-cols-subgrid gap-y-5 bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-6 px-6 -mx-6 relative">
+                  <div className="col-span-4 grid grid-cols-subgrid gap-y-3 bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-4 px-6 -mx-6 relative">
                     <div className="absolute top-[-1px] left-[-1px] bg-[#1a4a8c] text-white text-[11px] font-medium px-3 py-1 rounded-tl-md rounded-br-md">Beneficiary Bank Details</div>
                     
-                    <div className="font-medium text-black whitespace-nowrap mt-4">
+                    <div className="font-medium text-black whitespace-nowrap mt-2">
                       Client / Beneficiary Name <span className="text-red-600">*</span>
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-2">
                       <input 
                         type="text" 
                         value={currentAccount.clientName}
                         onChange={(e) => handleCurrentAccountChange('clientName', e.target.value)}
-                        placeholder="ENTER CLIENT NAME"
                         className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
                       />
                     </div>
 
-                    <div className="font-medium text-black whitespace-nowrap mt-4">
+                    <div className="font-medium text-black whitespace-nowrap mt-2">
                       Account Number <span className="text-red-600">*</span>
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-2">
                       <input 
                         type="text" 
                         value={currentAccount.accountNumber}
                         onChange={(e) => handleCurrentAccountChange('accountNumber', e.target.value)}
-                        placeholder="ENTER ACCOUNT NUMBER"
                         className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
                       />
                     </div>
@@ -536,7 +796,6 @@ export default function OrderEntryForm() {
                         type="text" 
                         value={currentAccount.ifscCode}
                         onChange={(e) => handleCurrentAccountChange('ifscCode', e.target.value)}
-                        placeholder="E.G. SBIN0000001"
                         className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
                       />
                     </div>
@@ -549,7 +808,6 @@ export default function OrderEntryForm() {
                         type="text" 
                         value={currentAccount.bankName}
                         readOnly
-                        placeholder="AUTO-FILLED BANK NAME"
                         className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-[#ebe9e1] uppercase focus:outline-none"
                       />
                     </div>
@@ -562,7 +820,6 @@ export default function OrderEntryForm() {
                         type="text" 
                         value={currentAccount.branchName}
                         readOnly
-                        placeholder="AUTO-FILLED BRANCH NAME"
                         className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-[#ebe9e1] uppercase focus:outline-none"
                       />
                     </div>
@@ -575,7 +832,6 @@ export default function OrderEntryForm() {
                         type="number" 
                         value={currentAccount.orderAmount}
                         onChange={(e) => handleCurrentAccountChange('orderAmount', e.target.value)}
-                        placeholder="Confirmed INR"
                         className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
                       />
                     </div>
@@ -588,7 +844,6 @@ export default function OrderEntryForm() {
                         type="number" 
                         value={currentAccount.confirmOrderAmount}
                         onChange={(e) => handleCurrentAccountChange('confirmOrderAmount', e.target.value)}
-                        placeholder="Sale Rate (AED)"
                         className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
                       />
                     </div>
@@ -605,7 +860,6 @@ export default function OrderEntryForm() {
                             : ''
                         }
                         readOnly
-                        placeholder="Confirmed AED"
                         className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-[#ebe9e1] focus:outline-none"
                       />
                     </div>
@@ -673,13 +927,17 @@ export default function OrderEntryForm() {
                 <div className="flex gap-4 mt-2">
                   <button 
                     onClick={handleGo}
-                    className="bg-[#1a4a8c] text-white rounded-md px-6 py-2 shadow-sm font-medium hover:bg-[#153970]"
+                    disabled={isSubmitting}
+                    className={`bg-[#1a4a8c] text-white rounded-md px-6 py-2 shadow-sm font-medium hover:bg-[#153970] transition-opacity ${
+                      isSubmitting ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
                   >
-                    Create Order (Go)
+                    {isSubmitting ? (editingOrderId ? 'Updating...' : 'Processing...') : (editingOrderId ? 'Update Order' : 'Create Order (Go)')}
                   </button>
                   <button 
                     onClick={handleClear}
-                    className="bg-white border border-[#c4d4ec] text-[#1a4a8c] rounded-md px-6 py-2 font-medium shadow-sm hover:bg-[#f4f7fb]"
+                    disabled={isSubmitting}
+                    className="bg-white border border-[#c4d4ec] text-[#1a4a8c] rounded-md px-6 py-2 font-medium shadow-sm hover:bg-[#f4f7fb] disabled:opacity-50"
                   >
                     Clear
                   </button>
@@ -687,36 +945,43 @@ export default function OrderEntryForm() {
               </div>
             </div>
           </div>
-        )}
+        </>
+      )}
 
       </div>
 
-      {/* Success Modal */}
-      {isSubmitted && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
-          <div className="bg-white p-4 shadow-2xl w-full max-w-lg flex flex-col" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-            <div className="border border-[#8f8f9d] p-[2px] bg-[#f0f0f5]">
-              <div className="border border-[#8f8f9d] bg-white p-4 flex items-center gap-4">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-b from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white font-serif italic font-bold text-base shadow-sm border border-[#00a8ff]">
-                  i
-                </div>
-                <div className="text-[12px] text-black">
-                  <div className="font-bold text-[#1e4676]">Order {orderRef} Registered Successfully.</div>
+        {/* Success Modal */}
+        {isSubmitted && (
+          <>
+            <div className="fixed inset-0 bg-black/40 z-40"></div>
+            <div className="absolute inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+              <div className="bg-white p-4 shadow-2xl w-full max-w-lg flex flex-col mt-4" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+              <div className="border border-[#8f8f9d] p-[2px] bg-[#f0f0f5]">
+                <div className="border border-[#8f8f9d] bg-white p-4 flex items-center gap-4">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-b from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white font-serif italic font-bold text-base shadow-sm border border-[#00a8ff]">
+                    i
+                  </div>
+                  <div className="text-[12px] text-black">
+                    <div className="font-bold text-[#1e4676]">Order {orderRef} Registered Successfully.</div>
+                  </div>
                 </div>
               </div>
+              <button 
+                onClick={() => {
+                  setIsSubmitted(false);
+                  setIsFormModalOpen(false);
+                  handleClear();
+                }}
+                className="mt-3 self-start bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-xs font-bold text-black"
+              >
+                Ok
+              </button>
             </div>
-            <button 
-              onClick={() => {
-                setIsSubmitted(false);
-                handleClear();
-              }}
-              className="mt-3 self-start bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-xs font-bold text-black"
-            >
-              Ok
-            </button>
           </div>
-        </div>
+        </>
       )}
+
+      </div>
 
     </div>
   );

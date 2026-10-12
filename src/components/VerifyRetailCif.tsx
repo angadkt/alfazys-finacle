@@ -4,6 +4,7 @@ import { dbService } from '../services/db';
 
 export default function VerifyRetailCif() {
   const [pendingCifs, setPendingCifs] = useState<any[]>([]);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadPendingCifs();
@@ -36,6 +37,8 @@ export default function VerifyRetailCif() {
   };
 
   const handleVerify = async (cif: any) => {
+    if (verifyingId) return;
+    setVerifyingId(cif.id);
     try {
       const targetId = cif.realId || cif.id;
       await api.patch(`/records/parties/${targetId}`, { status: 'verified' });
@@ -45,6 +48,8 @@ export default function VerifyRetailCif() {
       dbService.updateCustomer(cif.id, { status: 'approved' });
       alert(`CIF ${cif.id} has been verified successfully.`);
       loadPendingCifs();
+    } finally {
+      setVerifyingId(null);
     }
   };
 
@@ -92,9 +97,12 @@ export default function VerifyRetailCif() {
                   <td className="p-2">
                     <button 
                       onClick={() => handleVerify(cif)}
-                      className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2 py-0.5 text-xs text-black active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white"
+                      disabled={verifyingId === cif.id}
+                      className={`bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2 py-0.5 text-xs text-black active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white ${
+                        verifyingId === cif.id ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     >
-                      Verify
+                      {verifyingId === cif.id ? 'Verifying...' : 'Verify'}
                     </button>
                   </td>
                 </tr>
