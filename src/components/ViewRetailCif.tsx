@@ -9,6 +9,34 @@ export default function ViewRetailCif() {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; label: string; isPdf?: boolean } | null>(null);
+
+  const handlePreviewDoc = async (cifId: any, doc: any) => {
+    try {
+      const res = await api.get(`/cif/${cifId}/documents/${doc.id}`, { responseType: 'blob' });
+      const isPdf = res.data.type === 'application/pdf' || (doc.file_name && doc.file_name.toLowerCase().endsWith('.pdf'));
+      const url = URL.createObjectURL(res.data);
+      setPreviewDoc({ url, label: doc.doc_type || 'Document', isPdf });
+    } catch (e: any) {
+      alert('Failed to load document preview: ' + (e.response?.data?.message || e.message));
+    }
+  };
+
+  const handleDownloadDoc = async (cifId: any, doc: any) => {
+    try {
+      const res = await api.get(`/cif/${cifId}/documents/${doc.id}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.file_name || `${doc.doc_type}_${doc.id}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert('Failed to download document: ' + (e.response?.data?.message || e.message));
+    }
+  };
 
   useEffect(() => {
     loadVerifiedCifs();
@@ -225,18 +253,41 @@ export default function ViewRetailCif() {
                     <thead>
                       <tr className="bg-[#f0f0f5] border-b border-[#e4e4e4] text-left text-gray-600">
                         <th className="p-2 font-bold">Doc Type</th>
-                        <th className="p-2 font-bold">Last 4 Digits</th>
-                        <th className="p-2 font-bold">Expiry Date</th>
+                        <th className="p-2 font-bold">Document Name</th>
                         <th className="p-2 font-bold">Uploaded At</th>
+                        <th className="p-2 font-bold text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedCif.documents.map((doc: any) => (
                         <tr key={doc.id} className="border-b border-[#e4e4e4] last:border-0 hover:bg-gray-50">
-                          <td className="p-2 font-semibold text-[#1e4676]">{doc.doc_type}</td>
-                          <td className="p-2">***{doc.doc_number_last4 || 'N/A'}</td>
-                          <td className="p-2">{doc.expiry_date ? new Date(doc.expiry_date).toLocaleDateString() : '-'}</td>
-                          <td className="p-2">{new Date(doc.uploaded_at).toLocaleString()}</td>
+                          <td className="p-2 font-semibold text-[#1e4676] capitalize">
+                            {doc.doc_type ? doc.doc_type.replace(/_/g, ' ') : '-'}
+                          </td>
+                          <td className="p-2 text-gray-700 truncate max-w-[160px]">
+                            {doc.file_name || `${doc.doc_type || 'document'}`}
+                          </td>
+                          <td className="p-2 text-gray-500">
+                            {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : '-'}
+                          </td>
+                          <td className="p-2 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handlePreviewDoc(selectedCif.id, doc)}
+                                className="bg-[#1e4676] hover:bg-[#163459] text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
+                                title="View Document"
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={() => handleDownloadDoc(selectedCif.id, doc)}
+                                className="bg-gray-100 border border-gray-300 hover:bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
+                                title="Download Document"
+                              >
+                                Download
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -248,10 +299,37 @@ export default function ViewRetailCif() {
             <div className="bg-[#d4d0c8] border-t border-[#a0a0a0] p-2 flex justify-end">
               <button 
                 onClick={() => setSelectedCif(null)}
-                className="bg-gray-100 border border-gray-400 px-6 py-1 text-[12px] hover:bg-gray-200 font-bold text-[#1e4676]"
+                className="bg-gray-100 border border-gray-400 px-6 py-1 text-[12px] hover:bg-gray-200 font-bold text-[#1e4676] cursor-pointer"
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      </>
+    )}
+
+    {/* Document Preview Modal */}
+    {previewDoc && (
+      <>
+        <div className="fixed inset-0 bg-black/60 z-[90]" onClick={() => setPreviewDoc(null)}></div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-[#104080] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="bg-[#eaf0f8] px-3 py-2 font-bold text-[#104080] border-b border-[#a2b5cd] flex justify-between items-center">
+              <span>Document Preview - {previewDoc.label.replace(/_/g, ' ').toUpperCase()}</span>
+              <button 
+                onClick={() => setPreviewDoc(null)} 
+                className="text-red-600 font-bold hover:underline cursor-pointer px-2"
+              >
+                Close (X)
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4 min-h-[400px]">
+              {previewDoc.isPdf ? (
+                <iframe src={previewDoc.url} title={previewDoc.label} className="w-full h-[550px] border border-gray-300" />
+              ) : (
+                <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-[550px] object-contain shadow-md" />
+              )}
             </div>
           </div>
         </div>

@@ -11,7 +11,8 @@ export default function CreateRetailCifForm() {
   const [selectedFunction, setSelectedFunction] = useState('');
   const [inputCifId, setInputCifId] = useState('');
   const [documents, setDocuments] = useState<Record<string, string>>({});
-  const [previewDoc, setPreviewDoc] = useState<{url: string, label: string} | null>(null);
+  const [docFiles, setDocFiles] = useState<Record<string, File>>({});
+  const [previewDoc, setPreviewDoc] = useState<{url: string, label: string, isPdf?: boolean} | null>(null);
   const [cifTypesList, setCifTypesList] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
@@ -32,8 +33,10 @@ export default function CreateRetailCifForm() {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
       setDocuments(prev => ({ ...prev, [label]: url }));
-      setPreviewDoc({ url, label });
+      setDocFiles(prev => ({ ...prev, [label]: file }));
+      setPreviewDoc({ url, label, isPdf });
     }
   };
 
@@ -117,7 +120,37 @@ export default function CreateRetailCifForm() {
     setIsSubmitting(true);
     try {
       const res = await api.post('/records/parties', payload);
-      setCifId(res.data.record.cif_no || res.data.record.id);
+      const partyId = res.data.record.id;
+      const createdCifNo = res.data.record.cif_no || partyId;
+      setCifId(createdCifNo);
+
+      // Upload selected identification documents to backend
+      const labelToDocType: Record<string, string> = {
+        'Photo': 'photo',
+        'Passport (Front)': 'passport_front',
+        'Passport (Back)': 'passport_back',
+        'Aadhaar (Front)': 'aadhaar_front',
+        'Aadhaar (Back)': 'aadhaar_back',
+        'UAE ID / PAN': 'uae_id',
+        'Signature': 'signature'
+      };
+
+      const docEntries = Object.entries(docFiles);
+      if (docEntries.length > 0) {
+        for (const [label, file] of docEntries) {
+          try {
+            const formDataUpload = new FormData();
+            formDataUpload.append('file', file);
+            formDataUpload.append('doc_type', labelToDocType[label] || 'photo');
+            await api.post(`/cif/${partyId}/documents`, formDataUpload, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            });
+          } catch (uploadErr) {
+            console.error(`Failed to upload ${label}:`, uploadErr);
+          }
+        }
+      }
+
       setIsSubmitted(true);
     } catch (err: any) {
       alert('Error saving CIF: ' + (err.response?.data?.message || err.message));
@@ -131,6 +164,8 @@ export default function CreateRetailCifForm() {
     setActiveTab('Basic Info');
     setCifId('');
     setStep('selection');
+    setDocuments({});
+    setDocFiles({});
     setFormData({ 
       title: '', firstName: '', lastName: '', shortName: '', gender: '', 
       nationality: '', contactNo: '', ccy: '', branchOffice: '', cifType: '',
@@ -408,16 +443,36 @@ export default function CreateRetailCifForm() {
                           title=" " 
                         />
                         {documents[label] ? (
-                          <div 
-                            className="flex items-center gap-2 w-full h-full cursor-pointer"
-                            onClick={(e) => {
-                               e.preventDefault();
-                               e.stopPropagation();
-                               setPreviewDoc({ url: documents[label], label });
-                            }}
-                          >
-                            <img src={documents[label]} alt={label} className="h-8 w-8 object-cover rounded-sm border border-gray-300 flex-shrink-0" />
-                            <span className="text-[#316ac5] font-semibold text-[11px] truncate flex-1">Document uploaded</span>
+                          <div className="flex items-center justify-between w-full h-full pr-1">
+                            <div 
+                              className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                              onClick={(e) => {
+                                 e.preventDefault();
+                                 e.stopPropagation();
+                                 const isPdf = docFiles[label]?.type === 'application/pdf' || docFiles[label]?.name?.toLowerCase().endsWith('.pdf');
+                                 setPreviewDoc({ url: documents[label], label, isPdf });
+                              }}
+                            >
+                              {docFiles[label]?.type === 'application/pdf' || docFiles[label]?.name?.toLowerCase().endsWith('.pdf') ? (
+                                <span className="bg-red-100 text-red-700 text-[9px] font-bold px-1.5 py-0.5 border border-red-300 rounded flex-shrink-0">PDF</span>
+                              ) : (
+                                <img src={documents[label]} alt={label} className="h-8 w-8 object-cover rounded-sm border border-gray-300 flex-shrink-0" />
+                              )}
+                              <span className="text-[#316ac5] font-semibold text-[11px] truncate flex-1">{docFiles[label]?.name || 'Document uploaded'}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDocuments(prev => { const n = {...prev}; delete n[label]; return n; });
+                                setDocFiles(prev => { const n = {...prev}; delete n[label]; return n; });
+                              }}
+                              className="text-gray-400 hover:text-red-600 font-bold px-1.5 text-xs cursor-pointer z-20"
+                              title="Remove document"
+                            >
+                              ✕
+                            </button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2.5">
@@ -643,7 +698,11 @@ export default function CreateRetailCifForm() {
                 </button>
               </div>
               <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4 min-h-[400px]">
-                <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-full object-contain shadow-md" />
+                {previewDoc.isPdf ? (
+                  <iframe src={previewDoc.url} title={previewDoc.label} className="w-full h-[550px] border border-gray-300" />
+                ) : (
+                  <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-[550px] object-contain shadow-md" />
+                )}
               </div>
             </div>
           </div>
