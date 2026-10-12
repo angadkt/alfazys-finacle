@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 import { FileSpreadsheet, FileText } from 'lucide-react';
 import { exportOrdersToExcel, exportOrdersToPdf } from '../utils/exportOrders';
@@ -95,6 +95,70 @@ export default function OrderEntryForm() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
+
+  // Dynamic summary calculations for filtered orders
+  const { totalAed, totalInr, orderCount } = useMemo(() => {
+    let aedSum = 0;
+    let inrSum = 0;
+
+    for (const o of fetchedOrders) {
+      if (!o) continue;
+
+      // Safe numeric calculation for AED amount
+      let aed = 0;
+      if (o.aed_amount !== undefined && o.aed_amount !== null && o.aed_amount !== '') {
+        const parsed = typeof o.aed_amount === 'number' ? o.aed_amount : parseFloat(String(o.aed_amount).replace(/,/g, ''));
+        if (!isNaN(parsed) && isFinite(parsed)) {
+          aed = parsed;
+        }
+      }
+      if (aed === 0 && o.receivers_data) {
+        let recs = o.receivers_data;
+        if (typeof recs === 'string') {
+          try { recs = JSON.parse(recs); } catch { recs = []; }
+        }
+        if (Array.isArray(recs) && recs.length > 0) {
+          aed = recs.reduce((sum: number, acc: any) => {
+            const amt = parseFloat(String(acc?.orderAmount || '').replace(/,/g, ''));
+            const rate = parseFloat(String(acc?.confirmOrderAmount || '').replace(/,/g, ''));
+            if (!isNaN(amt) && !isNaN(rate) && rate > 0) {
+              return sum + (amt / rate);
+            }
+            return sum;
+          }, 0);
+        }
+      }
+      aedSum += aed;
+
+      // Safe numeric calculation for INR value
+      let inr = 0;
+      if (o.inr_value !== undefined && o.inr_value !== null && o.inr_value !== '') {
+        const parsed = typeof o.inr_value === 'number' ? o.inr_value : parseFloat(String(o.inr_value).replace(/,/g, ''));
+        if (!isNaN(parsed) && isFinite(parsed)) {
+          inr = parsed;
+        }
+      }
+      if (inr === 0 && o.receivers_data) {
+        let recs = o.receivers_data;
+        if (typeof recs === 'string') {
+          try { recs = JSON.parse(recs); } catch { recs = []; }
+        }
+        if (Array.isArray(recs) && recs.length > 0) {
+          inr = recs.reduce((sum: number, acc: any) => {
+            const amt = parseFloat(String(acc?.orderAmount || '').replace(/,/g, ''));
+            return !isNaN(amt) && isFinite(amt) ? sum + amt : sum;
+          }, 0);
+        }
+      }
+      inrSum += inr;
+    }
+
+    return {
+      totalAed: aedSum,
+      totalInr: inrSum,
+      orderCount: fetchedOrders.length
+    };
+  }, [fetchedOrders]);
 
   const fetchOrders = async (
     page = currentPage, 
@@ -473,6 +537,53 @@ export default function OrderEntryForm() {
                     <FileText className="w-3.5 h-3.5 text-[#d32f2f]" />
                     <span>{isExporting === 'pdf' ? 'Generating...' : 'PDF'}</span>
                   </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic Summary Cards: Total AED & Total INR */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              {/* Card 1: Total AED */}
+              <div className="bg-[#f4f9f5] border border-[#b7dfbe] rounded-md p-3.5 flex flex-col justify-between shadow-xs">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#1e7e34]"></span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#1e6e38]">Total AED</span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#1e6e38] bg-[#e1f3e4] border border-[#c3e6cb] px-2 py-0.5 rounded-full">
+                    {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[13px] font-bold text-[#145523]">AED</span>
+                  <span className="text-[22px] sm:text-[24px] font-extrabold text-[#145523] tracking-tight font-mono">
+                    {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="text-[10.5px] text-[#285e33] mt-1.5 font-medium">
+                  Combined AED volume across {orderCount} matching {orderCount === 1 ? 'order' : 'orders'}
+                </div>
+              </div>
+
+              {/* Card 2: Total INR */}
+              <div className="bg-[#f0f4f9] border border-[#c4d4ec] rounded-md p-3.5 flex flex-col justify-between shadow-xs">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#1e4676]"></span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#1e4676]">Total INR</span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#1e4676] bg-[#e0ebf7] border border-[#bcd2ee] px-2 py-0.5 rounded-full">
+                    {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[14px] font-bold text-[#0d2a4a]">₹</span>
+                  <span className="text-[22px] sm:text-[24px] font-extrabold text-[#0d2a4a] tracking-tight font-mono">
+                    {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="text-[10.5px] text-[#2c5282] mt-1.5 font-medium">
+                  Combined INR value across {orderCount} matching {orderCount === 1 ? 'order' : 'orders'}
                 </div>
               </div>
             </div>

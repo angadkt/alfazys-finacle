@@ -100,16 +100,41 @@ export default function Header({
 
       {/* Header Area (Logo & Branding) */}
       {!hideLogo && (
-        <div className="bg-white w-full px-8 py-1 border-b border-gray-200 flex justify-between items-center relative">
-          <div className="flex items-center gap-[2px]">
+        <div className="bg-white w-full px-8 py-1 border-b border-gray-200 flex justify-between items-center relative overflow-hidden">
+          <div className="flex items-center gap-[2px] shrink-0 z-10 bg-white pr-4">
             <img src={finacleLogo} alt="Finacle Logo" className="w-12 h-12 object-contain" />
             <div className="text-3xl tracking-tight text-[#111827] font-bold" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
               Infazys Finacle<sup className="text-sm font-medium">®</sup>
             </div>
           </div>
           
+          {/* Scrolling Marquee Notice in Empty Space */}
+          <div 
+            className="min-w-0 flex-1 mx-6 mr-[320px] overflow-hidden relative flex items-center h-10 select-none cursor-pointer"
+            title="Hover to pause scrolling"
+          >
+            <div className="animate-header-marquee flex items-center">
+              <div className="flex items-center shrink-0 pr-16 text-[14px] font-semibold text-[#8b1818] tracking-wide">
+                <span className="bg-[#fee2e2] text-[#991b1b] border border-[#fca5a5] text-[11px] font-bold px-2 py-0.5 mr-2 uppercase tracking-wide rounded-xs">
+                  Notice
+                </span>
+                <span>
+                  Bulk NEFT/RTGS via Infazys Finacle is available only from 7.00 AM to 7.00 PM on working days. Approvals outside this window, or on weekends and bank holidays, will be processed on the next working day.
+                </span>
+              </div>
+              <div className="flex items-center shrink-0 pr-16 text-[14px] font-semibold text-[#8b1818] tracking-wide">
+                <span className="bg-[#fee2e2] text-[#991b1b] border border-[#fca5a5] text-[11px] font-bold px-2 py-0.5 mr-2 uppercase tracking-wide rounded-xs">
+                  Notice
+                </span>
+                <span>
+                  Bulk NEFT/RTGS via Infazys Finacle is available only from 7.00 AM to 7.00 PM on working days. Approvals outside this window, or on weekends and bank holidays, will be processed on the next working day.
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Top Right Toolbar */}
-          <div className="absolute top-0 right-0 flex items-center text-[11px] font-bold text-[#1e4676] bg-[#f4f7f9] border border-[#a0a0a0] border-t-0 border-r-0">
+          <div className="absolute top-0 right-0 flex items-center text-[11px] font-bold text-[#1e4676] bg-[#f4f7f9] border border-[#a0a0a0] border-t-0 border-r-0 z-10">
             <button className="px-2 py-0.5 hover:bg-[#e4e9f0] flex items-center justify-center h-full">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10"/><path d="M17 7 7 17"/></svg>
             </button>

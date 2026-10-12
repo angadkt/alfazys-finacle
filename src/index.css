@@ -20,3 +20,24 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Header Marquee Scrolling Notice */
+@keyframes headerMarquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-header-marquee {
+  display: flex;
+  width: max-content;
+  animation: headerMarquee 35s linear infinite;
+}
+
+.animate-header-marquee:hover {
+  animation-play-state: paused;
+}
+
