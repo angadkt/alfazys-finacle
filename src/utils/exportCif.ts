@@ -4,6 +4,7 @@ import autoTable from 'jspdf-autotable';
 
 export interface CifFilterMeta {
   searchQuery?: string;
+  title?: string;
 }
 
 export const exportCifsToExcel = (cifs: any[], meta?: CifFilterMeta) => {
@@ -12,9 +13,11 @@ export const exportCifsToExcel = (cifs: any[], meta?: CifFilterMeta) => {
     return;
   }
 
+  const title = meta?.title || 'VERIFIED RETAIL CIF REGISTER';
+
   const rows: any[][] = [
     ['INFAZYS FINACLE - RETAIL CIF MODULE'],
-    ['VERIFIED RETAIL CIF REGISTER'],
+    [title.toUpperCase()],
     [`Search Query: "${meta?.searchQuery || 'None'}"  |  Total Matching CIFs: ${cifs.length}`],
     [`Generated On: ${new Date().toLocaleString()}`],
     [],
@@ -31,15 +34,21 @@ export const exportCifsToExcel = (cifs: any[], meta?: CifFilterMeta) => {
   ];
 
   cifs.forEach((c) => {
+    const fullName = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'N/A';
+    const phone = c.phone || c.contact_number || '-';
+    const issued = c.issuedBy || c.created_by_name || 'Staff';
+    const verified = c.verifiedBy || c.verified_by_name || '-';
+    const date = (c.created_at || '').split('T')[0] || '-';
+
     rows.push([
       c.cif_no || c.id || '',
-      `${c.first_name || ''} ${c.last_name || ''}`.trim(),
-      c.email || '',
-      c.contact_number || '',
-      c.created_by_name || 'Staff',
-      c.verified_by_name || 'Admin',
-      (c.status || 'verified').toUpperCase(),
-      (c.created_at || '').split('T')[0]
+      fullName,
+      c.email || '-',
+      phone,
+      issued,
+      verified,
+      (c.status || 'PENDING').toUpperCase(),
+      date
     ]);
   });
 
@@ -57,9 +66,10 @@ export const exportCifsToExcel = (cifs: any[], meta?: CifFilterMeta) => {
   ];
 
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Verified CIFs');
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Retail CIFs');
   const today = new Date().toISOString().split('T')[0];
-  XLSX.writeFile(workbook, `Finacle_Verified_CIFs_${today}.xlsx`);
+  const filename = title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  XLSX.writeFile(workbook, `Finacle_${filename}_${today}.xlsx`);
 };
 
 export const exportCifsToPdf = (cifs: any[], meta?: CifFilterMeta) => {
@@ -70,6 +80,7 @@ export const exportCifsToPdf = (cifs: any[], meta?: CifFilterMeta) => {
 
   const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
   const today = new Date().toISOString().split('T')[0];
+  const title = meta?.title || 'VERIFIED RETAIL CIF CUSTOMER DIRECTORY';
 
   doc.setFontSize(15);
   doc.setTextColor(30, 70, 118);
@@ -79,7 +90,7 @@ export const exportCifsToPdf = (cifs: any[], meta?: CifFilterMeta) => {
   doc.setFontSize(11);
   doc.setTextColor(40, 40, 40);
   doc.setFont('helvetica', 'bold');
-  doc.text('VERIFIED RETAIL CIF CUSTOMER DIRECTORY', 14, 19);
+  doc.text(title.toUpperCase(), 14, 19);
 
   doc.setFillColor(243, 246, 251);
   doc.setDrawColor(196, 212, 236);
@@ -88,7 +99,7 @@ export const exportCifsToPdf = (cifs: any[], meta?: CifFilterMeta) => {
   doc.setFontSize(8);
   doc.setTextColor(50, 60, 80);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Search Criteria: ${meta?.searchQuery ? `"${meta.searchQuery}"` : 'All Verified CIFs'}   |   Total Verified CIFs: ${cifs.length}`, 17, 27);
+  doc.text(`Filter / Search: ${meta?.searchQuery ? `"${meta.searchQuery}"` : 'All Listed CIFs'}   |   Total CIFs: ${cifs.length}`, 17, 27);
   doc.text(`Generated On: ${new Date().toLocaleString()}`, 17, 30.5);
 
   const head = [[
@@ -101,15 +112,22 @@ export const exportCifsToPdf = (cifs: any[], meta?: CifFilterMeta) => {
     'Status'
   ]];
 
-  const body = cifs.map((c) => [
-    c.cif_no || c.id || '',
-    `${c.first_name || ''} ${c.last_name || ''}`.trim(),
-    c.email || '-',
-    c.contact_number || '-',
-    c.created_by_name || 'Staff',
-    c.verified_by_name || 'Admin',
-    (c.status || 'VERIFIED').toUpperCase()
-  ]);
+  const body = cifs.map((c) => {
+    const fullName = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'N/A';
+    const phone = c.phone || c.contact_number || '-';
+    const issued = c.issuedBy || c.created_by_name || 'Staff';
+    const verified = c.verifiedBy || c.verified_by_name || '-';
+
+    return [
+      c.cif_no || c.id || '',
+      fullName,
+      c.email || '-',
+      phone,
+      issued,
+      verified,
+      (c.status || 'PENDING').toUpperCase()
+    ];
+  });
 
   autoTable(doc, {
     head,
@@ -143,5 +161,6 @@ export const exportCifsToPdf = (cifs: any[], meta?: CifFilterMeta) => {
     }
   });
 
-  doc.save(`Finacle_Verified_CIFs_${today}.pdf`);
+  const filename = title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  doc.save(`Finacle_${filename}_${today}.pdf`);
 };

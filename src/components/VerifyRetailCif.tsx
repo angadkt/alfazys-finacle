@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 import api from '../services/api';
 import { dbService } from '../services/db';
+import { exportCifsToExcel, exportCifsToPdf } from '../utils/exportCif';
 
 export default function VerifyRetailCif() {
   const [pendingCifs, setPendingCifs] = useState<any[]>([]);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
 
   useEffect(() => {
     loadPendingCifs();
@@ -53,13 +56,66 @@ export default function VerifyRetailCif() {
     }
   };
 
+  const handleExportExcel = () => {
+    if (pendingCifs.length === 0) {
+      alert('No pending CIF records to export.');
+      return;
+    }
+    setIsExporting('excel');
+    try {
+      exportCifsToExcel(pendingCifs, { title: 'PENDING RETAIL CIF VERIFICATION AUDIT' });
+    } catch (err: any) {
+      alert('Failed to export Excel: ' + err.message);
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const handleExportPdf = () => {
+    if (pendingCifs.length === 0) {
+      alert('No pending CIF records to export.');
+      return;
+    }
+    setIsExporting('pdf');
+    try {
+      exportCifsToPdf(pendingCifs, { title: 'PENDING RETAIL CIF VERIFICATION AUDIT' });
+    } catch (err: any) {
+      alert('Failed to export PDF: ' + err.message);
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
       <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
         <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide">verify retail cif creation</h4>
       </div>
       <div className="flex-1 flex flex-col p-4">
-      <h2 className="text-[18px] font-bold text-[#1e4676] mb-4">Verify Retail CIF</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-[18px] font-bold text-[#1e4676] m-0">Verify Retail CIF</h2>
+
+        <div className="flex items-center gap-1.5">
+          <button 
+            onClick={handleExportExcel}
+            disabled={isExporting !== null || pendingCifs.length === 0}
+            className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2.5 py-1 text-[11px] font-bold text-[#1e6e38] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            title="Export Pending CIFs to Excel"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#2e7d32]" />
+            <span>{isExporting === 'excel' ? 'Exporting...' : 'Excel'}</span>
+          </button>
+          <button 
+            onClick={handleExportPdf}
+            disabled={isExporting !== null || pendingCifs.length === 0}
+            className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2.5 py-1 text-[11px] font-bold text-[#b91c1c] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            title="Export Pending CIFs to PDF"
+          >
+            <FileText className="w-3.5 h-3.5 text-[#d32f2f]" />
+            <span>{isExporting === 'pdf' ? 'Generating...' : 'PDF'}</span>
+          </button>
+        </div>
+      </div>
       
       <div className="bg-white border border-[#a0a0a0] p-1 flex-1 overflow-auto">
         <table className="w-full border-collapse">
