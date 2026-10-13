@@ -104,6 +104,31 @@ export default function OrderEntryForm() {
   const [modeOfTransaction, setModeOfTransaction] = useState('');
   const [collectionStaff, setCollectionStaff] = useState('');
   const [remainingAed, setRemainingAed] = useState('');
+  const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  // View Received AED
+  const [isViewReceivedAedOpen, setIsViewReceivedAedOpen] = useState(false);
+  const [receivedAedRecords, setReceivedAedRecords] = useState<any[]>([]);
+  const [receivedAedTotal, setReceivedAedTotal] = useState(0);
+  const [receivedAedPage, setReceivedAedPage] = useState(1);
+  const [receivedAedLoading, setReceivedAedLoading] = useState(false);
+  const [viewDateFilter, setViewDateFilter] = useState('');
+  const [viewModeFilter, setViewModeFilter] = useState('');
+
+  const fetchReceivedAed = async (page = 1, date = viewDateFilter, mode = viewModeFilter) => {
+    setReceivedAedLoading(true);
+    try {
+      const params: Record<string, any> = { page, limit: 50 };
+      if (date) params.date = date;
+      if (mode) params.mode_of_txn = mode;
+      const res = await api.get('/records/received-aed', { params });
+      setReceivedAedRecords(res.data.records);
+      setReceivedAedTotal(res.data.total);
+      setReceivedAedPage(page);
+    } catch { /* silent */ } finally {
+      setReceivedAedLoading(false);
+    }
+  };
 
   // Dynamic summary calculations for filtered orders
   const { 
@@ -511,6 +536,13 @@ export default function OrderEntryForm() {
             onClick={() => setIsReceivedAedModalOpen(true)}
           >
             Received AED
+          </span>
+          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
+          <span
+            className="cursor-pointer hover:underline tracking-wide"
+            onClick={() => { setIsViewReceivedAedOpen(true); fetchReceivedAed(1, viewDateFilter, viewModeFilter); }}
+          >
+            View Received AED
           </span>
         </div>
 
@@ -1370,6 +1402,17 @@ export default function OrderEntryForm() {
               <div className="p-6 overflow-auto bg-white flex flex-col gap-6">
                 <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-4 text-[13px] items-center bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-5 px-6">
 
+                  {/* Entry Date */}
+                  <label className="font-medium text-black whitespace-nowrap">
+                    Date <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={entryDate}
+                    onChange={(e) => setEntryDate(e.target.value)}
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                  />
+
                   {/* AED Amount Received */}
                   <label className="font-medium text-black whitespace-nowrap">
                     AED Amount Received <span className="text-red-600">*</span>
@@ -1383,18 +1426,6 @@ export default function OrderEntryForm() {
                     placeholder="0.00"
                     autoFocus
                     className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
-                  />
-
-                  {/* Collection Staff */}
-                  <label className="font-medium text-black whitespace-nowrap">
-                    Collection Staff <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={collectedAed}
-                    onChange={(e) => setCollectedAed(e.target.value)}
-                    placeholder="Staff name"
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full"
                   />
 
                   {/* Mode of Transaction */}
@@ -1455,10 +1486,6 @@ export default function OrderEntryForm() {
                         alert('Please enter a valid AED amount received.');
                         return;
                       }
-                      if (!collectedAed || !collectedAed.trim()) {
-                        alert('Please enter the collection staff name.');
-                        return;
-                      }
                       if (!modeOfTransaction) {
                         alert('Please select a mode of transaction.');
                         return;
@@ -1470,10 +1497,10 @@ export default function OrderEntryForm() {
                       try {
                         await api.post('/records/received-aed', {
                           aed_amount: parseFloat(receivedAedAmount),
-                          collection_staff: collectedAed.trim(),
                           mode_of_txn: modeOfTransaction,
                           cash_staff: modeOfTransaction === 'BY CASH' ? collectionStaff.trim() : undefined,
                           remaining_amount: remainingAed ? parseFloat(remainingAed) : undefined,
+                          entry_date: entryDate,
                         });
                         setIsReceivedAedModalOpen(false);
                         setReceivedAedAmount('');
@@ -1481,6 +1508,7 @@ export default function OrderEntryForm() {
                         setModeOfTransaction('');
                         setCollectionStaff('');
                         setRemainingAed('');
+                        setEntryDate(new Date().toISOString().slice(0, 10));
                       } catch (err: any) {
                         alert(err?.response?.data?.error || 'Failed to save. Please try again.');
                       }
@@ -1497,6 +1525,7 @@ export default function OrderEntryForm() {
                       setModeOfTransaction('');
                       setCollectionStaff('');
                       setRemainingAed('');
+                      setEntryDate(new Date().toISOString().slice(0, 10));
                     }}
                     className="bg-white border border-[#c4d4ec] text-[#1a4a8c] rounded-md px-6 py-2 font-medium shadow-sm hover:bg-[#f4f7fb] text-[13px]"
                   >
@@ -1504,6 +1533,137 @@ export default function OrderEntryForm() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* View Received AED Modal */}
+      {isViewReceivedAedOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-30" onClick={() => setIsViewReceivedAedOpen(false)}></div>
+          <div className="absolute inset-0 z-40 flex items-start justify-center p-2 overflow-y-auto">
+            <div className="bg-white shadow-2xl flex flex-col w-full max-w-5xl rounded-md overflow-hidden mt-2 mb-4">
+
+              {/* Header */}
+              <div className="bg-[#eef2f9] px-6 py-3 font-bold text-black border-b border-[#c4d4ec] text-[15px] flex items-center justify-between">
+                <span>Received AED Records</span>
+                <button onClick={() => setIsViewReceivedAedOpen(false)} className="text-[#a51a1a] font-bold hover:underline text-[13px]">
+                  Close (X)
+                </button>
+              </div>
+
+              {/* Filters */}
+              <div className="px-5 py-3 bg-[#f4f7fb] border-b border-[#c4d4ec] flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
+                  <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
+                  <input
+                    type="date"
+                    value={viewDateFilter}
+                    onChange={(e) => { setViewDateFilter(e.target.value); fetchReceivedAed(1, e.target.value, viewModeFilter); }}
+                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
+                  />
+                  {viewDateFilter && (
+                    <button onClick={() => { setViewDateFilter(''); fetchReceivedAed(1, '', viewModeFilter); }} className="text-gray-400 hover:text-red-500 font-bold text-xs">✕</button>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
+                  <span className="text-[#1e4676] font-bold text-[11px]">Mode:</span>
+                  <select
+                    value={viewModeFilter}
+                    onChange={(e) => { setViewModeFilter(e.target.value); fetchReceivedAed(1, viewDateFilter, e.target.value); }}
+                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
+                  >
+                    <option value="">All Modes</option>
+                    <option value="CDM">CDM</option>
+                    <option value="BNK SLP">BNK SLP</option>
+                    <option value="FINAC">FINAC</option>
+                    <option value="BY CASH">BY CASH</option>
+                    <option value="MOB TRF">MOB TRF</option>
+                    <option value="UPI">UPI</option>
+                    <option value="COR NET">COR NET</option>
+                  </select>
+                  {viewModeFilter && (
+                    <button onClick={() => { setViewModeFilter(''); fetchReceivedAed(1, viewDateFilter, ''); }} className="text-gray-400 hover:text-red-500 font-bold text-xs">✕</button>
+                  )}
+                </div>
+                <button
+                  onClick={() => fetchReceivedAed(1, viewDateFilter, viewModeFilter)}
+                  className="bg-[#1a4a8c] text-white text-[11px] font-bold px-3 py-1 rounded hover:bg-[#153970]"
+                >
+                  Refresh
+                </button>
+                <span className="text-[11px] text-gray-500 ml-auto">{receivedAedTotal} record{receivedAedTotal !== 1 ? 's' : ''}</span>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-auto flex-1">
+                {receivedAedLoading ? (
+                  <div className="flex items-center justify-center py-12 text-gray-400 text-sm">Loading…</div>
+                ) : receivedAedRecords.length === 0 ? (
+                  <div className="flex items-center justify-center py-12 text-gray-400 text-sm">No records found</div>
+                ) : (
+                  <table className="w-full text-[12px] border-collapse">
+                    <thead>
+                      <tr className="bg-[#1e4676] text-white text-left">
+                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">#</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Date</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">AED Amount</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Mode</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Cash Staff</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Remaining AED</th>
+                        <th className="px-3 py-2 font-semibold whitespace-nowrap">Created By</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {receivedAedRecords.map((rec, i) => (
+                        <tr key={rec.id} className={`border-b border-[#e4e4e4] hover:bg-[#f0f5ff] ${i % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}`}>
+                          <td className="px-3 py-2 border-r border-[#e4e4e4] text-gray-500">{(receivedAedPage - 1) * 50 + i + 1}</td>
+                          <td className="px-3 py-2 border-r border-[#e4e4e4] whitespace-nowrap">
+                            {rec.entry_date ? new Date(rec.entry_date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                          </td>
+                          <td className="px-3 py-2 border-r border-[#e4e4e4] font-semibold text-[#1e4676] whitespace-nowrap">
+                            {parseFloat(rec.aed_amount).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
+                          </td>
+                          <td className="px-3 py-2 border-r border-[#e4e4e4]">
+                            <span className="bg-[#e8f0fb] text-[#1e4676] px-2 py-0.5 rounded font-medium">{rec.mode_of_txn}</span>
+                          </td>
+                          <td className="px-3 py-2 border-r border-[#e4e4e4]">{rec.cash_staff || <span className="text-gray-400">—</span>}</td>
+                          <td className="px-3 py-2 border-r border-[#e4e4e4] whitespace-nowrap">
+                            {rec.remaining_amount != null
+                              ? parseFloat(rec.remaining_amount).toLocaleString('en-AE', { minimumFractionDigits: 2 }) + ' AED'
+                              : <span className="text-gray-400">—</span>}
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">{rec.created_by_name || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-[#eef2f9] font-bold text-[#1e4676] border-t-2 border-[#c4d4ec]">
+                        <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={2}>Total ({receivedAedRecords.length} shown)</td>
+                        <td className="px-3 py-2 border-r border-[#c4d4ec] whitespace-nowrap">
+                          {receivedAedRecords.reduce((s, r) => s + parseFloat(r.aed_amount || 0), 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
+                        </td>
+                        <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={4}></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {receivedAedTotal > 50 && (
+                <div className="flex items-center justify-between px-5 py-3 border-t border-[#c4d4ec] bg-[#f4f7fb]">
+                  <span className="text-[11px] text-gray-500">Page {receivedAedPage} of {Math.ceil(receivedAedTotal / 50)}</span>
+                  <div className="flex gap-2">
+                    <button disabled={receivedAedPage <= 1} onClick={() => fetchReceivedAed(receivedAedPage - 1)}
+                      className="px-3 py-1 text-xs border border-[#c4d4ec] rounded disabled:opacity-40 hover:bg-white">← Prev</button>
+                    <button disabled={receivedAedPage >= Math.ceil(receivedAedTotal / 50)} onClick={() => fetchReceivedAed(receivedAedPage + 1)}
+                      className="px-3 py-1 text-xs border border-[#c4d4ec] rounded disabled:opacity-40 hover:bg-white">Next →</button>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </>
