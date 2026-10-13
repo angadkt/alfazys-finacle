@@ -98,6 +98,12 @@ export default function OrderEntryForm() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
+  const [isReceivedAedModalOpen, setIsReceivedAedModalOpen] = useState(false);
+  const [receivedAedAmount, setReceivedAedAmount] = useState('');
+  const [collectedAed, setCollectedAed] = useState('');
+  const [modeOfTransaction, setModeOfTransaction] = useState('');
+  const [collectionStaff, setCollectionStaff] = useState('');
+  const [remainingAed, setRemainingAed] = useState('');
 
   // Dynamic summary calculations for filtered orders
   const { 
@@ -498,6 +504,13 @@ export default function OrderEntryForm() {
             onClick={() => { fetchOrders(currentPage, searchQuery); }}
           >
             Refresh Orders
+          </span>
+          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
+          <span
+            className="cursor-pointer hover:underline tracking-wide"
+            onClick={() => setIsReceivedAedModalOpen(true)}
+          >
+            Received AED
           </span>
         </div>
 
@@ -1335,6 +1348,166 @@ export default function OrderEntryForm() {
       )}
 
       </div>
+
+      {/* Received AED Modal */}
+      {isReceivedAedModalOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-30" onClick={() => setIsReceivedAedModalOpen(false)}></div>
+          <div className="absolute inset-0 z-40 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white shadow-2xl flex flex-col max-h-[calc(100%-1rem)] max-w-xl w-full rounded-md overflow-hidden mt-1">
+              {/* Header */}
+              <div className="bg-[#eef2f9] px-6 py-4 font-bold text-black border-b border-[#c4d4ec] text-[16px] flex items-center justify-between">
+                <span>Received AED Entry</span>
+                <button
+                  onClick={() => setIsReceivedAedModalOpen(false)}
+                  className="text-[#a51a1a] font-bold hover:underline cursor-pointer text-[14px]"
+                >
+                  Close (X)
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 overflow-auto bg-white flex flex-col gap-6">
+                <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-4 text-[13px] items-center bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-5 px-6">
+
+                  {/* AED Amount Received */}
+                  <label className="font-medium text-black whitespace-nowrap">
+                    AED Amount Received <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={receivedAedAmount}
+                    onChange={(e) => setReceivedAedAmount(e.target.value)}
+                    placeholder="0.00"
+                    autoFocus
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                  />
+
+                  {/* Collection Staff */}
+                  <label className="font-medium text-black whitespace-nowrap">
+                    Collection Staff <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={collectedAed}
+                    onChange={(e) => setCollectedAed(e.target.value)}
+                    placeholder="Staff name"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full"
+                  />
+
+                  {/* Mode of Transaction */}
+                  <label className="font-medium text-black whitespace-nowrap">
+                    Mode of Transaction <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    value={modeOfTransaction}
+                    onChange={(e) => {
+                      setModeOfTransaction(e.target.value);
+                      if (e.target.value !== 'BY CASH') setCollectionStaff('');
+                    }}
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full"
+                  >
+                    <option value=""></option>
+                    <option value="CDM">CDM</option>
+                    <option value="BNK SLP">BNK SLP</option>
+                    <option value="FINAC">FINAC</option>
+                    <option value="BY CASH">BY CASH</option>
+                    <option value="MOB TRF">MOB TRF</option>
+                    <option value="UPI">UPI</option>
+                    <option value="COR NET">COR NET</option>
+                  </select>
+
+                  {/* Collection Staff — only when BY CASH */}
+                  {modeOfTransaction === 'BY CASH' && (
+                    <>
+                      <label className="font-medium text-black whitespace-nowrap">
+                        Collection Staff <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={collectionStaff}
+                        onChange={(e) => setCollectionStaff(e.target.value)}
+                        placeholder="Staff name"
+                        className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full"
+                      />
+                    </>
+                  )}
+
+                  {/* Remaining Amount AED */}
+                  <label className="font-medium text-black whitespace-nowrap">Remaining Amount AED</label>
+                  <input
+                    type="text"
+                    value={remainingAed}
+                    onChange={(e) => setRemainingAed(e.target.value)}
+                    placeholder="0.00"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                  />
+
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={async () => {
+                      if (!receivedAedAmount || parseFloat(receivedAedAmount) <= 0) {
+                        alert('Please enter a valid AED amount received.');
+                        return;
+                      }
+                      if (!collectedAed || !collectedAed.trim()) {
+                        alert('Please enter the collection staff name.');
+                        return;
+                      }
+                      if (!modeOfTransaction) {
+                        alert('Please select a mode of transaction.');
+                        return;
+                      }
+                      if (modeOfTransaction === 'BY CASH' && !collectionStaff.trim()) {
+                        alert('Please enter the cash collection staff name.');
+                        return;
+                      }
+                      try {
+                        await api.post('/records/received-aed', {
+                          aed_amount: parseFloat(receivedAedAmount),
+                          collection_staff: collectedAed.trim(),
+                          mode_of_txn: modeOfTransaction,
+                          cash_staff: modeOfTransaction === 'BY CASH' ? collectionStaff.trim() : undefined,
+                          remaining_amount: remainingAed ? parseFloat(remainingAed) : undefined,
+                        });
+                        setIsReceivedAedModalOpen(false);
+                        setReceivedAedAmount('');
+                        setCollectedAed('');
+                        setModeOfTransaction('');
+                        setCollectionStaff('');
+                        setRemainingAed('');
+                      } catch (err: any) {
+                        alert(err?.response?.data?.error || 'Failed to save. Please try again.');
+                      }
+                    }}
+                    className="bg-[#1a4a8c] text-white rounded-md px-6 py-2 shadow-sm font-medium hover:bg-[#153970] text-[13px]"
+                  >
+                    Submit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsReceivedAedModalOpen(false);
+                      setReceivedAedAmount('');
+                      setCollectedAed('');
+                      setModeOfTransaction('');
+                      setCollectionStaff('');
+                      setRemainingAed('');
+                    }}
+                    className="bg-white border border-[#c4d4ec] text-[#1a4a8c] rounded-md px-6 py-2 font-medium shadow-sm hover:bg-[#f4f7fb] text-[13px]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
     </div>
   );
