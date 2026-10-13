@@ -13,6 +13,7 @@ export default function CreateRetailCifForm() {
   const [documents, setDocuments] = useState<Record<string, string>>({});
   const [docFiles, setDocFiles] = useState<Record<string, File>>({});
   const [previewDoc, setPreviewDoc] = useState<{url: string, label: string, isPdf?: boolean} | null>(null);
+  const [selectedPreviewLabel, setSelectedPreviewLabel] = useState<string | null>(null);
   const [cifTypesList, setCifTypesList] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
@@ -33,10 +34,9 @@ export default function CreateRetailCifForm() {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
       setDocuments(prev => ({ ...prev, [label]: url }));
       setDocFiles(prev => ({ ...prev, [label]: file }));
-      setPreviewDoc({ url, label, isPdf });
+      setSelectedPreviewLabel(label);
     }
   };
 
@@ -417,88 +417,230 @@ export default function CreateRetailCifForm() {
             </div>
           )}
 
-          {activeTab === 'Identification Document' && (
-            <div className="flex flex-col gap-3 max-w-3xl">
-              <div className="bg-[#f4f7fc] border border-[#a2b5cd] p-4 flex flex-col gap-3">
-                <div className="font-bold text-[#104080] border-b border-[#a2b5cd] pb-1 mb-1">Document Upload</div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                  {[
-                    'Photo',
-                    'Passport (Front)',
-                    'Passport (Back)',
-                    'Aadhaar (Front)',
-                    'Aadhaar (Back)',
-                    'UAE ID / PAN',
-                    'Signature'
-                  ].map((label, idx) => (
-                    <div key={idx} className="flex flex-col gap-1.5">
-                      <span className="font-semibold text-black">{label}</span>
-                      <div className="flex items-center justify-between border border-[#a2b5cd] bg-white p-2 relative group hover:border-[#316ac5] transition-colors rounded-sm h-[46px] overflow-hidden">
-                        <input 
-                          type="file" 
-                          accept="image/*,.pdf"
-                          onChange={(e) => handleFileUpload(label, e)}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-                          title=" " 
-                        />
-                        {documents[label] ? (
-                          <div className="flex items-center justify-between w-full h-full pr-1">
-                            <div 
-                              className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
-                              onClick={(e) => {
-                                 e.preventDefault();
-                                 e.stopPropagation();
-                                 const isPdf = docFiles[label]?.type === 'application/pdf' || docFiles[label]?.name?.toLowerCase().endsWith('.pdf');
-                                 setPreviewDoc({ url: documents[label], label, isPdf });
-                              }}
-                            >
-                              {docFiles[label]?.type === 'application/pdf' || docFiles[label]?.name?.toLowerCase().endsWith('.pdf') ? (
-                                <span className="bg-red-100 text-red-700 text-[9px] font-bold px-1.5 py-0.5 border border-red-300 rounded flex-shrink-0">PDF</span>
-                              ) : (
-                                <img src={documents[label]} alt={label} className="h-8 w-8 object-cover rounded-sm border border-gray-300 flex-shrink-0" />
-                              )}
-                              <span className="text-[#316ac5] font-semibold text-[11px] truncate flex-1">{docFiles[label]?.name || 'Document uploaded'}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setDocuments(prev => { const n = {...prev}; delete n[label]; return n; });
-                                setDocFiles(prev => { const n = {...prev}; delete n[label]; return n; });
-                              }}
-                              className="text-gray-400 hover:text-red-600 font-bold px-1.5 text-xs cursor-pointer z-20"
-                              title="Remove document"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#316ac5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                              <polyline points="17 8 12 3 7 8"></polyline>
-                              <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <div className="flex flex-col leading-tight">
-                              <span className="text-[#316ac5] font-semibold text-[11px]">Upload file</span>
-                              <span className="text-[9px] text-gray-500 mt-[1px]">JPG, PNG or PDF</span>
-                            </div>
-                          </div>
-                        )}
-                        {!documents[label] && (
-                          <div className="bg-[#316ac5] border border-[#104080] px-3 py-1 text-white font-semibold text-[10px] rounded-sm shadow-sm group-hover:bg-[#104080] transition-colors">
-                            Browse
-                          </div>
-                        )}
-                      </div>
+          {activeTab === 'Identification Document' && (() => {
+            const activeLabel = (selectedPreviewLabel && documents[selectedPreviewLabel])
+              ? selectedPreviewLabel
+              : (Object.keys(documents)[0] || null);
+            const activeDocUrl = activeLabel ? documents[activeLabel] : null;
+            const activeFile = activeLabel ? docFiles[activeLabel] : null;
+            const isPdf = activeFile ? (activeFile.type === 'application/pdf' || activeFile.name.toLowerCase().endsWith('.pdf')) : false;
+
+            return (
+              <div className="flex flex-col lg:flex-row gap-5 items-start w-full">
+                {/* Left Column: Document Upload List */}
+                <div className="w-full lg:w-[480px] xl:w-[520px] flex-shrink-0 flex flex-col gap-3">
+                  <div className="bg-[#f4f7fc] border border-[#a2b5cd] p-4 flex flex-col gap-3 shadow-sm">
+                    <div className="font-bold text-[#104080] border-b border-[#a2b5cd] pb-1 mb-1 flex items-center justify-between">
+                      <span>Document Upload</span>
+                      <span className="text-[10px] text-gray-500 font-normal">
+                        {Object.keys(documents).length} uploaded
+                      </span>
                     </div>
-                  ))}
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        'Photo',
+                        'Passport (Front)',
+                        'Passport (Back)',
+                        'Aadhaar (Front)',
+                        'Aadhaar (Back)',
+                        'UAE ID / PAN',
+                        'Signature'
+                      ].map((label, idx) => {
+                        const hasDoc = Boolean(documents[label]);
+                        const isSelected = activeLabel === label;
+                        const curFile = docFiles[label];
+                        const curIsPdf = curFile ? (curFile.type === 'application/pdf' || curFile.name.toLowerCase().endsWith('.pdf')) : false;
+
+                        return (
+                          <div key={idx} className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-black text-[11px]">{label}</span>
+                              {isSelected && (
+                                <span className="text-[9px] text-[#104080] font-bold bg-[#dbe8f9] px-1.5 py-0.5 rounded border border-[#a2b5cd]">
+                                  Previewing
+                                </span>
+                              )}
+                            </div>
+                            <div 
+                              onClick={() => {
+                                if (hasDoc) {
+                                  setSelectedPreviewLabel(label);
+                                }
+                              }}
+                              className={`flex items-center justify-between border ${
+                                isSelected 
+                                  ? 'border-[#104080] bg-[#eaf0f8] ring-1 ring-[#104080]' 
+                                  : 'border-[#a2b5cd] bg-white'
+                              } p-2 relative group hover:border-[#316ac5] transition-all rounded-sm h-[46px] overflow-hidden ${
+                                hasDoc ? 'cursor-pointer' : ''
+                              }`}
+                            >
+                              {!hasDoc && (
+                                <input 
+                                  type="file" 
+                                  accept="image/*,.pdf"
+                                  onChange={(e) => handleFileUpload(label, e)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                                  title=" " 
+                                />
+                              )}
+                              {hasDoc ? (
+                                <div className="flex items-center justify-between w-full h-full pr-1 z-20">
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    {curIsPdf ? (
+                                      <span className="bg-red-100 text-red-700 text-[9px] font-bold px-1.5 py-0.5 border border-red-300 rounded flex-shrink-0">PDF</span>
+                                    ) : (
+                                      <img src={documents[label]} alt={label} className="h-8 w-8 object-cover rounded-sm border border-gray-300 flex-shrink-0" />
+                                    )}
+                                    <div className="flex flex-col min-w-0 flex-1 leading-tight">
+                                      <span className="text-[#104080] font-semibold text-[11px] truncate">{curFile?.name || 'Document uploaded'}</span>
+                                      <span className="text-[9px] text-gray-500">Click to view preview</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setPreviewDoc({ url: documents[label], label, isPdf: curIsPdf });
+                                      }}
+                                      className="text-[#316ac5] hover:text-[#104080] p-1 text-xs cursor-pointer"
+                                      title="Open modal preview"
+                                    >
+                                      ⤢
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setDocuments(prev => { const n = {...prev}; delete n[label]; return n; });
+                                        setDocFiles(prev => { const n = {...prev}; delete n[label]; return n; });
+                                        if (selectedPreviewLabel === label) {
+                                          setSelectedPreviewLabel(null);
+                                        }
+                                      }}
+                                      className="text-gray-400 hover:text-red-600 font-bold px-1 text-xs cursor-pointer"
+                                      title="Remove document"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-2.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#316ac5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                      <polyline points="17 8 12 3 7 8"></polyline>
+                                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    <div className="flex flex-col leading-tight">
+                                      <span className="text-[#316ac5] font-semibold text-[11px]">Upload file</span>
+                                      <span className="text-[9px] text-gray-500 mt-[1px]">JPG, PNG or PDF</span>
+                                    </div>
+                                  </div>
+                                  <div className="bg-[#316ac5] border border-[#104080] px-3 py-1 text-white font-semibold text-[10px] rounded-sm shadow-sm group-hover:bg-[#104080] transition-colors pointer-events-none">
+                                    Browse
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Live Document Preview in the empty white space */}
+                <div className="flex-1 w-full bg-[#f4f7fc] border border-[#a2b5cd] p-4 flex flex-col gap-3 shadow-sm min-h-[500px]">
+                  <div className="flex items-center justify-between border-b border-[#a2b5cd] pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[#104080] text-[12px]">Document Preview:</span>
+                      {activeLabel ? (
+                        <span className="font-bold text-[#104080] bg-white px-2.5 py-0.5 border border-[#a2b5cd] rounded text-[11px] shadow-sm">
+                          {activeLabel}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-[11px] italic">No document selected</span>
+                      )}
+                    </div>
+                    {activeDocUrl && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-gray-600 truncate max-w-[200px]" title={activeFile?.name}>
+                          {activeFile?.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewDoc({ url: activeDocUrl, label: activeLabel || '', isPdf })}
+                          className="bg-white border border-[#a2b5cd] hover:border-[#104080] text-[#104080] font-semibold text-[10px] px-2.5 py-1 rounded shadow-sm hover:bg-[#eaf0f8] transition-colors cursor-pointer flex items-center gap-1"
+                          title="Full Screen Preview"
+                        >
+                          <span>Fullscreen</span>
+                          <span>⤢</span>
+                        </button>
+                        <a
+                          href={activeDocUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-white border border-[#a2b5cd] hover:border-[#104080] text-[#104080] font-semibold text-[10px] px-2.5 py-1 rounded shadow-sm hover:bg-[#eaf0f8] transition-colors flex items-center gap-1"
+                          title="Open in new window"
+                        >
+                          <span>Open Tab</span>
+                          <span>↗</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 flex flex-col items-center justify-center bg-white border border-[#a2b5cd] p-3 rounded-sm min-h-[460px] overflow-auto">
+                    {activeDocUrl ? (
+                      isPdf ? (
+                        <iframe 
+                          src={activeDocUrl} 
+                          title={activeLabel || 'Document'} 
+                          className="w-full h-[520px] border border-gray-200 rounded" 
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full min-h-[420px] p-2">
+                          <img 
+                            src={activeDocUrl} 
+                            alt={activeLabel || 'Preview'} 
+                            className="max-w-full max-h-[500px] object-contain rounded shadow-sm border border-gray-200" 
+                          />
+                        </div>
+                      )
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-center p-8">
+                        <div className="w-16 h-16 rounded-full bg-[#f0f4f9] border border-[#a2b5cd] flex items-center justify-center text-[#316ac5] mb-3 shadow-inner">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                          </svg>
+                        </div>
+                        <div className="font-bold text-[#104080] text-[13px] mb-1">
+                          Document Live Preview
+                        </div>
+                        <p className="text-gray-500 text-[11px] max-w-xs mb-3 leading-relaxed">
+                          Upload any document on the left or click on an uploaded document to view a live preview in this space.
+                        </p>
+                        <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-gray-50 px-2.5 py-1 rounded border border-gray-200">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span>Supports JPG, PNG & PDF files</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {activeTab === 'Address Details' && (
             <div className="flex flex-col gap-4">
