@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import finacleLogo from '../assets/finacle-logo.png';
 import CostRateModal from './CostRateModal';
-import ProfitCalculatorModal from './ProfitCalculatorModal';
 
 export default function Header({ 
   hideLogo = false, 
@@ -18,7 +17,6 @@ export default function Header({
   const isFincoreActive = location.pathname.includes('/fincore');
   const [shortcutText, setShortcutText] = useState('');
   const [isCostRateModalOpen, setIsCostRateModalOpen] = useState(false);
-  const [isProfitCalcOpen, setIsProfitCalcOpen] = useState(false);
 
   const handleLogout = () => {
     navigate('/');
@@ -34,8 +32,6 @@ export default function Header({
       if (onShortcutSelect) onShortcutSelect('ORDER ENTRY');
     } else if (code.includes('COST') || code === 'CR') {
       setIsCostRateModalOpen(true);
-    } else if (code.includes('PROFIT') || code === 'PC') {
-      setIsProfitCalcOpen(true);
     } else if (code.includes('CREATE') || code === 'CIF' || code === 'CRCIF') {
       if (onShortcutSelect) onShortcutSelect('CREATE RETAIL CIF');
     } else if (code.includes('VIEW') || code === 'VCIF') {
@@ -151,7 +147,7 @@ export default function Header({
             <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
             <button className="px-2 py-0.5 hover:bg-[#e4e9f0] tracking-wide">CCY Converter</button>
             <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
-            <button className="px-2 py-0.5 hover:bg-[#e4e9f0] tracking-wide" onClick={() => setIsProfitCalcOpen(true)}>Profit Calculator</button>
+            <button disabled className="px-2 py-0.5 tracking-wide text-gray-400 cursor-not-allowed" title="Profit Calculator (Disabled)">Profit Calculator</button>
             <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
             <button className="px-2 py-0.5 hover:bg-[#e4e9f0] tracking-wide" onClick={() => setIsCostRateModalOpen(true)}>Cost Rate</button>
           </div>
@@ -194,12 +190,6 @@ export default function Header({
       <CostRateModal 
         isOpen={isCostRateModalOpen} 
         onClose={() => setIsCostRateModalOpen(false)} 
-      />
-
-      {/* Dedicated Profit Calculator Modal */}
-      <ProfitCalculatorModal
-        isOpen={isProfitCalcOpen}
-        onClose={() => setIsProfitCalcOpen(false)}
       />
     </div>
   );

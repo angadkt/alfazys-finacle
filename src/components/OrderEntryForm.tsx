@@ -113,6 +113,27 @@ export default function OrderEntryForm() {
   const [receivedAedLoading, setReceivedAedLoading] = useState(false);
   const [viewDateFilter, setViewDateFilter] = useState('');
   const [viewModeFilter, setViewModeFilter] = useState('');
+  const [editingReceivedAedId, setEditingReceivedAedId] = useState<number | null>(null);
+
+  const handleEditReceivedAed = (rec: any) => {
+    setEditingReceivedAedId(rec.id);
+    setEntryDate(rec.entry_date ? String(rec.entry_date).slice(0, 10) : new Date().toISOString().slice(0, 10));
+    setReceivedAedAmount(String(rec.aed_amount || ''));
+    setModeOfTransaction(rec.mode_of_txn || '');
+    setCollectionStaff(rec.cash_staff || '');
+    setRemainingAed(rec.remaining_amount != null ? String(rec.remaining_amount) : '');
+    setIsReceivedAedModalOpen(true);
+  };
+
+  const handleDeleteReceivedAed = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this Received AED entry?')) return;
+    try {
+      await api.delete(`/records/received-aed/${id}`);
+      fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
+    } catch (err: any) {
+      alert(err?.response?.data?.error || 'Failed to delete record.');
+    }
+  };
 
   const fetchReceivedAed = async (page = 1, date = viewDateFilter, mode = viewModeFilter) => {
     setReceivedAedLoading(true);
@@ -1388,9 +1409,17 @@ export default function OrderEntryForm() {
             <div className="bg-white shadow-2xl flex flex-col max-h-[90vh] max-w-xl w-full rounded-md overflow-hidden pointer-events-auto border border-[#c4d4ec]">
               {/* Header */}
               <div className="bg-[#eef2f9] px-6 py-4 font-bold text-black border-b border-[#c4d4ec] text-[16px] flex items-center justify-between">
-                <span>Received AED Entry</span>
+                <span>{editingReceivedAedId ? 'Edit Received AED Entry' : 'Received AED Entry'}</span>
                 <button
-                  onClick={() => setIsReceivedAedModalOpen(false)}
+                  onClick={() => {
+                    setIsReceivedAedModalOpen(false);
+                    setEditingReceivedAedId(null);
+                    setReceivedAedAmount('');
+                    setModeOfTransaction('');
+                    setCollectionStaff('');
+                    setRemainingAed('');
+                    setEntryDate(new Date().toISOString().slice(0, 10));
+                  }}
                   className="text-[#a51a1a] font-bold hover:underline cursor-pointer text-[14px]"
                 >
                   Close (X)
@@ -1494,14 +1523,29 @@ export default function OrderEntryForm() {
                         return;
                       }
                       try {
-                        await api.post('/records/received-aed', {
-                          aed_amount: parseFloat(receivedAedAmount),
-                          mode_of_txn: modeOfTransaction,
-                          cash_staff: modeOfTransaction === 'BY CASH' ? collectionStaff.trim() : undefined,
-                          remaining_amount: remainingAed ? parseFloat(remainingAed) : undefined,
-                          entry_date: entryDate,
-                        });
+                        if (editingReceivedAedId) {
+                          await api.put(`/records/received-aed/${editingReceivedAedId}`, {
+                            aed_amount: parseFloat(receivedAedAmount),
+                            mode_of_txn: modeOfTransaction,
+                            cash_staff: modeOfTransaction === 'BY CASH' ? collectionStaff.trim() : undefined,
+                            remaining_amount: remainingAed ? parseFloat(remainingAed) : undefined,
+                            entry_date: entryDate,
+                          });
+                          fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
+                        } else {
+                          await api.post('/records/received-aed', {
+                            aed_amount: parseFloat(receivedAedAmount),
+                            mode_of_txn: modeOfTransaction,
+                            cash_staff: modeOfTransaction === 'BY CASH' ? collectionStaff.trim() : undefined,
+                            remaining_amount: remainingAed ? parseFloat(remainingAed) : undefined,
+                            entry_date: entryDate,
+                          });
+                          if (isViewReceivedAedOpen) {
+                            fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
+                          }
+                        }
                         setIsReceivedAedModalOpen(false);
+                        setEditingReceivedAedId(null);
                         setReceivedAedAmount('');
                         setModeOfTransaction('');
                         setCollectionStaff('');
@@ -1513,11 +1557,12 @@ export default function OrderEntryForm() {
                     }}
                     className="bg-[#1a4a8c] text-white rounded-md px-6 py-2 shadow-sm font-medium hover:bg-[#153970] text-[13px]"
                   >
-                    Submit
+                    {editingReceivedAedId ? 'Update' : 'Submit'}
                   </button>
                   <button
                     onClick={() => {
                       setIsReceivedAedModalOpen(false);
+                      setEditingReceivedAedId(null);
                       setReceivedAedAmount('');
                       setModeOfTransaction('');
                       setCollectionStaff('');
@@ -1609,7 +1654,8 @@ export default function OrderEntryForm() {
                         <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Mode</th>
                         <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Cash Staff</th>
                         <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Remaining AED</th>
-                        <th className="px-3 py-2 font-semibold whitespace-nowrap">Created By</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Created By</th>
+                        <th className="px-3 py-2 font-semibold whitespace-nowrap text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1631,7 +1677,23 @@ export default function OrderEntryForm() {
                               ? parseFloat(rec.remaining_amount).toLocaleString('en-AE', { minimumFractionDigits: 2 }) + ' AED'
                               : <span className="text-gray-400">—</span>}
                           </td>
-                          <td className="px-3 py-2 text-gray-600">{rec.created_by_name || '—'}</td>
+                          <td className="px-3 py-2 border-r border-[#e4e4e4] text-gray-600">{rec.created_by_name || '—'}</td>
+                          <td className="px-3 py-2 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleEditReceivedAed(rec)}
+                                className="text-[#1a4a8c] hover:underline font-bold text-[11px] cursor-pointer"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReceivedAed(rec.id)}
+                                className="text-red-600 hover:underline font-bold text-[11px] cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1641,7 +1703,11 @@ export default function OrderEntryForm() {
                         <td className="px-3 py-2 border-r border-[#c4d4ec] whitespace-nowrap">
                           {receivedAedRecords.reduce((s, r) => s + parseFloat(r.aed_amount || 0), 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                         </td>
-                        <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={4}></td>
+                        <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={2}></td>
+                        <td className="px-3 py-2 border-r border-[#c4d4ec] whitespace-nowrap">
+                          {receivedAedRecords.reduce((s, r) => s + (r.remaining_amount != null ? parseFloat(r.remaining_amount || 0) : 0), 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
+                        </td>
+                        <td className="px-3 py-2" colSpan={2}></td>
                       </tr>
                     </tfoot>
                   </table>
