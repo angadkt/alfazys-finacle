@@ -254,7 +254,7 @@ export const exportOrdersToPdf = (orders: any[], meta?: ExportFilterMeta) => {
   doc.setTextColor(40, 40, 40);
   doc.text(`Total Orders: ${orders.length}    |    Total Beneficiaries: ${totalReceiversCount}`, 186, 28.5);
   doc.text(
-    `AED Total: AED ${grandTotalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}    |    INR Total: ₹ ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    `AED Total: AED ${grandTotalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}    |    INR Total: INR ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     186,
     31.5
   );
@@ -358,7 +358,7 @@ export const exportOrdersToPdf = (orders: any[], meta?: ExportFilterMeta) => {
         { content: rec.accountNumber || o.receiver_account || '-', styles: { fontStyle: 'bold', textColor: [40, 50, 70] } },
         { content: bankInfo, styles: { textColor: [60, 60, 60] } },
         { content: ifsc, styles: { halign: 'center', textColor: [80, 80, 80] } },
-        { content: `₹ ${inrNum.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [20, 20, 20] } },
+        { content: `INR ${inrNum.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, styles: { halign: 'right' as const, fontStyle: 'bold' as const, textColor: [20, 20, 20] } },
         { content: rateNum > 0 ? rateNum.toFixed(2) : (o.sale_rate || '-'), styles: { halign: 'right', textColor: [60, 60, 60] } },
         { content: `AED ${aedVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [16, 115, 65] } },
         { content: rec.servicer || o.servicer || '-', styles: { halign: 'center', textColor: [90, 90, 90] } },
@@ -374,20 +374,20 @@ export const exportOrdersToPdf = (orders: any[], meta?: ExportFilterMeta) => {
         styles: {
           fillColor: [238, 244, 252],
           textColor: [30, 70, 118],
-          fontStyle: 'bold',
-          halign: 'right',
-          fontSize: 7.4,
+          fontStyle: 'bold' as const,
+          halign: 'right' as const,
+          fontSize: 7.2,
           cellPadding: 1.8
         }
       },
       {
-        content: `₹ ${orderTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        content: `INR ${orderTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         styles: {
           fillColor: [238, 244, 252],
           textColor: [20, 20, 20],
-          fontStyle: 'bold',
-          halign: 'right',
-          fontSize: 7.4,
+          fontStyle: 'bold' as const,
+          halign: 'right' as const,
+          fontSize: 7.2,
           cellPadding: 1.8
         }
       },
@@ -400,9 +400,9 @@ export const exportOrdersToPdf = (orders: any[], meta?: ExportFilterMeta) => {
         styles: {
           fillColor: [238, 244, 252],
           textColor: [16, 115, 65],
-          fontStyle: 'bold',
-          halign: 'right',
-          fontSize: 7.4,
+          fontStyle: 'bold' as const,
+          halign: 'right' as const,
+          fontSize: 7.2,
           cellPadding: 1.8
         }
       },
@@ -439,18 +439,18 @@ export const exportOrdersToPdf = (orders: any[], meta?: ExportFilterMeta) => {
         halign: 'right' as const,
         fillColor: [30, 70, 118],
         textColor: [255, 255, 255],
-        fontSize: 7.8,
+        fontSize: 7.6,
         cellPadding: 2.2
       }
     },
     {
-      content: `₹ ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      content: `INR ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       styles: {
-        fontStyle: 'bold',
-        halign: 'right',
+        fontStyle: 'bold' as const,
+        halign: 'right' as const,
         fillColor: [30, 70, 118],
         textColor: [255, 255, 255],
-        fontSize: 7.8,
+        fontSize: 7.6,
         cellPadding: 2.2
       }
     },
@@ -461,11 +461,11 @@ export const exportOrdersToPdf = (orders: any[], meta?: ExportFilterMeta) => {
     {
       content: `AED ${grandTotalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       styles: {
-        fontStyle: 'bold',
-        halign: 'right',
+        fontStyle: 'bold' as const,
+        halign: 'right' as const,
         fillColor: [30, 70, 118],
         textColor: [255, 255, 255],
-        fontSize: 7.8,
+        fontSize: 7.6,
         cellPadding: 2.2
       }
     },
@@ -506,14 +506,14 @@ export const exportOrdersToPdf = (orders: any[], meta?: ExportFilterMeta) => {
     },
     columnStyles: {
       0: { cellWidth: 8, halign: 'center' },
-      1: { cellWidth: 44, halign: 'left' },
-      2: { cellWidth: 34, halign: 'left' },
-      3: { cellWidth: 45, halign: 'left' },
-      4: { cellWidth: 24, halign: 'center' },
-      5: { cellWidth: 28, halign: 'right' },
-      6: { cellWidth: 18, halign: 'right' },
-      7: { cellWidth: 26, halign: 'right' },
-      8: { cellWidth: 18, halign: 'center' },
+      1: { cellWidth: 42, halign: 'left' },
+      2: { cellWidth: 30, halign: 'left' },
+      3: { cellWidth: 44, halign: 'left' },
+      4: { cellWidth: 22, halign: 'center' },
+      5: { cellWidth: 36, halign: 'right' },
+      6: { cellWidth: 15, halign: 'right' },
+      7: { cellWidth: 32, halign: 'right' },
+      8: { cellWidth: 16, halign: 'center' },
       9: { cellWidth: 24, halign: 'center' }
     },
     alternateRowStyles: {

@@ -177,7 +177,7 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(40, 40, 40);
   doc.text(`Total Entries: ${entries.length}`, 186, 28.5);
-  doc.text(`Total Value: ₹ ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 186, 31.5);
+  doc.text(`Total Value: INR ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 186, 31.5);
 
   const head = [[
     'Entry No',
@@ -196,7 +196,7 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
     const amt = typeof e.totalAmount === 'number' ? e.totalAmount : parseFloat(String(e.totalAmount)) || 0;
 
     const utrLines = Array.isArray(e.utrItems) && e.utrItems.length > 0
-      ? e.utrItems.map((u: any) => `${u.utrNumber} (₹${Number(u.amount).toLocaleString('en-IN')})`).join('\n')
+      ? e.utrItems.map((u: any) => `${u.utrNumber} (INR ${Number(u.amount).toLocaleString('en-IN')})`).join('\n')
       : 'None';
 
     const statusUpper = (e.status || 'PENDING').toUpperCase();
@@ -217,7 +217,7 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
       { content: [e.bankName, e.ifscCode].filter(Boolean).join('\n') || '-', styles: { textColor: [60, 60, 60] } },
       { content: e.paymentMode || '-', styles: { textColor: [60, 60, 60] } },
       { content: utrLines, styles: { textColor: [50, 50, 50], fontSize: 6.8 } },
-      { content: `₹ ${amt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, styles: { halign: 'right' as const, fontStyle: 'bold' as const, textColor: [20, 20, 20] } },
+      { content: `INR ${amt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, styles: { halign: 'right' as const, fontStyle: 'bold' as const, textColor: [20, 20, 20] } },
       { content: statusUpper, styles: { halign: 'center' as const, fontStyle: 'bold' as const, textColor: statusTextColor } },
       { content: e.createdBy || '-', styles: { halign: 'center' as const, textColor: [80, 80, 80] } }
     ];
@@ -230,7 +230,7 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
       styles: { fontStyle: 'bold' as const, halign: 'right' as const, fillColor: [30, 70, 118], textColor: 255, fontSize: 7.8 }
     },
     {
-      content: `₹ ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      content: `INR ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       styles: { fontStyle: 'bold' as const, halign: 'right' as const, fillColor: [30, 70, 118], textColor: 255, fontSize: 7.8 }
     },
     {
@@ -271,14 +271,14 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
     columnStyles: {
       0: { cellWidth: 20 },
       1: { cellWidth: 18 },
-      2: { cellWidth: 38 },
-      3: { cellWidth: 30 },
-      4: { cellWidth: 36 },
+      2: { cellWidth: 36 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 34 },
       5: { cellWidth: 22 },
-      6: { cellWidth: 40 },
-      7: { cellWidth: 29, halign: 'right' },
-      8: { cellWidth: 18, halign: 'center' },
-      9: { cellWidth: 18, halign: 'center' }
+      6: { cellWidth: 38 },
+      7: { cellWidth: 35, halign: 'right' },
+      8: { cellWidth: 19, halign: 'center' },
+      9: { cellWidth: 19, halign: 'center' }
     },
     alternateRowStyles: {
       fillColor: [250, 252, 255]
