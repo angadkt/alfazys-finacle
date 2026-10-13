@@ -82,25 +82,43 @@ export const exportCifsToPdf = (cifs: any[], meta?: CifFilterMeta) => {
   const today = new Date().toISOString().split('T')[0];
   const title = meta?.title || 'VERIFIED RETAIL CIF CUSTOMER DIRECTORY';
 
-  doc.setFontSize(15);
+  // 1. Header & Platform Branding
+  doc.setFontSize(14);
   doc.setTextColor(30, 70, 118);
   doc.setFont('helvetica', 'bold');
-  doc.text('INFAZYS FINACLE CORE BANKING PLATFORM', 14, 13);
+  doc.text('INFAZYS FINACLE CORE BANKING PLATFORM', 14, 12);
 
-  doc.setFontSize(11);
-  doc.setTextColor(40, 40, 40);
+  doc.setFontSize(9.5);
+  doc.setTextColor(60, 60, 60);
   doc.setFont('helvetica', 'bold');
-  doc.text(title.toUpperCase(), 14, 19);
+  doc.text(`RETAIL CIF MODULE • ${title.toUpperCase()}`, 14, 17.5);
 
-  doc.setFillColor(243, 246, 251);
+  // 2. Filter & KPI Summary Cards (Side by Side)
+  doc.setFillColor(245, 248, 253);
   doc.setDrawColor(196, 212, 236);
-  doc.rect(14, 22, 269, 10, 'FD');
+  doc.rect(14, 20.5, 165, 13, 'FD');
 
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(50, 60, 80);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Filter / Search: ${meta?.searchQuery ? `"${meta.searchQuery}"` : 'All Listed CIFs'}   |   Total CIFs: ${cifs.length}`, 17, 27);
-  doc.text(`Generated On: ${new Date().toLocaleString()}`, 17, 30.5);
+  doc.text(`Filter / Search: ${meta?.searchQuery ? `"${meta.searchQuery}"` : 'All Listed CIF Records'}`, 17, 25);
+  doc.text(`Generated On: ${new Date().toLocaleString()}   •   Confidential Audit Export`, 17, 29.5);
+
+  // Right: KPI Card
+  doc.setFillColor(236, 243, 252);
+  doc.setDrawColor(180, 204, 235);
+  doc.rect(183, 20.5, 100, 13, 'FD');
+
+  doc.setFontSize(7.5);
+  doc.setTextColor(30, 70, 118);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DIRECTORY SUMMARY', 186, 24.5);
+
+  doc.setFontSize(7.2);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(40, 40, 40);
+  doc.text(`Total Customers Listed: ${cifs.length}`, 186, 28.5);
+  doc.text(`Status Scope: Verified & Active Records`, 186, 31.5);
 
   const head = [[
     'CIF ID',
@@ -112,49 +130,72 @@ export const exportCifsToPdf = (cifs: any[], meta?: CifFilterMeta) => {
     'Status'
   ]];
 
-  const body = cifs.map((c) => {
+  const body: any[] = cifs.map((c) => {
     const fullName = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'N/A';
     const phone = c.phone || c.contact_number || '-';
     const issued = c.issuedBy || c.created_by_name || 'Staff';
     const verified = c.verifiedBy || c.verified_by_name || '-';
+    const statusUpper = (c.status || 'PENDING').toUpperCase();
+
+    let statusTextColor: [number, number, number] = [70, 70, 70];
+    if (statusUpper === 'VERIFIED') {
+      statusTextColor = [16, 128, 64];
+    } else if (statusUpper === 'PENDING') {
+      statusTextColor = [180, 105, 15];
+    } else if (statusUpper === 'REJECTED') {
+      statusTextColor = [180, 30, 30];
+    }
 
     return [
-      c.cif_no || c.id || '',
-      fullName,
-      c.email || '-',
-      phone,
-      issued,
-      verified,
-      (c.status || 'PENDING').toUpperCase()
+      { content: c.cif_no || c.id || '-', styles: { fontStyle: 'bold' as const, textColor: [30, 70, 118] } },
+      { content: fullName.toUpperCase(), styles: { fontStyle: 'bold' as const, textColor: [30, 30, 30] } },
+      { content: c.email || '-', styles: { textColor: [50, 50, 50] } },
+      { content: phone, styles: { textColor: [50, 50, 50] } },
+      { content: issued, styles: { halign: 'center' as const, textColor: [70, 70, 70] } },
+      { content: verified, styles: { halign: 'center' as const, textColor: [70, 70, 70] } },
+      { content: statusUpper, styles: { halign: 'center' as const, fontStyle: 'bold' as const, textColor: statusTextColor } }
     ];
   });
 
   autoTable(doc, {
     head,
     body,
-    startY: 34,
+    startY: 36,
     theme: 'grid',
     styles: {
-      fontSize: 8,
-      cellPadding: 2.5,
-      lineColor: [196, 212, 236],
-      lineWidth: 0.15
+      fontSize: 7.4,
+      cellPadding: 2,
+      lineColor: [200, 215, 235],
+      lineWidth: 0.15,
+      textColor: [30, 30, 30]
     },
     headStyles: {
       fillColor: [30, 70, 118],
       textColor: 255,
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      fontSize: 7.8,
+      halign: 'center',
+      cellPadding: 2.2
+    },
+    columnStyles: {
+      0: { cellWidth: 26 },
+      1: { cellWidth: 50 },
+      2: { cellWidth: 52 },
+      3: { cellWidth: 35 },
+      4: { cellWidth: 34, halign: 'center' },
+      5: { cellWidth: 34, halign: 'center' },
+      6: { cellWidth: 38, halign: 'center' }
     },
     alternateRowStyles: {
-      fillColor: [247, 250, 254]
+      fillColor: [250, 252, 255]
     },
     didDrawPage: (data: any) => {
       const pageCount = doc.getNumberOfPages();
-      doc.setFontSize(7.5);
+      doc.setFontSize(7.2);
       doc.setTextColor(120, 120, 120);
       const pageHeight = doc.internal.pageSize.height;
       doc.text(
-        `Confidential - Finacle Banking Platform  •  Page ${data.pageNumber} of ${pageCount}  •  Exported on ${new Date().toLocaleString()}`,
+        `Confidential - Finacle Core Banking Platform  •  Page ${data.pageNumber} of ${pageCount}  •  Exported on ${new Date().toLocaleString()}`,
         14,
         pageHeight - 6
       );
