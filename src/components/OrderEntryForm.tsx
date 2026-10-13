@@ -100,7 +100,6 @@ export default function OrderEntryForm() {
   const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
   const [isReceivedAedModalOpen, setIsReceivedAedModalOpen] = useState(false);
   const [receivedAedAmount, setReceivedAedAmount] = useState('');
-  const [collectedAed, setCollectedAed] = useState('');
   const [modeOfTransaction, setModeOfTransaction] = useState('');
   const [collectionStaff, setCollectionStaff] = useState('');
   const [remainingAed, setRemainingAed] = useState('');
@@ -1504,7 +1503,6 @@ export default function OrderEntryForm() {
                         });
                         setIsReceivedAedModalOpen(false);
                         setReceivedAedAmount('');
-                        setCollectedAed('');
                         setModeOfTransaction('');
                         setCollectionStaff('');
                         setRemainingAed('');
@@ -1521,7 +1519,6 @@ export default function OrderEntryForm() {
                     onClick={() => {
                       setIsReceivedAedModalOpen(false);
                       setReceivedAedAmount('');
-                      setCollectedAed('');
                       setModeOfTransaction('');
                       setCollectionStaff('');
                       setRemainingAed('');
