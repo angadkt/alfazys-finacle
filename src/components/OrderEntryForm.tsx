@@ -78,6 +78,7 @@ export default function OrderEntryForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verifyingOrderId, setVerifyingOrderId] = useState<string | null>(null);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [orderRef, setOrderRef] = useState('');
   const [agentOrCustomer, setAgentOrCustomer] = useState('');
   const [transactionThrough, setTransactionThrough] = useState('');
@@ -258,6 +259,19 @@ export default function OrderEntryForm() {
     }, 400);
     return () => clearTimeout(handler);
   }, [searchQuery, filterDate, filterAgent, currentPage]);
+
+  const handleReceiverPaymentStatus = async (orderId: string, receiverIndex: number, newStatus: string) => {
+    try {
+      const res = await api.patch(`/records/orders/${orderId}/receiver/${receiverIndex}`, { payment_status: newStatus });
+      const updatedRecord = res.data.record;
+      // Update local state with fresh record from server (includes updated receivers_data + aggregate payment_status)
+      setFetchedOrders(prev => prev.map(item =>
+        item.id === updatedRecord.id ? { ...item, ...updatedRecord } : item
+      ));
+    } catch (err: any) {
+      alert('Failed to update receiver payment status: ' + (err.response?.data?.message || err.message));
+    }
+  };
 
   const handleDeleteOrder = async (id: string) => {
     if (window.confirm(`Are you sure you want to permanently delete Order ${id}?`)) {
@@ -770,170 +784,202 @@ export default function OrderEntryForm() {
               <table className="w-full text-left border-collapse text-[12px]">
                 <thead>
                   <tr className="bg-[#1e4676] text-white">
+                    <th className="p-2 border border-[#a0a0a0] w-6"></th>
                     <th className="p-2 border border-[#a0a0a0]">Order No</th>
                     <th className="p-2 border border-[#a0a0a0]">Date</th>
                     <th className="p-2 border border-[#a0a0a0]">Agent/Customer</th>
-                    <th className="p-2 border border-[#a0a0a0]">Beneficiary Name</th>
-                    <th className="p-2 border border-[#a0a0a0]">Beneficiary Account</th>
-                    <th className="p-2 border border-[#a0a0a0]">Sale Rate</th>
-                    <th className="p-2 border border-[#a0a0a0]">AED Amount</th>
-                    <th className="p-2 border border-[#a0a0a0]">INR Value</th>
+                    <th className="p-2 border border-[#a0a0a0]">Receivers</th>
+                    <th className="p-2 border border-[#a0a0a0]">AED Total</th>
+                    <th className="p-2 border border-[#a0a0a0]">INR Total</th>
                     <th className="p-2 border border-[#a0a0a0]">Txn Through</th>
                     <th className="p-2 border border-[#a0a0a0]">Issued By</th>
                     <th className="p-2 border border-[#a0a0a0]">Verified By</th>
-                    <th className="p-2 border border-[#a0a0a0]">Verification Status</th>
-                    <th className="p-2 border border-[#a0a0a0]">Payment Status</th>
+                    <th className="p-2 border border-[#a0a0a0]">Verification</th>
+                    <th className="p-2 border border-[#a0a0a0]">Payment</th>
                     <th className="p-2 border border-[#a0a0a0]">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {fetchedOrders.length > 0 ? fetchedOrders.map((o: any) => {
-                    let recs = o.receivers_data;
+                    let recs: any[] = o.receivers_data;
                     if (typeof recs === 'string') {
                       try { recs = JSON.parse(recs); } catch { recs = []; }
                     }
-                    const hasMultiple = Array.isArray(recs) && recs.length > 0;
-                    
+                    if (!Array.isArray(recs)) recs = [];
+                    const isExpanded = expandedOrderId === o.id;
+                    const aggStatus = (o.payment_status || 'Pending');
+                    const aggColor = aggStatus.toLowerCase() === 'paid'
+                      ? 'bg-green-100 text-green-800 border-green-300'
+                      : aggStatus.toLowerCase() === 'partial'
+                        ? 'bg-blue-100 text-blue-800 border-blue-300'
+                        : aggStatus.toLowerCase() === 'cancelled'
+                          ? 'bg-red-100 text-red-800 border-red-300'
+                          : 'bg-amber-100 text-amber-800 border-amber-300';
+
                     return (
-                      <tr key={o.id} className="hover:bg-[#f0f4f8]">
-                        <td className="p-2 border border-[#c4d4ec] font-bold text-blue-800">{o.order_no}</td>
-                        <td className="p-2 border border-[#c4d4ec]">{(o.order_date || '').split('T')[0]}</td>
-                        <td className="p-2 border border-[#c4d4ec]">{o.party_name || o.party_id || 'N/A'}</td>
-                        <td className="p-2 border border-[#c4d4ec]">
-                          {hasMultiple ? recs.map((acc: any, idx: number) => (
-                            <div key={idx} className={idx > 0 ? "border-t border-dashed border-[#c4d4ec] mt-1 pt-1" : ""}>
-                              {acc.clientName || '-'}
-                            </div>
-                          )) : o.receiver_name}
-                        </td>
-                        <td className="p-2 border border-[#c4d4ec]">
-                          {hasMultiple ? recs.map((acc: any, idx: number) => (
-                            <div key={idx} className={idx > 0 ? "border-t border-dashed border-[#c4d4ec] mt-1 pt-1" : ""}>
-                              {acc.accountNumber || '-'} <span className="text-gray-500 text-[10px]">({acc.bankName || 'N/A'})</span>
-                            </div>
-                          )) : o.receiver_account}
-                        </td>
-                        <td className="p-2 border border-[#c4d4ec]">
-                          {hasMultiple ? recs.map((acc: any, idx: number) => (
-                            <div key={idx} className={idx > 0 ? "border-t border-dashed border-[#c4d4ec] mt-1 pt-1" : ""}>
-                              {acc.confirmOrderAmount || o.sale_rate || '-'}
-                            </div>
-                          )) : (o.sale_rate || '-')}
-                        </td>
-                        <td className="p-2 border border-[#c4d4ec] font-medium text-emerald-700">
-                          {hasMultiple && recs.length > 1 ? (
-                            <>
-                              <div className="font-bold text-emerald-800 mb-1">Total: {o.aed_amount ? parseFloat(o.aed_amount).toFixed(2) : '-'}</div>
-                              {recs.map((acc: any, idx: number) => {
-                                const aed = acc.orderAmount && acc.confirmOrderAmount 
-                                  ? (parseFloat(acc.orderAmount) / parseFloat(acc.confirmOrderAmount)).toFixed(2)
-                                  : '-';
-                                return (
-                                  <div key={idx} className="text-emerald-700 text-[10px] border-t border-dashed border-[#c4d4ec] pt-1 mt-1">
-                                    {aed}
-                                  </div>
-                                );
-                              })}
-                            </>
-                          ) : (
-                            <>{o.aed_amount ? parseFloat(o.aed_amount).toFixed(2) : '-'}</>
-                          )}
-                        </td>
-                        <td className="p-2 border border-[#c4d4ec] font-medium">
-                          {hasMultiple && recs.length > 1 ? (
-                            <>
-                              <div className="font-bold text-black mb-1">Total: ₹ {o.inr_value}</div>
-                              {recs.map((acc: any, idx: number) => (
-                                <div key={idx} className="text-gray-600 text-[10px] border-t border-dashed border-[#c4d4ec] pt-1 mt-1">
-                                  ₹ {acc.orderAmount}
-                                </div>
-                              ))}
-                            </>
-                          ) : (
-                            <>₹ {o.inr_value}</>
-                          )}
-                        </td>
-                        <td className="p-2 border border-[#c4d4ec] text-[11px] font-semibold text-gray-700">
-                          {o.transaction_through || '-'}
-                        </td>
-                        <td className="p-2 border border-[#c4d4ec]">{o.created_by_name || 'Admin'}</td>
-                        <td className="p-2 border border-[#c4d4ec]">{o.verified_by_name || (o.status === 'verified' ? 'Admin' : '-')}</td>
-                        <td className="p-2 border border-[#c4d4ec]">
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                            o.status === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {o.status}
-                          </span>
-                        </td>
-                        <td className="p-2 border border-[#c4d4ec]">
-                          <select
-                            value={o.payment_status || 'Pending'}
-                            onChange={async (e) => {
-                              const newStatus = e.target.value;
-                              try {
-                                await api.patch(`/records/orders/${o.id}`, { payment_status: newStatus });
-                                setFetchedOrders(prev => prev.map(item => item.id === o.id ? { ...item, payment_status: newStatus } : item));
-                              } catch (err: any) {
-                                alert('Failed to update payment status: ' + (err.response?.data?.message || err.message));
-                              }
-                            }}
-                            className={`text-[11px] font-bold rounded px-2 pr-6 py-1 border cursor-pointer focus:outline-none ${
-                              (o.payment_status || 'Pending').toLowerCase() === 'paid' ? 'bg-green-100 text-green-800 border-green-300' :
-                              (o.payment_status || 'Pending').toLowerCase() === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-300' :
-                              (o.payment_status || 'Pending').toLowerCase() === 'partial' ? 'bg-blue-100 text-blue-800 border-blue-300' :
-                              'bg-gray-100 text-gray-800 border-gray-300'
-                            }`}
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="Paid">Paid</option>
-                            <option value="Partial">Partial</option>
-                            <option value="Cancelled">Cancelled</option>
-                          </select>
-                        </td>
-                        <td className="p-2 border border-[#c4d4ec] text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            {isAdmin && o.status === 'pending' && (
-                              <button
-                                disabled={verifyingOrderId === o.id}
-                                onClick={async () => {
-                                  if (confirm(`Verify order ${o.order_no}?`)) {
-                                    setVerifyingOrderId(o.id);
-                                    try {
-                                      await api.patch(`/records/orders/${o.id}`, { status: 'verified' });
-                                      fetchOrders(currentPage, searchQuery);
-                                    } catch (err: any) {
-                                      alert('Failed to verify order: ' + (err.response?.data?.message || err.message));
-                                    } finally {
-                                      setVerifyingOrderId(null);
+                      <>
+                        {/* ── Order summary row ── */}
+                        <tr
+                          key={o.id}
+                          className={`cursor-pointer transition-colors ${
+                            isExpanded ? 'bg-[#eef3fb] border-l-4 border-l-[#1e4676]' : 'hover:bg-[#f5f8fc]'
+                          }`}
+                          onClick={() => setExpandedOrderId(isExpanded ? null : o.id)}
+                        >
+                          {/* Expand toggle */}
+                          <td className="p-2 border border-[#c4d4ec] text-center text-[#1e4676] font-bold select-none">
+                            {isExpanded ? '▾' : '▸'}
+                          </td>
+                          <td className="p-2 border border-[#c4d4ec] font-bold text-blue-800 whitespace-nowrap">{o.order_no}</td>
+                          <td className="p-2 border border-[#c4d4ec] whitespace-nowrap">{(o.order_date || '').split('T')[0]}</td>
+                          <td className="p-2 border border-[#c4d4ec]">{o.party_name || o.party_id || 'N/A'}</td>
+                          <td className="p-2 border border-[#c4d4ec]">
+                            <span className="bg-[#e8eef8] text-[#1e4676] border border-[#c4d4ec] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              {recs.length} {recs.length === 1 ? 'receiver' : 'receivers'}
+                            </span>
+                          </td>
+                          <td className="p-2 border border-[#c4d4ec] font-semibold text-emerald-700 whitespace-nowrap">
+                            {o.aed_amount ? `AED ${parseFloat(o.aed_amount).toFixed(2)}` : '-'}
+                          </td>
+                          <td className="p-2 border border-[#c4d4ec] font-semibold whitespace-nowrap">
+                            {o.inr_value ? `₹ ${o.inr_value}` : '-'}
+                          </td>
+                          <td className="p-2 border border-[#c4d4ec] text-[11px] font-semibold text-gray-700">{o.transaction_through || '-'}</td>
+                          <td className="p-2 border border-[#c4d4ec]">{o.created_by_name || 'Admin'}</td>
+                          <td className="p-2 border border-[#c4d4ec]">{o.verified_by_name || (o.status === 'verified' ? 'Admin' : '-')}</td>
+                          <td className="p-2 border border-[#c4d4ec]">
+                            <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                              o.status === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {o.status}
+                            </span>
+                          </td>
+                          <td className="p-2 border border-[#c4d4ec]" onClick={e => e.stopPropagation()}>
+                            <span className={`text-[11px] font-bold rounded px-2 py-1 border ${aggColor}`}>
+                              {aggStatus}
+                            </span>
+                          </td>
+                          <td className="p-2 border border-[#c4d4ec] text-center" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-2">
+                              {isAdmin && o.status === 'pending' && (
+                                <button
+                                  disabled={verifyingOrderId === o.id}
+                                  onClick={async () => {
+                                    if (confirm(`Verify order ${o.order_no}?`)) {
+                                      setVerifyingOrderId(o.id);
+                                      try {
+                                        await api.patch(`/records/orders/${o.id}`, { status: 'verified' });
+                                        fetchOrders(currentPage, searchQuery);
+                                      } catch (err: any) {
+                                        alert('Failed to verify order: ' + (err.response?.data?.message || err.message));
+                                      } finally {
+                                        setVerifyingOrderId(null);
+                                      }
                                     }
-                                  }
-                                }}
-                                className={`bg-[#1a4a8c] hover:bg-[#153970] text-white text-[11px] font-bold px-2.5 py-1 rounded shadow-sm ${
-                                  verifyingOrderId === o.id ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                  }}
+                                  className={`bg-[#1a4a8c] hover:bg-[#153970] text-white text-[11px] font-bold px-2.5 py-1 rounded shadow-sm ${
+                                    verifyingOrderId === o.id ? 'opacity-50 cursor-not-allowed' : ''
+                                  }`}
+                                >
+                                  {verifyingOrderId === o.id ? 'Verifying...' : 'Verify'}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleEditOrder(o)}
+                                className="text-[#1a4a8c] hover:underline font-bold text-[11px]"
                               >
-                                {verifyingOrderId === o.id ? 'Verifying...' : 'Verify'}
+                                Edit
                               </button>
-                            )}
-                            <button
-                              onClick={() => handleEditOrder(o)}
-                              className="text-[#1a4a8c] hover:underline font-bold text-[11px]"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteOrder(o.id)}
-                              className="text-red-600 hover:underline font-bold text-[11px]"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                              <button
+                                onClick={() => handleDeleteOrder(o.id)}
+                                className="text-red-600 hover:underline font-bold text-[11px]"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* ── Expanded sub-table (one row per receiver) ── */}
+                        {isExpanded && (
+                          <tr key={`${o.id}-detail`}>
+                            <td colSpan={13} className="p-0 border-x border-b border-[#c4d4ec] bg-[#f5f8ff]">
+                              <div className="px-6 py-3">
+                                <div className="text-[11px] font-extrabold text-[#1e4676] uppercase tracking-wider mb-2">
+                                  Receiver Payment Details — {o.order_no}
+                                </div>
+                                {recs.length === 0 ? (
+                                  <div className="text-[11px] text-gray-400 italic">No receiver data stored.</div>
+                                ) : (
+                                  <table className="w-full text-left border-collapse text-[11px]">
+                                    <thead>
+                                      <tr className="bg-[#dce6f7] text-[#1e4676]">
+                                        <th className="p-1.5 border border-[#c4d4ec] font-bold">#</th>
+                                        <th className="p-1.5 border border-[#c4d4ec] font-bold">Client / Beneficiary</th>
+                                        <th className="p-1.5 border border-[#c4d4ec] font-bold">Account Number</th>
+                                        <th className="p-1.5 border border-[#c4d4ec] font-bold">Bank (IFSC)</th>
+                                        <th className="p-1.5 border border-[#c4d4ec] font-bold">INR Amount</th>
+                                        <th className="p-1.5 border border-[#c4d4ec] font-bold">Sale Rate</th>
+                                        <th className="p-1.5 border border-[#c4d4ec] font-bold">AED Amount</th>
+                                        <th className="p-1.5 border border-[#c4d4ec] font-bold">Payment Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {recs.map((rec: any, idx: number) => {
+                                        const recAed = rec.orderAmount && rec.confirmOrderAmount && parseFloat(rec.confirmOrderAmount) > 0
+                                          ? (parseFloat(rec.orderAmount) / parseFloat(rec.confirmOrderAmount)).toFixed(2)
+                                          : '-';
+                                        const recStatus = rec.payment_status || 'Pending';
+                                        const recColor = recStatus.toLowerCase() === 'paid'
+                                          ? 'bg-green-100 text-green-800 border-green-300'
+                                          : recStatus.toLowerCase() === 'partial'
+                                            ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                            : recStatus.toLowerCase() === 'cancelled'
+                                              ? 'bg-red-100 text-red-800 border-red-300'
+                                              : 'bg-amber-100 text-amber-800 border-amber-300';
+                                        return (
+                                          <tr key={idx} className="hover:bg-[#eef3fb] bg-white">
+                                            <td className="p-1.5 border border-[#c4d4ec] text-gray-500">{idx + 1}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-medium">{rec.clientName || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-mono">{rec.accountNumber || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] text-gray-600">
+                                              {rec.bankName || '-'}
+                                              {rec.ifscCode ? <span className="text-gray-400 ml-1">({rec.ifscCode})</span> : ''}
+                                            </td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-semibold">₹ {rec.orderAmount || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec]">{rec.confirmOrderAmount || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-semibold text-emerald-700">AED {recAed}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec]">
+                                              <select
+                                                value={recStatus}
+                                                onChange={async (e) => {
+                                                  e.stopPropagation();
+                                                  await handleReceiverPaymentStatus(o.id, idx, e.target.value);
+                                                }}
+                                                className={`text-[11px] font-bold rounded px-2 py-0.5 border cursor-pointer focus:outline-none w-full ${recColor}`}
+                                                onClick={e => e.stopPropagation()}
+                                              >
+                                                <option value="Pending">Pending</option>
+                                                <option value="Paid">Paid</option>
+                                                <option value="Partial">Partial</option>
+                                                <option value="Cancelled">Cancelled</option>
+                                              </select>
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     );
                   }) : (
                     <tr>
-                      <td colSpan={14} className="p-4 text-center text-gray-500 italic border border-[#c4d4ec]">No orders found.</td>
+                      <td colSpan={13} className="p-4 text-center text-gray-500 italic border border-[#c4d4ec]">No orders found.</td>
                     </tr>
                   )}
                 </tbody>
