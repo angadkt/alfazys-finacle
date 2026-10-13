@@ -1383,9 +1383,9 @@ export default function OrderEntryForm() {
       {/* Received AED Modal */}
       {isReceivedAedModalOpen && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-30" onClick={() => setIsReceivedAedModalOpen(false)}></div>
-          <div className="absolute inset-0 z-40 flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white shadow-2xl flex flex-col max-h-[calc(100%-1rem)] max-w-xl w-full rounded-md overflow-hidden mt-1">
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setIsReceivedAedModalOpen(false)}></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white shadow-2xl flex flex-col max-h-[90vh] max-w-xl w-full rounded-md overflow-hidden pointer-events-auto border border-[#c4d4ec]">
               {/* Header */}
               <div className="bg-[#eef2f9] px-6 py-4 font-bold text-black border-b border-[#c4d4ec] text-[16px] flex items-center justify-between">
                 <span>Received AED Entry</span>
@@ -1538,12 +1538,12 @@ export default function OrderEntryForm() {
       {/* View Received AED Modal */}
       {isViewReceivedAedOpen && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-30" onClick={() => setIsViewReceivedAedOpen(false)}></div>
-          <div className="absolute inset-0 z-40 flex items-start justify-center p-2 overflow-y-auto">
-            <div className="bg-white shadow-2xl flex flex-col w-full max-w-5xl rounded-md overflow-hidden mt-2 mb-4">
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setIsViewReceivedAedOpen(false)}></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white shadow-2xl flex flex-col w-full max-w-5xl max-h-[85vh] rounded-md overflow-hidden pointer-events-auto border border-[#c4d4ec]">
 
               {/* Header */}
-              <div className="bg-[#eef2f9] px-6 py-3 font-bold text-black border-b border-[#c4d4ec] text-[15px] flex items-center justify-between">
+              <div className="bg-[#eef2f9] px-6 py-3 font-bold text-black border-b border-[#c4d4ec] text-[15px] flex items-center justify-between shrink-0">
                 <span>Received AED Records</span>
                 <button onClick={() => setIsViewReceivedAedOpen(false)} className="text-[#a51a1a] font-bold hover:underline text-[13px]">
                   Close (X)
@@ -1551,7 +1551,7 @@ export default function OrderEntryForm() {
               </div>
 
               {/* Filters */}
-              <div className="px-5 py-3 bg-[#f4f7fb] border-b border-[#c4d4ec] flex flex-wrap items-center gap-3">
+              <div className="px-5 py-3 bg-[#f4f7fb] border-b border-[#c4d4ec] flex flex-wrap items-center gap-3 shrink-0">
                 <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
                   <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
                   <input
@@ -1650,7 +1650,7 @@ export default function OrderEntryForm() {
 
               {/* Pagination */}
               {receivedAedTotal > 50 && (
-                <div className="flex items-center justify-between px-5 py-3 border-t border-[#c4d4ec] bg-[#f4f7fb]">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-[#c4d4ec] bg-[#f4f7fb] shrink-0">
                   <span className="text-[11px] text-gray-500">Page {receivedAedPage} of {Math.ceil(receivedAedTotal / 50)}</span>
                   <div className="flex gap-2">
                     <button disabled={receivedAedPage <= 1} onClick={() => fetchReceivedAed(receivedAedPage - 1)}
