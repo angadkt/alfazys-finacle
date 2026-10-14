@@ -196,7 +196,7 @@ export default function OrderEntryForm() {
   const [fetchedOrders, setFetchedOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+  const [filterDate, setFilterDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [filterAgent, setFilterAgent] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -308,146 +308,126 @@ export default function OrderEntryForm() {
   };
 
   // Dynamic summary calculations for filtered orders
-  const { 
-    totalAed, 
-    clearedAed, 
-    unclearedAed, 
-    totalInr, 
-    clearedInr, 
-    unclearedInr, 
+  const {
+    totalAed,
+    receivedAed,
+    pendingAed,
+    aedCollectionPct,
+    totalInr,
+    transferredInr,
+    unclearedInr,
+    inrTransferPct,
     orderCount,
-    clearedOrderCount,
-    unclearedOrderCount,
-    totalProfitAed,
-    marginPct,
-    clearedPercentage,
-    hasCostRate
+    paidOrdersCount,
+    partialOrdersCount
   } = useMemo(() => {
     let aedSum = 0;
-    let clearedAedSum = 0;
-    let unclearedAedSum = 0;
-
     let inrSum = 0;
-    let clearedInrSum = 0;
-    let unclearedInrSum = 0;
+    let transferredInrSum = 0;
 
-    let clearedCount = 0;
-    let unclearedCount = 0;
+    let paidOrdersCount = 0;
+    let partialOrdersCount = 0;
+    let pendingOrdersCount = 0;
 
     for (const o of fetchedOrders) {
       if (!o) continue;
 
-      const isPaid = (o.payment_status || '').toLowerCase() === 'paid';
-      if (isPaid) {
-        clearedCount++;
-      } else {
-        unclearedCount++;
-      }
-
-      // Safe numeric calculation for AED amount
+      // 1. Calculate AED for this order
       let aed = 0;
       if (o.aed_amount !== undefined && o.aed_amount !== null && o.aed_amount !== '') {
         const parsed = typeof o.aed_amount === 'number' ? o.aed_amount : parseFloat(String(o.aed_amount).replace(/,/g, ''));
-        if (!isNaN(parsed) && isFinite(parsed)) {
-          aed = parsed;
-        }
+        if (!isNaN(parsed) && isFinite(parsed)) aed = parsed;
       }
       if (aed === 0 && o.receivers_data) {
         let recs = o.receivers_data;
         if (typeof recs === 'string') {
           try { recs = JSON.parse(recs); } catch { recs = []; }
         }
-        if (Array.isArray(recs) && recs.length > 0) {
+        if (Array.isArray(recs)) {
           aed = recs.reduce((sum: number, acc: any) => {
             const amt = parseFloat(String(acc?.orderAmount || '').replace(/,/g, ''));
             const rate = parseFloat(String(acc?.confirmOrderAmount || '').replace(/,/g, ''));
-            if (!isNaN(amt) && !isNaN(rate) && rate > 0) {
-              return sum + (amt / rate);
-            }
-            return sum;
+            return (!isNaN(amt) && !isNaN(rate) && rate > 0) ? sum + (amt / rate) : sum;
           }, 0);
         }
       }
       aedSum += aed;
-      if (isPaid) {
-        clearedAedSum += aed;
+
+      // 2. Calculate INR and Transferred INR for this order
+      let orderInr = 0;
+      let orderTransferred = 0;
+      let recs = o.receivers_data;
+      if (typeof recs === 'string') {
+        try { recs = JSON.parse(recs); } catch { recs = []; }
+      }
+
+      if (Array.isArray(recs) && recs.length > 0) {
+        for (const rec of recs) {
+          const recAmt = parseFloat(String(rec?.orderAmount || 0).replace(/,/g, '')) || 0;
+          orderInr += recAmt;
+          const status = (rec?.payment_status || 'Pending').toLowerCase();
+          if (status === 'paid') {
+            orderTransferred += recAmt;
+          } else if (status === 'partial') {
+            const partialAmt = parseFloat(String(rec?.paid_amount || 0).replace(/,/g, '')) || 0;
+            orderTransferred += Math.min(recAmt, partialAmt);
+          }
+        }
       } else {
-        unclearedAedSum += aed;
-      }
-
-      // Safe numeric calculation for INR value
-      let inr = 0;
-      if (o.inr_value !== undefined && o.inr_value !== null && o.inr_value !== '') {
-        const parsed = typeof o.inr_value === 'number' ? o.inr_value : parseFloat(String(o.inr_value).replace(/,/g, ''));
-        if (!isNaN(parsed) && isFinite(parsed)) {
-          inr = parsed;
+        if (o.inr_value !== undefined && o.inr_value !== null && o.inr_value !== '') {
+          const parsed = typeof o.inr_value === 'number' ? o.inr_value : parseFloat(String(o.inr_value).replace(/,/g, ''));
+          if (!isNaN(parsed) && isFinite(parsed)) orderInr = parsed;
+        }
+        const status = (o.payment_status || 'Pending').toLowerCase();
+        if (status === 'paid') {
+          orderTransferred = orderInr;
         }
       }
-      if (inr === 0 && o.receivers_data) {
-        let recs = o.receivers_data;
-        if (typeof recs === 'string') {
-          try { recs = JSON.parse(recs); } catch { recs = []; }
-        }
-        if (Array.isArray(recs) && recs.length > 0) {
-          inr = recs.reduce((sum: number, acc: any) => {
-            const amt = parseFloat(String(acc?.orderAmount || '').replace(/,/g, ''));
-            return !isNaN(amt) && isFinite(amt) ? sum + amt : sum;
-          }, 0);
-        }
-      }
-      inrSum += inr;
-      if (isPaid) {
-        clearedInrSum += inr;
-      } else {
-        unclearedInrSum += inr;
-      }
+
+      inrSum += orderInr;
+      transferredInrSum += orderTransferred;
+
+      const orderStatus = (o.payment_status || 'Pending').toLowerCase();
+      if (orderStatus === 'paid') paidOrdersCount++;
+      else if (orderStatus === 'partial') partialOrdersCount++;
+      else pendingOrdersCount++;
     }
 
-    // Effective Cleared & Settled calculation incorporating Received AED
-    let effectiveClearedAed = clearedAedSum;
-    if (receivedAedTotalSum > 0) {
-      effectiveClearedAed = Math.min(aedSum, Math.max(clearedAedSum, receivedAedTotalSum));
-    }
+    // AED Section (Agent collections vs Received AED modal)
+    const recAed = receivedAedTotalSum || 0;
+    const pendAed = Math.max(0, Math.round((aedSum - recAed) * 100) / 100);
+    const aedPct = aedSum > 0 ? Math.min(100, (recAed / aedSum) * 100) : 0;
 
-    const effectiveUnclearedAed = Math.max(0, Math.round((aedSum - effectiveClearedAed) * 100) / 100);
+    // INR Section (Remittances vs Beneficiary transfers)
+    const unclrInr = Math.max(0, Math.round((inrSum - transferredInrSum) * 100) / 100);
+    const inrPct = inrSum > 0 ? Math.min(100, (transferredInrSum / inrSum) * 100) : 0;
 
-    // Dynamic INR conversion for cleared / uncleared based on effective rate
-    const avgRate = aedSum > 0 ? (inrSum / aedSum) : 0;
-    let effectiveClearedInr = clearedInrSum;
-    if (effectiveClearedAed > 0 && aedSum > 0) {
-      effectiveClearedInr = Math.min(inrSum, Math.round(effectiveClearedAed * avgRate * 100) / 100);
-    }
-    const effectiveUnclearedInr = Math.max(0, Math.round((inrSum - effectiveClearedInr) * 100) / 100);
-
+    // Profit Section
     const hasCostRate = Boolean(currentCostRate && currentCostRate > 0);
     let totalCostAed = 0;
     let totalProfitAed = 0;
-
     if (hasCostRate && currentCostRate) {
       totalCostAed = inrSum / currentCostRate;
       totalProfitAed = aedSum - totalCostAed;
     }
-
-    const marginPct = (aedSum > 0 && totalProfitAed !== 0) 
-      ? ((totalProfitAed / aedSum) * 100) 
-      : 0;
-
-    const clearedPercentage = aedSum > 0 ? ((effectiveClearedAed / aedSum) * 100) : 0;
+    const marginPct = (aedSum > 0 && totalProfitAed !== 0) ? ((totalProfitAed / aedSum) * 100) : 0;
 
     return {
       totalAed: aedSum,
-      clearedAed: effectiveClearedAed,
-      unclearedAed: effectiveUnclearedAed,
+      receivedAed: recAed,
+      pendingAed: pendAed,
+      aedCollectionPct: aedPct,
       totalInr: inrSum,
-      clearedInr: effectiveClearedInr,
-      unclearedInr: effectiveUnclearedInr,
+      transferredInr: transferredInrSum,
+      unclearedInr: unclrInr,
+      inrTransferPct: inrPct,
       orderCount: fetchedOrders.length,
-      clearedOrderCount: clearedCount,
-      unclearedOrderCount: unclearedCount,
+      paidOrdersCount,
+      partialOrdersCount,
+      pendingOrdersCount,
       totalCostAed,
       totalProfitAed,
       marginPct,
-      clearedPercentage,
       hasCostRate
     };
   }, [fetchedOrders, currentCostRate, receivedAedTotalSum]);
@@ -525,11 +505,43 @@ export default function OrderEntryForm() {
     return () => clearTimeout(handler);
   }, [searchQuery, filterDate, filterAgent, currentPage]);
 
-  const handleReceiverPaymentStatus = async (orderId: string, receiverIndex: number, newStatus: string) => {
+  const handleReceiverPaymentStatus = async (orderId: string, receiverIndex: number, newStatus: string, customPaidAmount?: number) => {
+    let paidAmount = customPaidAmount;
+
+    if (newStatus === 'Partial' && paidAmount === undefined) {
+      const order = fetchedOrders.find(o => String(o.id) === String(orderId));
+      let recs = order?.receivers_data;
+      if (typeof recs === 'string') {
+        try { recs = JSON.parse(recs); } catch { recs = []; }
+      }
+      const currentRec = Array.isArray(recs) ? recs[receiverIndex] : null;
+      const totalAmt = parseFloat(String(currentRec?.orderAmount || 0).replace(/,/g, '')) || 0;
+      const currentPaid = parseFloat(String(currentRec?.paid_amount || 0).replace(/,/g, '')) || 0;
+
+      const input = window.prompt(
+        `Enter Transferred INR Amount for this receiver (Total: ₹${totalAmt.toLocaleString('en-IN')}):`,
+        currentPaid > 0 ? String(currentPaid) : ''
+      );
+
+      if (input === null) {
+        // Cancelled by user, do not change status
+        return;
+      }
+      const parsed = parseFloat(input.replace(/,/g, ''));
+      if (isNaN(parsed) || parsed < 0) {
+        alert('Please enter a valid positive number for partial paid amount.');
+        return;
+      }
+      paidAmount = Math.min(totalAmt, parsed);
+    }
+
     try {
-      const res = await api.patch(`/records/orders/${orderId}/receiver/${receiverIndex}`, { payment_status: newStatus });
+      const payload: any = { payment_status: newStatus };
+      if (paidAmount !== undefined) {
+        payload.paid_amount = paidAmount;
+      }
+      const res = await api.patch(`/records/orders/${orderId}/receiver/${receiverIndex}`, payload);
       const updatedRecord = res.data.record;
-      // Update local state with fresh record from server (includes updated receivers_data + aggregate payment_status)
       setFetchedOrders(prev => prev.map(item =>
         item.id === updatedRecord.id ? { ...item, ...updatedRecord } : item
       ));
@@ -777,14 +789,6 @@ export default function OrderEntryForm() {
           >
             View Received AED
           </span>
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span
-            className="cursor-pointer hover:underline tracking-wide font-semibold text-[#1e4676]"
-            onClick={() => setIsCostRateModalOpen(true)}
-            title="Configure wholesale cost rate for profit calculation"
-          >
-            Daily Cost Rate
-          </span>
         </div>
 
         <div className="p-4 bg-white overflow-auto flex-1">
@@ -868,10 +872,10 @@ export default function OrderEntryForm() {
                 </div>
 
                 {/* Reset Filters */}
-                {(filterDate || filterAgent || searchQuery) && (
+                {(filterDate !== new Date().toLocaleDateString('en-CA') || filterAgent || searchQuery) && (
                   <button
                     onClick={() => {
-                      setFilterDate('');
+                      setFilterDate(new Date().toLocaleDateString('en-CA'));
                       setFilterAgent('');
                       setSearchQuery('');
                       setCurrentPage(1);
@@ -908,194 +912,188 @@ export default function OrderEntryForm() {
             </div>
 
             {/* Executive Banking Summary Dashboard: 4 Cards */}
-            <div className="bg-[#f8fafc] border border-[#c4d4ec] rounded-md p-3 mb-4 shadow-2xs">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-3 border-b border-[#d8e2ef]">
+            {/* ── Executive Dashboard (6 Cards: 3 AED, 3 INR) ── */}
+            <div className="mb-4 bg-white border border-[#c4d4ec] rounded-md p-3.5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#e1e9f4]">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-[#1e4676]"></span>
-                  <span className="text-[11px] font-extrabold text-[#1e4676] uppercase tracking-wider">
-                    Executive Remittance & Profit Dashboard
-                  </span>
-                  <span className="text-[10.5px] text-gray-500 hidden sm:inline">
-                    • Dynamic Dual-Currency Reconciliation & Treasury Spread
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#1e4676]"></span>
+                  <h4 className="text-[12px] font-extrabold text-[#1e4676] uppercase tracking-wider m-0">
+                    Executive Remittance & Liquidity Dashboard
+                  </h4>
+                  <span className="text-[10px] text-gray-500 font-medium hidden sm:inline">
+                    • Dual-Currency Collections & Payout Reconciliation
                   </span>
                 </div>
+
                 <div className="flex items-center gap-2 text-[10.5px]">
                   <span className="bg-[#f0f4f9] text-[#1e4676] border border-[#c4d4ec] font-bold px-2 py-0.5 rounded">
-                    Total: {orderCount}
-                  </span>
-                  <span className="bg-[#edf7ed] text-[#1e6e38] border border-[#c3e6cb] font-bold px-2 py-0.5 rounded">
-                    Cleared: {clearedOrderCount}
-                  </span>
-                  <span className="bg-[#fff8ee] text-[#b45309] border border-[#fde68a] font-bold px-2 py-0.5 rounded">
-                    Uncleared: {unclearedOrderCount}
+                    Orders: {orderCount}
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                {/* 1. Total Turnover Volume */}
-                <div className="bg-[#f4f7fc] border border-[#a2b5cd] rounded-sm p-3 flex flex-col justify-between shadow-xs">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#104080]"></span>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#104080]">Total Turnover</span>
-                      </div>
-                      <span className="text-[10px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] px-2 py-0.5 rounded-full">
-                        {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
-                      </span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-[11px] font-bold text-[#104080]">AED</span>
-                      <span className="text-[20px] font-extrabold text-[#104080] tracking-tight font-mono">
-                        {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <div className="text-[11.5px] font-bold text-[#3b5998] font-mono mt-0.5">
-                      ₹ {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9.5px] font-normal text-gray-500">INR</span>
-                    </div>
-                  </div>
-                  <div className="text-[9.5px] text-gray-500 mt-2 pt-1.5 border-t border-[#d0dbe8] flex items-center justify-between">
-                    <span>Booked Volume</span>
-                    <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
-                  </div>
+              {/* ── Group 1: AED Collections (3 Cards) ── */}
+              <div className="mb-3">
+                <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#104080] mb-1.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#104080]"></span>
+                  AED Collections (Agent / Customer)
                 </div>
-
-                {/* 2. Cleared & Settled */}
-                <div className="bg-[#f0f9f3] border border-[#9ed4ad] rounded-sm p-3 flex flex-col justify-between shadow-xs">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#0f5132]"></span>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0f5132]">Cleared & Settled</span>
-                      </div>
-                      <span className="text-[10px] font-bold text-[#0f5132] bg-[#d1e7dd] border border-[#badbcc] px-2 py-0.5 rounded-full">
-                        {clearedOrderCount > 0 ? `${clearedOrderCount} Paid` : (clearedAed > 0 ? "AED Received" : "0 Paid")}
-                      </span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-[11px] font-bold text-[#0f5132]">AED</span>
-                      <span className="text-[20px] font-extrabold text-[#0f5132] tracking-tight font-mono">
-                        {clearedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <div className="text-[11.5px] font-bold text-[#1e7e34] font-mono mt-0.5">
-                      ₹ {clearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9.5px] font-normal text-gray-500">INR</span>
-                    </div>
-                  </div>
-                  <div className="mt-2 pt-1.5 border-t border-[#c6e6cf]">
-                    <div className="flex items-center justify-between text-[9.5px] text-[#0f5132] font-semibold mb-1">
-                      <span>Settlement Progress</span>
-                      <span>{clearedPercentage.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-[#d5ecd9] h-1.5 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-[#0f5132] h-full rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min(100, clearedPercentage)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. Pending Receivables */}
-                <div className="bg-[#fef9ec] border border-[#fae29c] rounded-sm p-3 flex flex-col justify-between shadow-xs">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#b45309]"></span>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#92400e]">Pending Receivables</span>
-                      </div>
-                      <span className="text-[10px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
-                        {unclearedAed === 0 ? "0 Pending" : (clearedAed > 0 ? "Partial Pending" : `${unclearedOrderCount} Pending`)}
-                      </span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-[11px] font-bold text-[#92400e]">AED</span>
-                      <span className="text-[20px] font-extrabold text-[#92400e] tracking-tight font-mono">
-                        {unclearedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <div className="text-[11.5px] font-bold text-[#b45309] font-mono mt-0.5">
-                      ₹ {unclearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9.5px] font-normal text-gray-500">INR</span>
-                    </div>
-                  </div>
-                  <div className="text-[9.5px] text-[#92400e] mt-2 pt-1.5 border-t border-[#fae6b2] flex items-center justify-between">
-                    <span>Outstanding Balance</span>
-                    <span className="font-semibold">{unclearedAed === 0 ? "All Settled" : "Awaiting Settlement"}</span>
-                  </div>
-                </div>
-
-                {/* 4. Estimated Gross Profit */}
-                <div className="bg-[#f0fbf6] border border-[#8ce0b0] rounded-sm p-3 flex flex-col justify-between shadow-xs">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#0d6e5a]"></span>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0d6e5a]">Est. Gross Profit</span>
-                      </div>
-                      {hasCostRate ? (
-                        <button
-                          type="button"
-                          onClick={() => setIsCostRateModalOpen(true)}
-                          className="text-[9.5px] font-bold text-[#0d6e5a] bg-[#d6f5e8] border border-[#a2e8c8] hover:bg-[#bbf0d8] px-2 py-0.5 rounded-full transition-colors cursor-pointer"
-                          title="Click to view or edit cost rate"
-                        >
-                          Cost: {currentCostRate?.toFixed(4)}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setIsCostRateModalOpen(true)}
-                          className="text-[9.5px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] hover:bg-[#dbe8f9] px-2 py-0.5 rounded-full transition-colors cursor-pointer"
-                          title="Click to set cost rate"
-                        >
-                          Set Rate
-                        </button>
-                      )}
-                    </div>
-                    
-                    {hasCostRate ? (
-                      <>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className={`text-[11px] font-bold ${totalProfitAed >= 0 ? 'text-[#0d6e5a]' : 'text-red-600'}`}>
-                            {totalProfitAed >= 0 ? '+' : ''}AED
-                          </span>
-                          <span className={`text-[20px] font-extrabold tracking-tight font-mono ${totalProfitAed >= 0 ? 'text-[#0d6e5a]' : 'text-red-600'}`}>
-                            {totalProfitAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                        <div className="text-[11.5px] font-bold text-[#0a5647] font-mono mt-0.5">
-                          {totalProfitAed >= 0 ? '+' : ''}₹ {(totalProfitAed * (currentCostRate || 1)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9.5px] font-normal text-gray-500">INR</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col py-0.5">
-                        <span className="text-[14px] font-bold text-gray-600">Rate Not Set</span>
-                        <span className="text-[10px] text-gray-500 leading-tight">
-                          Set cost rate to calculate profit for {filterDate || 'today'}.
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* 1. Total AED Amount */}
+                  <div className="bg-[#f4f7fc] border border-[#a2b5cd] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#104080]">Total AED Amount</span>
+                        <span className="text-[10px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] px-2 py-0.5 rounded-full">
+                          {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
                         </span>
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-2 pt-1.5 border-t border-[#b6eed0] flex items-center justify-between text-[9.5px]">
-                    {hasCostRate ? (
-                      <>
-                        <span className="text-gray-600">Margin Spread</span>
-                        <span className="font-extrabold text-[#0d6e5a]">
-                          {marginPct >= 0 ? '▲ +' : '▼ '}{marginPct.toFixed(2)}%
+                      <div className="flex items-baseline gap-1.5 mt-1">
+                        <span className="text-[11px] font-bold text-[#104080]">AED</span>
+                        <span className="text-[20px] font-extrabold text-[#104080] tracking-tight font-mono">
+                          {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setIsCostRateModalOpen(true)}
-                        className="text-[#104080] hover:underline font-bold flex items-center gap-1 cursor-pointer"
-                      >
-                        <span>%</span>
-                        <span>Click to set daily cost rate</span>
-                      </button>
-                    )}
+                      </div>
+                    </div>
+                    <div className="text-[9.5px] text-gray-500 mt-2 pt-1.5 border-t border-[#d0dbe8] flex items-center justify-between">
+                      <span>Total Booked</span>
+                      <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
+                    </div>
+                  </div>
+
+                  {/* 2. Received AED */}
+                  <div className="bg-[#f2f9f4] border border-[#8ce0b0] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0f5132]">Received AED</span>
+                        <span className="text-[10px] font-bold text-[#0f5132] bg-[#d1e7dd] border border-[#badbcc] px-2 py-0.5 rounded-full">
+                          {aedCollectionPct.toFixed(1)}% Collected
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 mt-1">
+                        <span className="text-[11px] font-bold text-[#0f5132]">AED</span>
+                        <span className="text-[20px] font-extrabold text-[#0f5132] tracking-tight font-mono">
+                          {receivedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-2 pt-1.5 border-t border-[#c6e6cf]">
+                      <div className="flex items-center justify-between text-[9.5px] text-[#0f5132] font-semibold mb-1">
+                        <span>Collection Progress</span>
+                        <span>{aedCollectionPct.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-[#d5ecd9] h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-[#0f5132] h-full rounded-full transition-all duration-300"
+                          style={{ width: `${aedCollectionPct}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Pending AED */}
+                  <div className="bg-[#fef9ec] border border-[#fae29c] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#92400e]">Pending AED</span>
+                        <span className="text-[10px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+                          {pendingAed === 0 ? "Fully Cleared" : "Awaiting Receipt"}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 mt-1">
+                        <span className="text-[11px] font-bold text-[#92400e]">AED</span>
+                        <span className="text-[20px] font-extrabold text-[#92400e] tracking-tight font-mono">
+                          {pendingAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-[9.5px] text-[#92400e] mt-2 pt-1.5 border-t border-[#fae6b2] flex items-center justify-between">
+                      <span>Outstanding Balance</span>
+                      <span className="font-semibold">{pendingAed === 0 ? "All Collected" : "Pending from Agents"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Group 2: INR Remittances (3 Cards) ── */}
+              <div>
+                <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#1e4676] mb-1.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1e4676]"></span>
+                  INR Remittances (Beneficiary Payouts)
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* 4. Total INR */}
+                  <div className="bg-[#f8f9fc] border border-[#c4d4ec] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#1e4676]">Total INR Amount</span>
+                        <span className="text-[10px] font-bold text-[#1e4676] bg-[#eef3fb] border border-[#c4d4ec] px-2 py-0.5 rounded-full">
+                          Total Obligation
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 mt-1">
+                        <span className="text-[11px] font-bold text-[#1e4676]">INR</span>
+                        <span className="text-[20px] font-extrabold text-[#1e4676] tracking-tight font-mono">
+                          ₹ {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-[9.5px] text-gray-500 mt-2 pt-1.5 border-t border-[#d8e2ef] flex items-center justify-between">
+                      <span>Remittance Volume</span>
+                      <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
+                    </div>
+                  </div>
+
+                  {/* 5. Transferred INR */}
+                  <div className="bg-[#f0fbf6] border border-[#7ed8a7] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0d6e5a]">Transferred INR</span>
+                        <span className="text-[10px] font-bold text-[#0d6e5a] bg-[#d6f5e8] border border-[#a2e8c8] px-2 py-0.5 rounded-full">
+                          {inrTransferPct.toFixed(1)}% Dispatched
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 mt-1">
+                        <span className="text-[11px] font-bold text-[#0d6e5a]">INR</span>
+                        <span className="text-[20px] font-extrabold text-[#0d6e5a] tracking-tight font-mono">
+                          ₹ {transferredInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-2 pt-1.5 border-t border-[#bce8d2]">
+                      <div className="flex items-center justify-between text-[9.5px] text-[#0d6e5a] font-semibold mb-1">
+                        <span>Payout Progress ({paidOrdersCount} Paid{partialOrdersCount > 0 ? `, ${partialOrdersCount} Partial` : ''})</span>
+                        <span>{inrTransferPct.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-[#d0f0e0] h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-[#0d6e5a] h-full rounded-full transition-all duration-300"
+                          style={{ width: `${inrTransferPct}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 6. Uncleared INR */}
+                  <div className="bg-[#fffbf2] border border-[#f5d58f] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#854d0e]">Uncleared INR</span>
+                        <span className="text-[10px] font-bold text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+                          {unclearedInr === 0 ? "All Paid" : "Remaining to Pay"}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 mt-1">
+                        <span className="text-[11px] font-bold text-[#854d0e]">INR</span>
+                        <span className="text-[20px] font-extrabold text-[#854d0e] tracking-tight font-mono">
+                          ₹ {unclearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-[9.5px] text-[#854d0e] mt-2 pt-1.5 border-t border-[#fae2ab] flex items-center justify-between">
+                      <span>Pending Payout</span>
+                      <span className="font-semibold">{unclearedInr === 0 ? "Zero Balance" : "Pending Beneficiary Transfer"}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1272,7 +1270,14 @@ export default function OrderEntryForm() {
                                               <div className="font-medium">{rec.bankName || '-'}</div>
                                               {rec.branchName && <div className="text-gray-400 text-[10px]">{rec.branchName}</div>}
                                             </td>
-                                            <td className="p-1.5 border border-[#c4d4ec] font-semibold">₹ {rec.orderAmount || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-semibold">
+                                              <div>₹ {rec.orderAmount || '-'}</div>
+                                              {recStatus.toLowerCase() === 'partial' && (
+                                                <div className="text-[9.5px] font-normal text-blue-700 mt-0.5">
+                                                  Paid: ₹{(parseFloat(rec.paid_amount) || 0).toLocaleString('en-IN')}
+                                                </div>
+                                              )}
+                                            </td>
                                             <td className="p-1.5 border border-[#c4d4ec]">{rec.confirmOrderAmount || '-'}</td>
                                             <td className="p-1.5 border border-[#c4d4ec] font-semibold text-emerald-700">AED {recAed}</td>
                                             <td className="p-1.5 border border-[#c4d4ec] text-gray-700">{rec.servicer || '-'}</td>
@@ -1291,6 +1296,19 @@ export default function OrderEntryForm() {
                                                 <option value="Partial">Partial</option>
                                                 <option value="Cancelled">Cancelled</option>
                                               </select>
+                                              {recStatus.toLowerCase() === 'partial' && (
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleReceiverPaymentStatus(o.id, idx, 'Partial');
+                                                  }}
+                                                  className="text-[9.5px] text-[#1e4676] hover:underline font-semibold block mt-1"
+                                                  title="Click to edit transferred amount"
+                                                >
+                                                  Edit Paid: ₹{(parseFloat(rec.paid_amount) || 0).toLocaleString('en-IN')}
+                                                </button>
+                                              )}
                                             </td>
                                           </tr>
                                         );
