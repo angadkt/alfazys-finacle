@@ -1,34 +1,82 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import CreateRetailCifForm from '../components/CreateRetailCifForm';
 import VerifyRetailCif from '../components/VerifyRetailCif';
 import ViewRetailCif from '../components/ViewRetailCif';
 import CreditEntryForm from '../components/CreditEntryForm';
 import OrderEntryForm from '../components/OrderEntryForm';
+import AddStaffForm from '../components/AddStaffForm';
+import StaffManagement from '../components/StaffManagement';
+import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
+import type { FinacleScreen } from '../types/staff';
 
 import { dbService } from '../services/db';
 
 export default function FincorePage() {
+  const navigate = useNavigate();
   const [activeScreen, setActiveScreen] = useState<string>('DASHBOARD');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const userRole = dbService.getUserRole();
 
-  const menuItems = [
+  // Enforce mandatory first-login password change
+  useEffect(() => {
+    const isMustChange = localStorage.getItem('infazys_must_change_password') === 'true';
+    const currentUser = userRole === 'staff' ? dbService.getCurrentUserStaff() : null;
+    if (isMustChange || (currentUser && currentUser.mustChangePassword)) {
+      navigate('/change-password?mandatory=true');
+    }
+  }, [userRole, navigate]);
+
+  const currentStaff = userRole === 'staff' ? dbService.getCurrentUserStaff() : null;
+  const permissions = currentStaff ? currentStaff.permissions : DEFAULT_STAFF_PERMISSIONS;
+
+  // Build dynamic menu items based on Role and Staff Permissions
+  const menuItems = userRole === 'super_admin' ? [
     "DASHBOARD",
+    "ADD STAFF",
+    "STAFF MANAGEMENT",
     "USER PROFILE MAINTENANCE",
     "EMPLOYEE FILE MAINTENANCE",
     "ROLE PROFILE MAINTENANCE",
     "CREATE RETAIL CIF",
-    ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF CREATION"] : []),
-    ...(userRole === 'super_admin' ? ["VERIFY RETAIL CIF MODIFICATION"] : []),
+    "VERIFY RETAIL CIF CREATION",
+    "VERIFY RETAIL CIF MODIFICATION",
     "VIEW RETAIL CIF",
     "ORDER ENTRY",
     "CREDIT ENTRY",
     "AED COLLECTON"
+  ] : [
+    ...(permissions['DASHBOARD'] ? ["DASHBOARD"] : []),
+    ...(permissions['CREATE RETAIL CIF'] ? ["CREATE RETAIL CIF"] : []),
+    ...(permissions['VIEW RETAIL CIF'] ? ["VIEW RETAIL CIF"] : []),
+    ...(permissions['ORDER ENTRY'] ? ["ORDER ENTRY"] : []),
+    ...(permissions['CREDIT ENTRY'] ? ["CREDIT ENTRY"] : []),
+    ...(permissions['AED COLLECTON'] ? ["AED COLLECTON"] : []),
+    ...(permissions['VERIFY RETAIL CIF CREATION'] ? ["VERIFY RETAIL CIF CREATION"] : []),
+    ...(permissions['VERIFY RETAIL CIF MODIFICATION'] ? ["VERIFY RETAIL CIF MODIFICATION"] : [])
   ];
 
   const handleShortcutSelect = (screen: string) => {
-    setActiveScreen(screen);
+    const upper = screen.toUpperCase().trim();
+    if (upper.includes('ADD') && upper.includes('STAF')) {
+      setActiveScreen('ADD STAFF');
+    } else if (upper.includes('STAF') || upper === 'STFMGMT' || upper === 'STFM') {
+      setActiveScreen('STAFF MANAGEMENT');
+    } else {
+      setActiveScreen(screen);
+    }
+  };
+
+  // Check if staff has permission to view current screen
+  const isScreenAllowed = () => {
+    if (userRole === 'super_admin') return true;
+    if (activeScreen === 'ADD STAFF' || activeScreen === 'STAFF MANAGEMENT') return false;
+    const key = activeScreen as FinacleScreen;
+    if (key in permissions) {
+      return !!permissions[key];
+    }
+    return true;
   };
 
   return (
@@ -79,7 +127,33 @@ export default function FincorePage() {
 
         {/* Main Workspace */}
         <div className="flex-1 flex flex-col bg-white overflow-hidden">
-          {activeScreen === 'CREATE RETAIL CIF' ? (
+          {!isScreenAllowed() ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#f4f7fb]">
+              <div className="bg-[#e4e4e4] border-2 border-[#104080] p-4 max-w-md shadow-lg text-center">
+                <div className="bg-[#104080] text-white py-1 px-2 text-[12px] font-bold mb-3 flex items-center justify-between">
+                  <span>FINACLE CORE — ACCESS DENIED</span>
+                  <span>SECURITY EXCEPTION</span>
+                </div>
+                <div className="text-[13px] font-bold text-red-600 mb-1">
+                  Unauthorized Module Access
+                </div>
+                <p className="text-[12px] text-gray-700 mb-4">
+                  Your staff account does not have permission to view <strong>{activeScreen}</strong>. Please request module authorization from the Administrator.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveScreen('DASHBOARD')}
+                  className="bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-4 py-1 text-[12px] font-bold hover:bg-[#e4e4e4]"
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+            </div>
+          ) : activeScreen === 'ADD STAFF' ? (
+            <AddStaffForm onNavigateToManagement={() => setActiveScreen('STAFF MANAGEMENT')} />
+          ) : activeScreen === 'STAFF MANAGEMENT' ? (
+            <StaffManagement onNavigateToAddStaff={() => setActiveScreen('ADD STAFF')} />
+          ) : activeScreen === 'CREATE RETAIL CIF' ? (
             <CreateRetailCifForm />
           ) : activeScreen === 'VERIFY RETAIL CIF CREATION' ? (
             <VerifyRetailCif />

@@ -40,6 +40,10 @@ export default function Header({
       if (onShortcutSelect) onShortcutSelect('VIEW RETAIL CIF');
     } else if (code.includes('VERIF') || code === 'VRCIF') {
       if (onShortcutSelect) onShortcutSelect('VERIFY RETAIL CIF CREATION');
+    } else if (code === 'ADDSTAFF' || code === 'ADDSTF' || code === 'ASTF') {
+      if (onShortcutSelect) onShortcutSelect('ADD STAFF');
+    } else if (code === 'STAFF' || code === 'STFMGMT' || code === 'STFM') {
+      if (onShortcutSelect) onShortcutSelect('STAFF MANAGEMENT');
     } else if (onShortcutSelect) {
       onShortcutSelect(code);
     }
@@ -168,7 +172,7 @@ export default function Header({
         </span>
         
         <div className="flex items-center text-black text-[12px] h-[22px]">
-          <span>UBSADMIN | 25/02/2014 | Menu Shortcut:</span>
+          <span>{localStorage.getItem('infazys_user_name') || (localStorage.getItem('infazys_finacle_active_role') === 'super_admin' ? 'UBSADMIN' : 'STAFF')} | 25/02/2014 | Menu Shortcut:</span>
           <input 
             type="text" 
             value={shortcutText}

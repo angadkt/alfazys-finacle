@@ -1,30 +1,67 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import logoImg from '../assets/alfazys-logo-nobg.png';
 import { useToast } from '../contexts/ToastContext';
 import Header from '../components/Header';
+import { dbService } from '../services/db';
+import api from '../services/api';
+import { ShieldAlert } from 'lucide-react';
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isMandatory, setIsMandatory] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const mandatoryFlag = params.get('mandatory') === 'true' || localStorage.getItem('infazys_must_change_password') === 'true';
+    setIsMandatory(mandatoryFlag);
+  }, [location.search]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!oldPassword || !newPassword || !confirmPassword) {
-      toast.error('Please fill in all fields');
+      toast.error('Please fill in all password fields.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters long.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error('New passwords do not match');
+      toast.error('New passwords do not match.');
       return;
     }
-    
-    toast.success('Password changed successfully');
-    navigate('/dashboard');
+    if (oldPassword === newPassword) {
+      toast.error('New password must differ from your temporary password.');
+      return;
+    }
+
+    const userEmail = localStorage.getItem('infazys_user_email');
+    if (userEmail) {
+      const result = dbService.changeStaffPassword(userEmail, oldPassword, newPassword);
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+    }
+
+    // Attempt sync with remote backend if session is active
+    api.post('/auth/change-password', {
+      currentPassword: oldPassword,
+      newPassword: newPassword
+    }).catch(e => {
+      console.warn('Backend password sync notice:', e?.response?.data || e?.message);
+    });
+
+    localStorage.removeItem('infazys_must_change_password');
+    toast.success('Password changed successfully! Finacle terminal unlocked.');
+    navigate('/fincore');
   };
 
   const handleClear = () => {
@@ -45,11 +82,27 @@ export default function ChangePasswordPage() {
 
       {/* Main Content */}
       <div className="px-4 py-5 relative z-10 flex-1 flex flex-col">
-        <h1 className="font-bold text-[15px] mb-5 font-sans">Change Credentials</h1>
+        
+        {/* Mandatory First-Login Notice Banner */}
+        {isMandatory && (
+          <div className="mb-4 bg-[#fff3cd] border-2 border-[#ffeeba] text-[#856404] p-3 shadow-sm flex items-start gap-2.5">
+            <ShieldAlert size={18} className="text-[#c0392b] shrink-0 mt-0.5" />
+            <div>
+              <div className="font-bold text-[13px] text-[#900]">
+                MANDATORY FIRST-LOGIN CREDENTIAL INITIALIZATION
+              </div>
+              <div className="text-[12px] text-[#555] mt-0.5">
+                For banking security compliance, your temporary password must be replaced with a secure personal password. All terminal functions and sidebar menus remain locked until this update is completed.
+              </div>
+            </div>
+          </div>
+        )}
+
+        <h1 className="font-bold text-[15px] mb-4 font-sans text-[#104080]">Change Credentials</h1>
 
         {/* First Box: Change Credentials */}
         <div className="border border-[#98b0c8] p-0.5 mb-3 bg-[#f0f0f0]">
-          <div className="border border-[#98b0c8] bg-[#ffffff] px-4 py-5 flex items-center h-20 shadow-[inset_0_0_2px_rgba(0,0,0,0.1)]">
+          <div className="border border-[#98b0c8] bg-[#ffffff] px-4 py-4 flex items-center h-16 shadow-[inset_0_0_2px_rgba(0,0,0,0.1)]">
             <span className="font-bold text-[14px] w-56 pl-2">
               Change <span className="text-red-500 font-bold">*</span>
             </span>

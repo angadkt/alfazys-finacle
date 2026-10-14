@@ -128,6 +128,9 @@ export const UtrItem = {};
 
 export const initialCreditEntries: CreditEntry[] = [];
 
+import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
+import type { StaffMember, StaffPermissions, StaffEmailNotification } from '../types/staff';
+
 export interface DbSchema {
   user: User;
   accounts: Account[];
@@ -136,7 +139,97 @@ export interface DbSchema {
   recipients: Recipient[];
   customers: Customer[];
   creditEntries?: CreditEntry[];
+  staffMembers?: StaffMember[];
+  emailLogs?: StaffEmailNotification[];
 }
+
+export const initialStaffMembers: StaffMember[] = [
+  {
+    id: 'STF0001',
+    email: 'staff@finacle.io',
+    password: 'user',
+    role: 'staff',
+    status: 'active',
+    mustChangePassword: false,
+    permissions: { ...DEFAULT_STAFF_PERMISSIONS },
+    createdAt: '2026-10-01T08:00:00.000Z',
+    lastLoginAt: '2026-10-14T10:30:00.000Z',
+    emailSentAt: '2026-10-01T08:00:00.000Z'
+  },
+  {
+    id: 'STF0002',
+    email: 'newstaff@infazys.com',
+    password: 'TempPassword123!',
+    role: 'staff',
+    status: 'pending_first_login',
+    mustChangePassword: true,
+    permissions: {
+      'DASHBOARD': true,
+      'CREATE RETAIL CIF': true,
+      'VERIFY RETAIL CIF CREATION': false,
+      'VERIFY RETAIL CIF MODIFICATION': false,
+      'VIEW RETAIL CIF': true,
+      'ORDER ENTRY': false,
+      'CREDIT ENTRY': true,
+      'AED COLLECTON': false,
+    },
+    createdAt: '2026-10-14T09:00:00.000Z',
+    emailSentAt: '2026-10-14T09:00:00.000Z',
+    lastSentPassword: 'TempPassword123!'
+  }
+];
+
+export const createStaffEmailContent = (toEmail: string, staffId: string, temporaryPassword: string): StaffEmailNotification => {
+  const loginUrl = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : 'https://alfazys-finacle.vercel.app';
+  const htmlBody = `
+    <div style="font-family: Arial, Helvetica, sans-serif; max-width: 620px; border: 2px solid #104080; background: #ffffff; padding: 20px; color: #333;">
+      <div style="background: #104080; color: #ffffff; padding: 12px 16px; font-size: 16px; font-weight: bold; letter-spacing: 0.5px;">
+        INFAZYS FINACLE — Staff Terminal Provisioning
+      </div>
+      <div style="padding: 16px 8px;">
+        <p style="font-size: 14px; margin-bottom: 12px;">Dear Staff Member,</p>
+        <p style="font-size: 13px; line-height: 1.5; color: #444;">
+          Your access account for the <strong>Infazys Finacle Universal Payment Solution</strong> has been provisioned by the Administrator.
+        </p>
+        <div style="background: #f4f7fb; border: 1px solid #c9d7e8; border-left: 4px solid #104080; padding: 14px; margin: 16px 0;">
+          <table style="width: 100%; font-size: 13px; font-family: monospace;">
+            <tr>
+              <td style="font-weight: bold; width: 150px; padding: 4px 0;">Staff ID:</td>
+              <td style="color: #104080; font-weight: bold;">${staffId}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; padding: 4px 0;">Login User ID / Email:</td>
+              <td>${toEmail}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; padding: 4px 0;">Temporary Password:</td>
+              <td style="color: #9c0f3d; font-weight: bold; font-size: 15px;">${temporaryPassword}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; padding: 4px 0;">Portal URL:</td>
+              <td><a href="${loginUrl}" style="color: #15549a; text-decoration: underline;">${loginUrl}</a></td>
+            </tr>
+          </table>
+        </div>
+        <div style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px 14px; font-size: 12px; font-weight: bold; margin-top: 10px;">
+          ⚠ IMPORTANT MANDATORY NOTICE: Upon your initial login, you will be automatically prompted to change this temporary password. You cannot access dashboard features until this step is completed.
+        </div>
+      </div>
+      <div style="border-top: 1px solid #e2e8f0; margin-top: 15px; padding-top: 10px; font-size: 11px; color: #777; text-align: center;">
+        Infazys Finacle Banking Core • Confidential Security Delivery
+      </div>
+    </div>
+  `;
+
+  return {
+    toEmail,
+    staffId,
+    temporaryPassword,
+    sentAt: new Date().toISOString(),
+    subject: 'Infazys Finacle — Staff Portal Credentials & First-Time Access',
+    htmlBody
+  };
+};
 
 const STORAGE_KEY = 'infazys_finacle_db';
 
@@ -151,6 +244,8 @@ export const getDb = (): DbSchema => {
   if (!stored) {
     const typedInitialData = initialData as DbSchema;
     typedInitialData.creditEntries = [...initialCreditEntries];
+    typedInitialData.staffMembers = [...initialStaffMembers];
+    typedInitialData.emailLogs = [];
     saveDb(typedInitialData);
     localStorage.setItem('infazys_finacle_db_cleaned', 'true');
     return typedInitialData;
@@ -187,12 +282,24 @@ export const getDb = (): DbSchema => {
       db.creditEntries = [...initialCreditEntries];
       saveDb(db);
     }
+
+    if (!db.staffMembers || !Array.isArray(db.staffMembers) || db.staffMembers.length === 0) {
+      db.staffMembers = [...initialStaffMembers];
+      saveDb(db);
+    }
+
+    if (!db.emailLogs || !Array.isArray(db.emailLogs)) {
+      db.emailLogs = [];
+      saveDb(db);
+    }
     
     return db;
   } catch (e) {
     console.error('Failed to parse database, resetting to default', e);
     const typedInitialData = initialData as DbSchema;
     typedInitialData.creditEntries = [...initialCreditEntries];
+    typedInitialData.staffMembers = [...initialStaffMembers];
+    typedInitialData.emailLogs = [];
     saveDb(typedInitialData);
     localStorage.setItem('infazys_finacle_db_cleaned', 'true');
     return typedInitialData;
@@ -452,7 +559,167 @@ export const dbService = {
   resetDb: (): DbSchema => {
     const typedInitialData = initialData as DbSchema;
     typedInitialData.creditEntries = [...initialCreditEntries];
+    typedInitialData.staffMembers = [...initialStaffMembers];
+    typedInitialData.emailLogs = [];
     saveDb(typedInitialData);
     return typedInitialData;
+  },
+
+  // Staff Management Service
+  getStaffMembers: (): StaffMember[] => {
+    const db = getDb();
+    if (!db.staffMembers || db.staffMembers.length === 0) {
+      db.staffMembers = [...initialStaffMembers];
+      saveDb(db);
+    }
+    return db.staffMembers;
+  },
+
+  getStaffById: (id: string): StaffMember | undefined => {
+    const staffList = dbService.getStaffMembers();
+    return staffList.find(s => s.id === id);
+  },
+
+  getStaffByEmail: (email: string): StaffMember | undefined => {
+    const staffList = dbService.getStaffMembers();
+    const clean = email.trim().toLowerCase();
+    return staffList.find(s => s.email.toLowerCase() === clean);
+  },
+
+  addStaffMember: (data: { 
+    email: string; 
+    password?: string; 
+    permissions?: StaffPermissions;
+    sendEmail?: boolean;
+  }): { staff: StaffMember; emailNotification: StaffEmailNotification } => {
+    const db = getDb();
+    if (!db.staffMembers) {
+      db.staffMembers = [...initialStaffMembers];
+    }
+    if (!db.emailLogs) {
+      db.emailLogs = [];
+    }
+
+    // Generate unique sequential Staff ID: STF0001, STF0002...
+    let maxSeq = 0;
+    db.staffMembers.forEach(s => {
+      const match = s.id.match(/^STF(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxSeq) maxSeq = num;
+      }
+    });
+    const nextSeq = maxSeq + 1;
+    const staffId = `STF${String(nextSeq).padStart(4, '0')}`;
+
+    const rawPassword = data.password && data.password.trim().length > 0 
+      ? data.password.trim() 
+      : `Finacle@${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newStaff: StaffMember = {
+      id: staffId,
+      email: data.email.trim().toLowerCase(),
+      password: rawPassword,
+      role: 'staff',
+      status: 'pending_first_login',
+      mustChangePassword: true,
+      permissions: data.permissions || { ...DEFAULT_STAFF_PERMISSIONS },
+      createdAt: new Date().toISOString(),
+      emailSentAt: new Date().toISOString(),
+      lastSentPassword: rawPassword
+    };
+
+    db.staffMembers.push(newStaff);
+
+    // Create simulated corporate email dispatch
+    const emailNotification = createStaffEmailContent(newStaff.email, newStaff.id, rawPassword);
+    db.emailLogs.unshift(emailNotification);
+
+    saveDb(db);
+    return { staff: newStaff, emailNotification };
+  },
+
+  updateStaffMember: (id: string, updates: Partial<StaffMember>): StaffMember | null => {
+    const db = getDb();
+    if (!db.staffMembers) return null;
+    const index = db.staffMembers.findIndex(s => s.id === id);
+    if (index === -1) return null;
+
+    db.staffMembers[index] = { ...db.staffMembers[index], ...updates };
+    saveDb(db);
+    return db.staffMembers[index];
+  },
+
+  updateStaffPermissions: (id: string, permissions: StaffPermissions): StaffMember | null => {
+    const db = getDb();
+    if (!db.staffMembers) return null;
+    const index = db.staffMembers.findIndex(s => s.id === id);
+    if (index === -1) return null;
+
+    db.staffMembers[index].permissions = permissions;
+    saveDb(db);
+    return db.staffMembers[index];
+  },
+
+  resendStaffCredentials: (id: string): StaffEmailNotification | null => {
+    const db = getDb();
+    if (!db.staffMembers) return null;
+    const staff = db.staffMembers.find(s => s.id === id);
+    if (!staff) return null;
+
+    const emailNotification = createStaffEmailContent(staff.email, staff.id, staff.password);
+    staff.emailSentAt = new Date().toISOString();
+    staff.lastSentPassword = staff.password;
+    if (!db.emailLogs) db.emailLogs = [];
+    db.emailLogs.unshift(emailNotification);
+    saveDb(db);
+    return emailNotification;
+  },
+
+  deleteStaffMember: (id: string): boolean => {
+    const db = getDb();
+    if (!db.staffMembers) return false;
+    const initialLen = db.staffMembers.length;
+    db.staffMembers = db.staffMembers.filter(s => s.id !== id);
+    if (db.staffMembers.length !== initialLen) {
+      saveDb(db);
+      return true;
+    }
+    return false;
+  },
+
+  getCurrentUserStaff: (): StaffMember | null => {
+    const activeEmail = localStorage.getItem('infazys_user_email');
+    if (!activeEmail) return null;
+    return dbService.getStaffByEmail(activeEmail) || null;
+  },
+
+  changeStaffPassword: (email: string, oldPass: string, newPass: string): { success: boolean; message: string } => {
+    const db = getDb();
+    if (!db.staffMembers) {
+      db.staffMembers = [...initialStaffMembers];
+    }
+    const staff = db.staffMembers.find(s => s.email.toLowerCase() === email.trim().toLowerCase());
+    if (!staff) {
+      return { success: false, message: 'Staff user record not found.' };
+    }
+
+    if (staff.password !== oldPass) {
+      return { success: false, message: 'Existing temporary or old password does not match.' };
+    }
+
+    staff.password = newPass;
+    staff.mustChangePassword = false;
+    staff.status = 'active';
+    staff.lastPasswordChangedAt = new Date().toISOString();
+    saveDb(db);
+
+    // Clear compulsory flag in storage
+    localStorage.removeItem('infazys_must_change_password');
+    return { success: true, message: 'Password updated successfully. Terminal unlocked.' };
+  },
+
+  getEmailLogs: (): StaffEmailNotification[] => {
+    return getDb().emailLogs || [];
   }
 };

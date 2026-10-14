@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import logoImg from '../assets/alfazys-logo-nobg.png';
 import finacleLogo from '../assets/finacle-logo.png';
-import type { UserRole } from '../services/db';
+import { dbService, type UserRole } from '../services/db';
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 
@@ -68,9 +68,66 @@ export default function LoginPage() {
       // Normalize shortcut logins for convenience
       if (submitEmail === 'admin' || submitEmail === 'super_admin' || submitEmail === 'ubsadmin') {
         submitEmail = 'admin@admin.com';
-        if (submitPassword === 'admin' || submitPassword === 'user') {
+        if (submitPassword === 'admin' || submitPassword === 'user' || !submitPassword) {
           submitPassword = 'adminPassword123!';
         }
+      } else if (submitEmail === 'user' || submitEmail === 'staff') {
+        submitEmail = 'staff@finacle.io';
+        if (submitPassword === 'user' || submitPassword === 'staff' || !submitPassword) {
+          submitPassword = 'user';
+        }
+      }
+
+      // 1. Check local Staff Member database first
+      const staffMember = dbService.getStaffByEmail(submitEmail);
+      if (staffMember) {
+        if (staffMember.status === 'suspended') {
+          setError('This staff account has been suspended. Please contact the administrator.');
+          toast.error('Staff account suspended.');
+          setLoading(false);
+          return;
+        }
+
+        if (staffMember.password === submitPassword) {
+          localStorage.setItem('infazys_token', `infazys-staff-token-${staffMember.id}`);
+          localStorage.setItem('infazys_user_name', staffMember.email.split('@')[0].toUpperCase());
+          localStorage.setItem('infazys_user_email', staffMember.email);
+          localStorage.setItem('infazys_finacle_active_role', 'staff');
+
+          const loginTimeStr = new Date().toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          localStorage.setItem('infazys_finacle_login_time', loginTimeStr);
+          dbService.updateStaffMember(staffMember.id, { lastLoginAt: new Date().toISOString() });
+
+          if (staffMember.mustChangePassword) {
+            localStorage.setItem('infazys_must_change_password', 'true');
+            toast.info('Compulsory First Login: You must change your temporary password.');
+            navigate('/change-password?mandatory=true');
+          } else {
+            localStorage.removeItem('infazys_must_change_password');
+            toast.success(`Welcome back, ${staffMember.email}!`);
+            navigate('/fincore');
+          }
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Fallback for offline or local Super Admin demo
+      if (submitEmail === 'admin@admin.com' && (submitPassword === 'adminPassword123!' || submitPassword === 'admin' || submitPassword === 'user')) {
+        localStorage.setItem('infazys_token', 'infazys-admin-master-token');
+        localStorage.setItem('infazys_user_name', 'UBSADMIN');
+        localStorage.setItem('infazys_user_email', 'admin@admin.com');
+        localStorage.setItem('infazys_finacle_active_role', 'super_admin');
+        localStorage.removeItem('infazys_must_change_password');
+        toast.success('Welcome back, Super Admin!');
+        navigate('/fincore');
+        setLoading(false);
+        return;
       }
 
       const response = await api.post('/auth/login', {
@@ -87,6 +144,9 @@ export default function LoginPage() {
       if (user?.fullName) {
         localStorage.setItem('infazys_user_name', user.fullName);
       }
+      if (user?.email) {
+        localStorage.setItem('infazys_user_email', user.email);
+      }
       
       // Map 'admin' from backend to 'super_admin' in frontend role state
       const resolvedRole = (role === 'admin' || role === 'super_admin') ? 'super_admin' : role; 
@@ -101,7 +161,7 @@ export default function LoginPage() {
       localStorage.setItem('infazys_finacle_login_time', loginTimeStr);
 
       toast.success(`Welcome back!`);
-      navigate('/dashboard');
+      navigate('/fincore');
 
     } catch (err: any) {
       setError('Invalid Email or Password.');

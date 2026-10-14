@@ -29,7 +29,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       const isLoginRequest = error.config?.url?.includes('/auth/login');
-      if (!isLoginRequest) {
+      const token = localStorage.getItem('infazys_token') || '';
+      const isRealJwt = token.split('.').length === 3;
+
+      if (!isLoginRequest && isRealJwt) {
         // Clear token and active session
         localStorage.removeItem('infazys_token');
         localStorage.removeItem('infazys_finacle_active_role');
