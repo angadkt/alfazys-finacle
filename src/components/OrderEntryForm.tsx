@@ -104,6 +104,7 @@ export default function OrderEntryForm() {
   const [modeOfTransaction, setModeOfTransaction] = useState('');
   const [collectionStaff, setCollectionStaff] = useState('');
   const [remainingAed, setRemainingAed] = useState('');
+  const [receivedAedAgent, setReceivedAedAgent] = useState('');
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [isCostRateModalOpen, setIsCostRateModalOpen] = useState(false);
   const [currentCostRate, setCurrentCostRate] = useState<number | null>(null);
@@ -147,6 +148,7 @@ export default function OrderEntryForm() {
   const handleEditReceivedAed = (rec: any) => {
     setEditingReceivedAedId(rec.id);
     setEntryDate(rec.entry_date ? String(rec.entry_date).slice(0, 10) : new Date().toISOString().slice(0, 10));
+    setReceivedAedAgent(rec.agent_customer || "");
     setReceivedAedAmount(String(rec.aed_amount || ''));
     setModeOfTransaction(rec.mode_of_txn || '');
     setCollectionStaff(rec.cash_staff || '');
@@ -1536,6 +1538,27 @@ export default function OrderEntryForm() {
                     className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
                   />
 
+                  {/* Agent / Customer */}
+                  <label className="font-medium text-black whitespace-nowrap">
+                    Agent / Customer
+                  </label>
+                  <div className="w-full">
+                    <input
+                      list="received-aed-agent-list"
+                      type="text"
+                      placeholder="Search or enter Agent / Customer..."
+                      autoComplete="off"
+                      value={receivedAedAgent}
+                      onChange={(e) => setReceivedAedAgent(e.target.value)}
+                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full text-xs"
+                    />
+                    <datalist id="received-aed-agent-list">
+                      {customers.map((c) => (
+                        <option key={c.id} value={`${c.name} (${c.id})`} />
+                      ))}
+                    </datalist>
+                  </div>
+
                   {/* AED Amount Received */}
                   <label className="font-medium text-black whitespace-nowrap">
                     AED Amount Received <span className="text-red-600">*</span>
@@ -1625,6 +1648,7 @@ export default function OrderEntryForm() {
                             cash_staff: modeOfTransaction === 'BY CASH' ? collectionStaff.trim() : undefined,
                             remaining_amount: remainingAed ? parseFloat(remainingAed) : undefined,
                             entry_date: entryDate,
+                            agent_customer: receivedAedAgent.trim() || undefined,
                           });
                           fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
                         } else {
@@ -1634,6 +1658,7 @@ export default function OrderEntryForm() {
                             cash_staff: modeOfTransaction === 'BY CASH' ? collectionStaff.trim() : undefined,
                             remaining_amount: remainingAed ? parseFloat(remainingAed) : undefined,
                             entry_date: entryDate,
+                            agent_customer: receivedAedAgent.trim() || undefined,
                           });
                           if (isViewReceivedAedOpen) {
                             fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
@@ -1645,6 +1670,7 @@ export default function OrderEntryForm() {
                         setModeOfTransaction('');
                         setCollectionStaff('');
                         setRemainingAed('');
+                        setReceivedAedAgent('');
                         setEntryDate(new Date().toISOString().slice(0, 10));
                       } catch (err: any) {
                         alert(err?.response?.data?.error || 'Failed to save. Please try again.');
@@ -1662,6 +1688,7 @@ export default function OrderEntryForm() {
                       setModeOfTransaction('');
                       setCollectionStaff('');
                       setRemainingAed('');
+                      setReceivedAedAgent('');
                       setEntryDate(new Date().toISOString().slice(0, 10));
                     }}
                     className="bg-white border border-[#c4d4ec] text-[#1a4a8c] rounded-md px-6 py-2 font-medium shadow-sm hover:bg-[#f4f7fb] text-[13px]"
@@ -1745,6 +1772,7 @@ export default function OrderEntryForm() {
                       <tr className="bg-[#1e4676] text-white text-left">
                         <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">#</th>
                         <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Date</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Agent / Customer</th>
                         <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">AED Amount</th>
                         <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Mode</th>
                         <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Cash Staff</th>
@@ -1794,7 +1822,7 @@ export default function OrderEntryForm() {
                     </tbody>
                     <tfoot>
                       <tr className="bg-[#eef2f9] font-bold text-[#1e4676] border-t-2 border-[#c4d4ec]">
-                        <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={2}>Total ({receivedAedRecords.length} shown)</td>
+                        <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}>Total ({receivedAedRecords.length} shown)</td>
                         <td className="px-3 py-2 border-r border-[#c4d4ec] whitespace-nowrap">
                           {receivedAedRecords.reduce((s, r) => s + parseFloat(r.aed_amount || 0), 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                         </td>
