@@ -135,6 +135,29 @@ export default function OrderEntryForm() {
     setCurrentCostRate(rate);
   };
 
+  const [receivedAedTotalSum, setReceivedAedTotalSum] = useState<number>(0);
+
+  const fetchReceivedAedSummary = async (date = filterDate, agentId = filterAgent) => {
+    try {
+      let url = `/records/received-aed?limit=1`;
+      if (date) url += `&date=${encodeURIComponent(date)}`;
+      if (agentId) {
+        const selectedCust = customers.find(c => String(c.internal_id) === String(agentId));
+        if (selectedCust) {
+          url += `&agent=${encodeURIComponent(selectedCust.name)}`;
+        }
+      }
+      const res = await api.get(url);
+      setReceivedAedTotalSum(parseFloat(res.data?.totalAedSum || 0));
+    } catch (err) {
+      console.error("Failed to fetch received aed summary:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchReceivedAedSummary(filterDate, filterAgent);
+  }, [filterDate, filterAgent, customers]);
+
   // View Received AED
   const [isViewReceivedAedOpen, setIsViewReceivedAedOpen] = useState(false);
   const [receivedAedRecords, setReceivedAedRecords] = useState<any[]>([]);
@@ -161,6 +184,7 @@ export default function OrderEntryForm() {
     try {
       await api.delete(`/records/received-aed/${id}`);
       fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
+      fetchReceivedAedSummary(filterDate, filterAgent);
     } catch (err: any) {
       alert(err?.response?.data?.error || 'Failed to delete record.');
     }
@@ -277,6 +301,22 @@ export default function OrderEntryForm() {
       }
     }
 
+    // Effective Cleared & Settled calculation incorporating Received AED
+    let effectiveClearedAed = clearedAedSum;
+    if (receivedAedTotalSum > 0) {
+      effectiveClearedAed = Math.min(aedSum, Math.max(clearedAedSum, receivedAedTotalSum));
+    }
+
+    const effectiveUnclearedAed = Math.max(0, Math.round((aedSum - effectiveClearedAed) * 100) / 100);
+
+    // Dynamic INR conversion for cleared / uncleared based on effective rate
+    const avgRate = aedSum > 0 ? (inrSum / aedSum) : 0;
+    let effectiveClearedInr = clearedInrSum;
+    if (effectiveClearedAed > 0 && aedSum > 0) {
+      effectiveClearedInr = Math.min(inrSum, Math.round(effectiveClearedAed * avgRate * 100) / 100);
+    }
+    const effectiveUnclearedInr = Math.max(0, Math.round((inrSum - effectiveClearedInr) * 100) / 100);
+
     const hasCostRate = Boolean(currentCostRate && currentCostRate > 0);
     let totalCostAed = 0;
     let totalProfitAed = 0;
@@ -290,15 +330,15 @@ export default function OrderEntryForm() {
       ? ((totalProfitAed / aedSum) * 100) 
       : 0;
 
-    const clearedPercentage = aedSum > 0 ? ((clearedAedSum / aedSum) * 100) : 0;
+    const clearedPercentage = aedSum > 0 ? ((effectiveClearedAed / aedSum) * 100) : 0;
 
     return {
       totalAed: aedSum,
-      clearedAed: clearedAedSum,
-      unclearedAed: unclearedAedSum,
+      clearedAed: effectiveClearedAed,
+      unclearedAed: effectiveUnclearedAed,
       totalInr: inrSum,
-      clearedInr: clearedInrSum,
-      unclearedInr: unclearedInrSum,
+      clearedInr: effectiveClearedInr,
+      unclearedInr: effectiveUnclearedInr,
       orderCount: fetchedOrders.length,
       clearedOrderCount: clearedCount,
       unclearedOrderCount: unclearedCount,
@@ -308,7 +348,7 @@ export default function OrderEntryForm() {
       clearedPercentage,
       hasCostRate
     };
-  }, [fetchedOrders, currentCostRate]);
+  }, [fetchedOrders, currentCostRate, receivedAedTotalSum]);
 
   const fetchOrders = async (
     page = currentPage, 
@@ -812,7 +852,7 @@ export default function OrderEntryForm() {
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0f5132]">Cleared & Settled</span>
                       </div>
                       <span className="text-[10px] font-bold text-[#0f5132] bg-[#d1e7dd] border border-[#badbcc] px-2 py-0.5 rounded-full">
-                        {clearedOrderCount} Paid
+                        {clearedOrderCount > 0 ? `${clearedOrderCount} Paid` : (clearedAed > 0 ? "AED Received" : "0 Paid")}
                       </span>
                     </div>
                     <div className="flex items-baseline gap-1.5">
@@ -848,7 +888,7 @@ export default function OrderEntryForm() {
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#92400e]">Pending Receivables</span>
                       </div>
                       <span className="text-[10px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
-                        {unclearedOrderCount} Pending
+                        {unclearedAed === 0 ? "0 Pending" : (clearedAed > 0 ? "Partial Pending" : `${unclearedOrderCount} Pending`)}
                       </span>
                     </div>
                     <div className="flex items-baseline gap-1.5">
@@ -863,7 +903,7 @@ export default function OrderEntryForm() {
                   </div>
                   <div className="text-[9.5px] text-[#92400e] mt-2 pt-1.5 border-t border-[#fae6b2] flex items-center justify-between">
                     <span>Outstanding Balance</span>
-                    <span className="font-semibold">{unclearedOrderCount === 0 ? 'All Settled' : 'Awaiting Settlement'}</span>
+                    <span className="font-semibold">{unclearedAed === 0 ? "All Settled" : "Awaiting Settlement"}</span>
                   </div>
                 </div>
 
@@ -1651,6 +1691,7 @@ export default function OrderEntryForm() {
                             agent_customer: receivedAedAgent.trim() || undefined,
                           });
                           fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
+                          fetchReceivedAedSummary(filterDate, filterAgent);
                         } else {
                           await api.post('/records/received-aed', {
                             aed_amount: parseFloat(receivedAedAmount),
@@ -1663,6 +1704,7 @@ export default function OrderEntryForm() {
                           if (isViewReceivedAedOpen) {
                             fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
                           }
+                          fetchReceivedAedSummary(filterDate, filterAgent);
                         }
                         setIsReceivedAedModalOpen(false);
                         setEditingReceivedAedId(null);
