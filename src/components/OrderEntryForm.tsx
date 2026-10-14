@@ -18,15 +18,105 @@ export default function OrderEntryForm() {
     branchName: '',
     servicer: ''
   });
+  const [agentOrCustomer, setAgentOrCustomer] = useState('');
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [savedBeneficiaries, setSavedBeneficiaries] = useState<any[]>([]);
+
+  const selectedPartyId = useMemo(() => {
+    const selected = customers.find(c => `${c.name} (${c.id})` === agentOrCustomer);
+    return selected ? String(selected.internal_id) : null;
+  }, [agentOrCustomer, customers]);
+
+  const sortedBeneficiaries = useMemo(() => {
+    if (!savedBeneficiaries || savedBeneficiaries.length === 0) return [];
+    return [...savedBeneficiaries].sort((a, b) => {
+      const aMatch = selectedPartyId && String(a.party_id) === String(selectedPartyId) ? 1 : 0;
+      const bMatch = selectedPartyId && String(b.party_id) === String(selectedPartyId) ? 1 : 0;
+      if (aMatch !== bMatch) return bMatch - aMatch;
+      return (a.client_name || '').localeCompare(b.client_name || '');
+    });
+  }, [savedBeneficiaries, selectedPartyId]);
+
+  const uniqueClientOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const list: any[] = [];
+    sortedBeneficiaries.forEach(b => {
+      const key = `${(b.client_name || '').toUpperCase()}__${(b.account_number || '').trim()}`;
+      if (b.client_name && !seen.has(key)) {
+        seen.add(key);
+        list.push(b);
+      }
+    });
+    return list;
+  }, [sortedBeneficiaries]);
+
+  const uniqueAccountOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const list: any[] = [];
+    sortedBeneficiaries.forEach(b => {
+      const key = (b.account_number || '').trim();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        list.push(b);
+      }
+    });
+    return list;
+  }, [sortedBeneficiaries]);
+
+  const uniqueIfscOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const list: any[] = [];
+    sortedBeneficiaries.forEach(b => {
+      const key = (b.ifsc_code || '').toUpperCase().trim();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        list.push(b);
+      }
+    });
+    return list;
+  }, [sortedBeneficiaries]);
 
   const handleCurrentAccountChange = async (field: keyof typeof currentAccount, value: string) => {
     let updated = { ...currentAccount, [field]: value };
     
-    if (field === 'ifscCode') {
-      // IFSC is always 11 characters long
-      if (value.length === 11) {
+    if (field === 'clientName') {
+      const trimmed = value.trim().toUpperCase();
+      if (trimmed) {
+        const match = sortedBeneficiaries.find(b => (b.client_name || '').toUpperCase() === trimmed);
+        if (match) {
+          if (match.account_number) updated.accountNumber = match.account_number;
+          if (match.ifsc_code) {
+            updated.ifscCode = match.ifsc_code;
+            updated.bankName = match.bank_name || '';
+            updated.branchName = match.branch_name || '';
+          }
+          if (match.servicer && !updated.servicer) updated.servicer = match.servicer;
+        }
+      }
+    } else if (field === 'accountNumber') {
+      const trimmed = value.trim();
+      if (trimmed) {
+        const match = sortedBeneficiaries.find(b => (b.account_number || '').trim() === trimmed);
+        if (match) {
+          if (match.client_name) updated.clientName = match.client_name;
+          if (match.ifsc_code) {
+            updated.ifscCode = match.ifsc_code;
+            updated.bankName = match.bank_name || '';
+            updated.branchName = match.branch_name || '';
+          }
+          if (match.servicer && !updated.servicer) updated.servicer = match.servicer;
+        }
+      }
+    } else if (field === 'ifscCode') {
+      const trimmed = value.trim().toUpperCase();
+      updated.ifscCode = trimmed;
+      const match = sortedBeneficiaries.find(b => (b.ifsc_code || '').toUpperCase() === trimmed && b.bank_name);
+      if (match && match.bank_name) {
+        updated.bankName = match.bank_name;
+        updated.branchName = match.branch_name || '';
+      } else if (trimmed.length === 11) {
         try {
-          const res = await fetch(`https://ifsc.razorpay.com/${value}`);
+          const res = await fetch(`https://ifsc.razorpay.com/${trimmed}`);
           if (res.ok) {
             const data = await res.json();
             updated = {
@@ -54,6 +144,20 @@ export default function OrderEntryForm() {
       return;
     }
     setAccounts([...accounts, currentAccount]);
+    if (currentAccount.clientName.trim()) {
+      setSavedBeneficiaries(prev => [
+        {
+          client_name: currentAccount.clientName.trim(),
+          account_number: currentAccount.accountNumber.trim(),
+          ifsc_code: currentAccount.ifscCode.trim().toUpperCase(),
+          bank_name: currentAccount.bankName,
+          branch_name: currentAccount.branchName,
+          servicer: currentAccount.servicer,
+          party_id: selectedPartyId
+        },
+        ...prev
+      ]);
+    }
     setCurrentAccount({
       clientName: '',
       accountNumber: '',
@@ -83,9 +187,7 @@ export default function OrderEntryForm() {
   const [verifyingOrderId, setVerifyingOrderId] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [orderRef, setOrderRef] = useState('');
-  const [agentOrCustomer, setAgentOrCustomer] = useState('');
   const [transactionThrough, setTransactionThrough] = useState('');
-  const [customers, setCustomers] = useState<any[]>([]);
 
   const activeRole = localStorage.getItem('infazys_finacle_active_role');
   const isAdmin = activeRole === 'super_admin' || activeRole === 'admin';
@@ -383,6 +485,21 @@ export default function OrderEntryForm() {
     }
   };
 
+  const fetchBeneficiaries = async () => {
+    try {
+      const res = await api.get('/records/beneficiaries');
+      if (res.data?.beneficiaries && Array.isArray(res.data.beneficiaries)) {
+        setSavedBeneficiaries(res.data.beneficiaries);
+      }
+    } catch (err) {
+      console.warn('Failed to load beneficiaries:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBeneficiaries();
+  }, []);
+
   useEffect(() => {
     const loadCustomers = async () => {
       try {
@@ -486,6 +603,7 @@ export default function OrderEntryForm() {
         setOrderRef(ref);
         setIsFormModalOpen(false);
         setIsSubmitted(true);
+        fetchBeneficiaries();
         fetchOrders(1, searchQuery);
       }
     } catch (err: any) {
@@ -1312,10 +1430,23 @@ export default function OrderEntryForm() {
                     <div className="mt-2">
                       <input 
                         type="text" 
+                        list="beneficiary-client-suggestions"
+                        autoComplete="off"
                         value={currentAccount.clientName}
                         onChange={(e) => handleCurrentAccountChange('clientName', e.target.value)}
                         className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
                       />
+                      <datalist id="beneficiary-client-suggestions">
+                        {uniqueClientOptions.map((b, idx) => (
+                          <option 
+                            key={`client-${idx}-${b.account_number}`} 
+                            value={b.client_name} 
+                            label={`${b.account_number ? `A/C ${b.account_number}` : ''}${b.bank_name ? ` • ${b.bank_name}` : ''}`}
+                          >
+                            {b.account_number ? `A/C ${b.account_number}` : ''}{b.bank_name ? ` • ${b.bank_name}` : ''}
+                          </option>
+                        ))}
+                      </datalist>
                     </div>
 
                     <div className="font-medium text-black whitespace-nowrap mt-2">
@@ -1324,10 +1455,23 @@ export default function OrderEntryForm() {
                     <div className="mt-2">
                       <input 
                         type="text" 
+                        list="beneficiary-account-suggestions"
+                        autoComplete="off"
                         value={currentAccount.accountNumber}
                         onChange={(e) => handleCurrentAccountChange('accountNumber', e.target.value)}
                         className="w-[100%] max-w-[400px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
                       />
+                      <datalist id="beneficiary-account-suggestions">
+                        {uniqueAccountOptions.map((b, idx) => (
+                          <option 
+                            key={`acc-${idx}-${b.account_number}`} 
+                            value={b.account_number} 
+                            label={`${b.client_name || ''}${b.bank_name ? ` • ${b.bank_name}` : ''}`}
+                          >
+                            {b.client_name || ''}{b.bank_name ? ` • ${b.bank_name}` : ''}
+                          </option>
+                        ))}
+                      </datalist>
                     </div>
 
                     <div className="font-medium text-black whitespace-nowrap">
@@ -1336,10 +1480,23 @@ export default function OrderEntryForm() {
                     <div>
                       <input 
                         type="text" 
+                        list="beneficiary-ifsc-suggestions"
+                        autoComplete="off"
                         value={currentAccount.ifscCode}
                         onChange={(e) => handleCurrentAccountChange('ifscCode', e.target.value)}
                         className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none"
                       />
+                      <datalist id="beneficiary-ifsc-suggestions">
+                        {uniqueIfscOptions.map((b, idx) => (
+                          <option 
+                            key={`ifsc-${idx}-${b.ifsc_code}`} 
+                            value={b.ifsc_code} 
+                            label={`${b.bank_name || ''}${b.branch_name ? ` • ${b.branch_name}` : ''}`}
+                          >
+                            {b.bank_name || ''}{b.branch_name ? ` • ${b.branch_name}` : ''}
+                          </option>
+                        ))}
+                      </datalist>
                     </div>
 
                     <div className="font-medium text-black whitespace-nowrap">
