@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 import { FileSpreadsheet, FileText } from 'lucide-react';
 import { exportOrdersToExcel, exportOrdersToPdf } from '../utils/exportOrders';
+import CostRateModal from './CostRateModal';
 
 export default function OrderEntryForm() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -104,6 +105,34 @@ export default function OrderEntryForm() {
   const [collectionStaff, setCollectionStaff] = useState('');
   const [remainingAed, setRemainingAed] = useState('');
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [isCostRateModalOpen, setIsCostRateModalOpen] = useState(false);
+  const [currentCostRate, setCurrentCostRate] = useState<number | null>(null);
+
+  const fetchCostRate = async (date: string) => {
+    if (!date) {
+      setCurrentCostRate(null);
+      return;
+    }
+    try {
+      const res = await api.get(`/records/cost-rate?date=${encodeURIComponent(date)}`);
+      if (res.data?.cost_rate !== null && res.data?.cost_rate !== undefined) {
+        setCurrentCostRate(Number(res.data.cost_rate));
+      } else {
+        setCurrentCostRate(null);
+      }
+    } catch {
+      setCurrentCostRate(null);
+    }
+  };
+
+  useEffect(() => {
+    const d = filterDate || new Date().toISOString().slice(0, 10);
+    fetchCostRate(d);
+  }, [filterDate]);
+
+  const handleCostRateSaved = (_date: string, rate: number) => {
+    setCurrentCostRate(rate);
+  };
 
   // View Received AED
   const [isViewReceivedAedOpen, setIsViewReceivedAedOpen] = useState(false);
@@ -160,7 +189,11 @@ export default function OrderEntryForm() {
     unclearedInr, 
     orderCount,
     clearedOrderCount,
-    unclearedOrderCount
+    unclearedOrderCount,
+    totalProfitAed,
+    marginPct,
+    clearedPercentage,
+    hasCostRate
   } = useMemo(() => {
     let aedSum = 0;
     let clearedAedSum = 0;
@@ -242,6 +275,21 @@ export default function OrderEntryForm() {
       }
     }
 
+    const hasCostRate = Boolean(currentCostRate && currentCostRate > 0);
+    let totalCostAed = 0;
+    let totalProfitAed = 0;
+
+    if (hasCostRate && currentCostRate) {
+      totalCostAed = inrSum / currentCostRate;
+      totalProfitAed = aedSum - totalCostAed;
+    }
+
+    const marginPct = (aedSum > 0 && totalProfitAed !== 0) 
+      ? ((totalProfitAed / aedSum) * 100) 
+      : 0;
+
+    const clearedPercentage = aedSum > 0 ? ((clearedAedSum / aedSum) * 100) : 0;
+
     return {
       totalAed: aedSum,
       clearedAed: clearedAedSum,
@@ -251,9 +299,14 @@ export default function OrderEntryForm() {
       unclearedInr: unclearedInrSum,
       orderCount: fetchedOrders.length,
       clearedOrderCount: clearedCount,
-      unclearedOrderCount: unclearedCount
+      unclearedOrderCount: unclearedCount,
+      totalCostAed,
+      totalProfitAed,
+      marginPct,
+      clearedPercentage,
+      hasCostRate
     };
-  }, [fetchedOrders]);
+  }, [fetchedOrders, currentCostRate]);
 
   const fetchOrders = async (
     page = currentPage, 
@@ -564,6 +617,14 @@ export default function OrderEntryForm() {
           >
             View Received AED
           </span>
+          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
+          <span
+            className="cursor-pointer hover:underline tracking-wide font-semibold text-[#1e4676]"
+            onClick={() => setIsCostRateModalOpen(true)}
+            title="Configure wholesale cost rate for profit calculation"
+          >
+            Daily Cost Rate
+          </span>
         </div>
 
         <div className="p-4 bg-white overflow-auto flex-1">
@@ -686,16 +747,16 @@ export default function OrderEntryForm() {
               </div>
             </div>
 
-            {/* Unified Summary Card (6 Cards Container) */}
+            {/* Executive Banking Summary Dashboard: 4 Cards */}
             <div className="bg-[#f8fafc] border border-[#c4d4ec] rounded-md p-3 mb-4 shadow-2xs">
               <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-3 border-b border-[#d8e2ef]">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-sm bg-[#1e4676]"></span>
                   <span className="text-[11px] font-extrabold text-[#1e4676] uppercase tracking-wider">
-                    Order Settlement & Clearance Overview
+                    Executive Remittance & Profit Dashboard
                   </span>
                   <span className="text-[10.5px] text-gray-500 hidden sm:inline">
-                    • Dynamic AED & INR reconciliation
+                    • Dynamic Dual-Currency Reconciliation & Treasury Spread
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-[10.5px]">
@@ -711,136 +772,170 @@ export default function OrderEntryForm() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {/* 1. Total AED */}
-                <div className="bg-[#f4f9f5] border border-[#b7dfbe] rounded-md p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#1e7e34]"></span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#1e6e38]">Total AED</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                {/* 1. Total Turnover Volume */}
+                <div className="bg-[#f4f7fc] border border-[#a2b5cd] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#104080]"></span>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#104080]">Total Turnover</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] px-2 py-0.5 rounded-full">
+                        {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-[#1e6e38] bg-[#e1f3e4] border border-[#c3e6cb] px-2 py-0.5 rounded-full">
-                      {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
-                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-[11px] font-bold text-[#104080]">AED</span>
+                      <span className="text-[20px] font-extrabold text-[#104080] tracking-tight font-mono">
+                        {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="text-[11.5px] font-bold text-[#3b5998] font-mono mt-0.5">
+                      ₹ {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9.5px] font-normal text-gray-500">INR</span>
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[12px] font-bold text-[#145523]">AED</span>
-                    <span className="text-[20px] font-extrabold text-[#145523] tracking-tight font-mono">
-                      {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-[#285e33] mt-1 font-medium">
-                    Combined AED volume across {orderCount} {orderCount === 1 ? 'order' : 'orders'}
+                  <div className="text-[9.5px] text-gray-500 mt-2 pt-1.5 border-t border-[#d0dbe8] flex items-center justify-between">
+                    <span>Booked Volume</span>
+                    <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
                   </div>
                 </div>
 
-                {/* 2. Cleared AED */}
-                <div className="bg-[#edf7ed] border border-[#a3d9a5] rounded-md p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#0f5132]"></span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f5132]">Cleared AED</span>
+                {/* 2. Cleared & Settled */}
+                <div className="bg-[#f0f9f3] border border-[#9ed4ad] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#0f5132]"></span>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0f5132]">Cleared & Settled</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#0f5132] bg-[#d1e7dd] border border-[#badbcc] px-2 py-0.5 rounded-full">
+                        {clearedOrderCount} Paid
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-[#0f5132] bg-[#d1e7dd] border border-[#badbcc] px-2 py-0.5 rounded-full">
-                      {clearedOrderCount} Paid
-                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-[11px] font-bold text-[#0f5132]">AED</span>
+                      <span className="text-[20px] font-extrabold text-[#0f5132] tracking-tight font-mono">
+                        {clearedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="text-[11.5px] font-bold text-[#1e7e34] font-mono mt-0.5">
+                      ₹ {clearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9.5px] font-normal text-gray-500">INR</span>
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[12px] font-bold text-[#0f5132]">AED</span>
-                    <span className="text-[20px] font-extrabold text-[#0f5132] tracking-tight font-mono">
-                      {clearedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-[#0f5132] mt-1 font-medium">
-                    Paid & settled AED amount
+                  <div className="mt-2 pt-1.5 border-t border-[#c6e6cf]">
+                    <div className="flex items-center justify-between text-[9.5px] text-[#0f5132] font-semibold mb-1">
+                      <span>Settlement Progress</span>
+                      <span>{clearedPercentage.toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-[#d5ecd9] h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-[#0f5132] h-full rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, clearedPercentage)}%` }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
 
-                {/* 3. Uncleared AED */}
-                <div className="bg-[#fef9ec] border border-[#fae29c] rounded-md p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#b45309]"></span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#b45309]">Uncleared AED</span>
+                {/* 3. Pending Receivables */}
+                <div className="bg-[#fef9ec] border border-[#fae29c] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#b45309]"></span>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#92400e]">Pending Receivables</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+                        {unclearedOrderCount} Pending
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
-                      {unclearedOrderCount} Pending
-                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-[11px] font-bold text-[#92400e]">AED</span>
+                      <span className="text-[20px] font-extrabold text-[#92400e] tracking-tight font-mono">
+                        {unclearedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="text-[11.5px] font-bold text-[#b45309] font-mono mt-0.5">
+                      ₹ {unclearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9.5px] font-normal text-gray-500">INR</span>
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[12px] font-bold text-[#92400e]">AED</span>
-                    <span className="text-[20px] font-extrabold text-[#92400e] tracking-tight font-mono">
-                      {unclearedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-[#92400e] mt-1 font-medium">
-                    Pending / partial AED payment
+                  <div className="text-[9.5px] text-[#92400e] mt-2 pt-1.5 border-t border-[#fae6b2] flex items-center justify-between">
+                    <span>Outstanding Balance</span>
+                    <span className="font-semibold">{unclearedOrderCount === 0 ? 'All Settled' : 'Awaiting Settlement'}</span>
                   </div>
                 </div>
 
-                {/* 4. Total INR */}
-                <div className="bg-[#f0f4f9] border border-[#c4d4ec] rounded-md p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#1e4676]"></span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#1e4676]">Total INR</span>
+                {/* 4. Estimated Gross Profit */}
+                <div className="bg-[#f0fbf6] border border-[#8ce0b0] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#0d6e5a]"></span>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0d6e5a]">Est. Gross Profit</span>
+                      </div>
+                      {hasCostRate ? (
+                        <button
+                          type="button"
+                          onClick={() => setIsCostRateModalOpen(true)}
+                          className="text-[9.5px] font-bold text-[#0d6e5a] bg-[#d6f5e8] border border-[#a2e8c8] hover:bg-[#bbf0d8] px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                          title="Click to view or edit cost rate"
+                        >
+                          Cost: {currentCostRate?.toFixed(4)}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsCostRateModalOpen(true)}
+                          className="text-[9.5px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] hover:bg-[#dbe8f9] px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                          title="Click to set cost rate"
+                        >
+                          Set Rate
+                        </button>
+                      )}
                     </div>
-                    <span className="text-[10px] font-semibold text-[#1e4676] bg-[#e0ebf7] border border-[#bcd2ee] px-2 py-0.5 rounded-full">
-                      {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
-                    </span>
+                    
+                    {hasCostRate ? (
+                      <>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className={`text-[11px] font-bold ${totalProfitAed >= 0 ? 'text-[#0d6e5a]' : 'text-red-600'}`}>
+                            {totalProfitAed >= 0 ? '+' : ''}AED
+                          </span>
+                          <span className={`text-[20px] font-extrabold tracking-tight font-mono ${totalProfitAed >= 0 ? 'text-[#0d6e5a]' : 'text-red-600'}`}>
+                            {totalProfitAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="text-[11.5px] font-bold text-[#0a5647] font-mono mt-0.5">
+                          {totalProfitAed >= 0 ? '+' : ''}₹ {(totalProfitAed * (currentCostRate || 1)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9.5px] font-normal text-gray-500">INR</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col py-0.5">
+                        <span className="text-[14px] font-bold text-gray-600">Rate Not Set</span>
+                        <span className="text-[10px] text-gray-500 leading-tight">
+                          Set cost rate to calculate profit for {filterDate || 'today'}.
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[13px] font-bold text-[#0d2a4a]">₹</span>
-                    <span className="text-[20px] font-extrabold text-[#0d2a4a] tracking-tight font-mono">
-                      {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-[#2c5282] mt-1 font-medium">
-                    Combined INR value across {orderCount} {orderCount === 1 ? 'order' : 'orders'}
-                  </div>
-                </div>
-
-                {/* 5. Cleared INR */}
-                <div className="bg-[#eaf1fb] border border-[#abc6ea] rounded-md p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#1a4a8c]"></span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#1a4a8c]">Cleared INR</span>
-                    </div>
-                    <span className="text-[10px] font-semibold text-[#1a4a8c] bg-[#dbe8f9] border border-[#b8d4f6] px-2 py-0.5 rounded-full">
-                      {clearedOrderCount} Paid
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[13px] font-bold text-[#103567]">₹</span>
-                    <span className="text-[20px] font-extrabold text-[#103567] tracking-tight font-mono">
-                      {clearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-[#1a4a8c] mt-1 font-medium">
-                    Paid & settled INR value
-                  </div>
-                </div>
-
-                {/* 6. Uncleared INR */}
-                <div className="bg-[#fef7ee] border border-[#fed7aa] rounded-md p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#c2410c]"></span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#c2410c]">Uncleared INR</span>
-                    </div>
-                    <span className="text-[10px] font-semibold text-[#c2410c] bg-[#ffedd5] border border-[#fed7aa] px-2 py-0.5 rounded-full">
-                      {unclearedOrderCount} Pending
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[13px] font-bold text-[#9a3412]">₹</span>
-                    <span className="text-[20px] font-extrabold text-[#9a3412] tracking-tight font-mono">
-                      {unclearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-[#9a3412] mt-1 font-medium">
-                    Pending / partial INR payment
+                  
+                  <div className="mt-2 pt-1.5 border-t border-[#b6eed0] flex items-center justify-between text-[9.5px]">
+                    {hasCostRate ? (
+                      <>
+                        <span className="text-gray-600">Margin Spread</span>
+                        <span className="font-extrabold text-[#0d6e5a]">
+                          {marginPct >= 0 ? '▲ +' : '▼ '}{marginPct.toFixed(2)}%
+                        </span>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsCostRateModalOpen(true)}
+                        className="text-[#104080] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>%</span>
+                        <span>Click to set daily cost rate</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1731,6 +1826,13 @@ export default function OrderEntryForm() {
           </div>
         </>
       )}
+
+      <CostRateModal
+        isOpen={isCostRateModalOpen}
+        onClose={() => setIsCostRateModalOpen(false)}
+        initialDate={filterDate || new Date().toISOString().slice(0, 10)}
+        onRateSaved={handleCostRateSaved}
+      />
 
     </div>
   );

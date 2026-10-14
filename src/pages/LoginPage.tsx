@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import logoImg from '../assets/alfazys-logo-nobg.png';
@@ -17,6 +17,17 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const wasExpired = params.get('session_expired') === 'true' || sessionStorage.getItem('infazys_session_expired') === 'true';
+    if (wasExpired) {
+      sessionStorage.removeItem('infazys_session_expired');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setError('Your session has timed out. Please log in again.');
+      toast.info('Session timed out. Please log in again.');
+    }
+  }, []);
 
   const handleRoleChange = (role: UserRole) => {
     setError('');

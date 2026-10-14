@@ -22,15 +22,25 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle token expiry
+let isRedirecting = false;
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear token and optionally redirect to login
-      localStorage.removeItem('infazys_token');
-      localStorage.removeItem('infazys_finacle_active_role');
-      // If you want to force redirect:
-      // window.location.href = '/';
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      if (!isLoginRequest) {
+        // Clear token and active session
+        localStorage.removeItem('infazys_token');
+        localStorage.removeItem('infazys_finacle_active_role');
+        
+        // Redirect to login if not already there, debounced across concurrent requests
+        if (!isRedirecting && window.location.pathname !== '/' && window.location.pathname !== '/login') {
+          isRedirecting = true;
+          sessionStorage.setItem('infazys_session_expired', 'true');
+          window.location.href = '/?session_expired=true';
+        }
+      }
     }
     return Promise.reject(error);
   }

@@ -19,6 +19,8 @@ export default function Header({
   const [isCostRateModalOpen, setIsCostRateModalOpen] = useState(false);
 
   const handleLogout = () => {
+    localStorage.removeItem('infazys_token');
+    localStorage.removeItem('infazys_finacle_active_role');
     navigate('/');
   };
 

@@ -4,10 +4,11 @@ import api from '../services/api';
 interface CostRateModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialDate?: string;
   onRateSaved?: (date: string, costRate: number) => void;
 }
 
-export default function CostRateModal({ isOpen, onClose, onRateSaved }: CostRateModalProps) {
+export default function CostRateModal({ isOpen, onClose, initialDate, onRateSaved }: CostRateModalProps) {
   // Today's date in local YYYY-MM-DD
   const getTodayStr = () => {
     const d = new Date();
@@ -17,7 +18,7 @@ export default function CostRateModal({ isOpen, onClose, onRateSaved }: CostRate
     return `${year}-${month}-${day}`;
   };
 
-  const [selectedDate, setSelectedDate] = useState<string>(getTodayStr());
+  const [selectedDate, setSelectedDate] = useState<string>(initialDate || getTodayStr());
   const [costRateInput, setCostRateInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
@@ -48,6 +49,12 @@ export default function CostRateModal({ isOpen, onClose, onRateSaved }: CostRate
 
   useEffect(() => {
     if (isOpen) {
+      setSelectedDate(initialDate || getTodayStr());
+    }
+  }, [isOpen, initialDate]);
+
+  useEffect(() => {
+    if (isOpen && selectedDate) {
       fetchRateForDate(selectedDate);
     }
   }, [isOpen, selectedDate]);

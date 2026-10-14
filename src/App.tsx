@@ -7,6 +7,14 @@ import ChangePasswordPage from './pages/ChangePasswordPage';
 import FincorePage from './pages/FincorePage';
 import { ToastProvider } from './contexts/ToastContext';
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('infazys_token');
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
     <ToastProvider>
@@ -14,12 +22,12 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
-          <Route path="/change-password" element={<ChangePasswordPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/customers" element={<CustomersPage />} />
+          <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
           <Route path="/customers/new" element={<Navigate to="/customers" replace />} />
-          <Route path="/customers/view/:id" element={<CustomerViewPage />} />
-          <Route path="/fincore" element={<FincorePage />} />
+          <Route path="/customers/view/:id" element={<ProtectedRoute><CustomerViewPage /></ProtectedRoute>} />
+          <Route path="/fincore" element={<ProtectedRoute><FincorePage /></ProtectedRoute>} />
           
           {/* Legacy fallback redirects */}
           <Route path="/admin-panel" element={<Navigate to="/customers" replace />} />

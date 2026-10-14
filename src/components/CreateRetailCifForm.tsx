@@ -14,6 +14,8 @@ export default function CreateRetailCifForm() {
   const [docFiles, setDocFiles] = useState<Record<string, File>>({});
   const [previewDoc, setPreviewDoc] = useState<{url: string, label: string, isPdf?: boolean} | null>(null);
   const [selectedPreviewLabel, setSelectedPreviewLabel] = useState<string | null>(null);
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const [previewRotation, setPreviewRotation] = useState(0);
   const [cifTypesList, setCifTypesList] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
@@ -127,12 +129,14 @@ export default function CreateRetailCifForm() {
       // Upload selected identification documents to backend
       const labelToDocType: Record<string, string> = {
         'Photo': 'photo',
-        'Passport (Front)': 'passport_front',
-        'Passport (Back)': 'passport_back',
+        'Signature': 'signature',
         'Aadhaar (Front)': 'aadhaar_front',
         'Aadhaar (Back)': 'aadhaar_back',
-        'UAE ID / PAN': 'uae_id',
-        'Signature': 'signature'
+        'Passport (Front)': 'passport_front',
+        'Passport (Back)': 'passport_back',
+        'UAE ID / PAN (Front)': 'uae_id_front',
+        'UAE ID / PAN (Back)': 'uae_id_back',
+        'UAE ID / PAN': 'uae_id'
       };
 
       const docEntries = Object.entries(docFiles);
@@ -418,6 +422,17 @@ export default function CreateRetailCifForm() {
           )}
 
           {activeTab === 'Identification Document' && (() => {
+            const docItems = [
+              { label: 'Photo', type: 'photo', short: 'Photo' },
+              { label: 'Signature', type: 'signature', short: 'Sign' },
+              { label: 'Aadhaar (Front)', type: 'aadhaar', short: 'Aadhaar (F)' },
+              { label: 'Aadhaar (Back)', type: 'aadhaar', short: 'Aadhaar (B)' },
+              { label: 'Passport (Front)', type: 'passport', short: 'Passport (F)' },
+              { label: 'Passport (Back)', type: 'passport', short: 'Passport (B)' },
+              { label: 'UAE ID / PAN (Front)', type: 'id', short: 'ID/PAN (F)' },
+              { label: 'UAE ID / PAN (Back)', type: 'id', short: 'ID/PAN (B)' }
+            ];
+
             const activeLabel = (selectedPreviewLabel && documents[selectedPreviewLabel])
               ? selectedPreviewLabel
               : (Object.keys(documents)[0] || null);
@@ -425,28 +440,58 @@ export default function CreateRetailCifForm() {
             const activeFile = activeLabel ? docFiles[activeLabel] : null;
             const isPdf = activeFile ? (activeFile.type === 'application/pdf' || activeFile.name.toLowerCase().endsWith('.pdf')) : false;
 
+            const renderDocIcon = (type: string) => {
+              if (type === 'photo') {
+                return (
+                  <svg className="w-3.5 h-3.5 text-[#104080]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                );
+              }
+              if (type === 'signature') {
+                return (
+                  <svg className="w-3.5 h-3.5 text-[#104080]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                );
+              }
+              if (type === 'passport') {
+                return (
+                  <svg className="w-3.5 h-3.5 text-[#104080]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                );
+              }
+              if (type === 'aadhaar') {
+                return (
+                  <svg className="w-3.5 h-3.5 text-[#104080]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                  </svg>
+                );
+              }
+              return (
+                <svg className="w-3.5 h-3.5 text-[#104080]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              );
+            };
+
             return (
               <div className="flex flex-col lg:flex-row gap-5 items-start w-full">
-                {/* Left Column: Document Upload List */}
-                <div className="w-full lg:w-[480px] xl:w-[520px] flex-shrink-0 flex flex-col gap-3">
-                  <div className="bg-[#f4f7fc] border border-[#a2b5cd] p-4 flex flex-col gap-3 shadow-sm">
-                    <div className="font-bold text-[#104080] border-b border-[#a2b5cd] pb-1 mb-1 flex items-center justify-between">
-                      <span>Document Upload</span>
-                      <span className="text-[10px] text-gray-500 font-normal">
-                        {Object.keys(documents).length} uploaded
+                {/* Left Column: KYC Document Vault Cards */}
+                <div className="w-full lg:w-[500px] xl:w-[540px] flex-shrink-0 flex flex-col gap-3">
+                  <div className="bg-[#f4f7fc] border border-[#a2b5cd] p-3.5 flex flex-col gap-3 shadow-xs">
+                    <div className="font-bold text-[#104080] border-b border-[#a2b5cd] pb-1.5 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-[12px]">
+                        <span>Identification Document Vault</span>
+                      </div>
+                      <span className="text-[10px] text-[#104080] font-semibold bg-[#eaf0f8] px-2 py-0.5 rounded border border-[#a2b5cd]">
+                        {Object.keys(documents).length} / 8 Uploaded
                       </span>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {[
-                        'Photo',
-                        'Passport (Front)',
-                        'Passport (Back)',
-                        'Aadhaar (Front)',
-                        'Aadhaar (Back)',
-                        'UAE ID / PAN',
-                        'Signature'
-                      ].map((label, idx) => {
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {docItems.map(({ label, type }, idx) => {
                         const hasDoc = Boolean(documents[label]);
                         const isSelected = activeLabel === label;
                         const curFile = docFiles[label];
@@ -454,27 +499,39 @@ export default function CreateRetailCifForm() {
 
                         return (
                           <div key={idx} className="flex flex-col gap-1">
+                            {/* Card Header Label */}
                             <div className="flex items-center justify-between">
-                              <span className="font-semibold text-black text-[11px]">{label}</span>
-                              {isSelected && (
-                                <span className="text-[9px] text-[#104080] font-bold bg-[#dbe8f9] px-1.5 py-0.5 rounded border border-[#a2b5cd]">
-                                  Previewing
+                              <div className="flex items-center gap-1 text-[11px] font-bold text-[#104080]">
+                                {renderDocIcon(type)}
+                                <span className="truncate">{label}</span>
+                              </div>
+                              {hasDoc && (
+                                <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
+                                  isSelected 
+                                    ? 'bg-[#104080] text-white border-[#104080]' 
+                                    : 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                }`}>
+                                  {isSelected ? 'Viewing' : '✓ Ready'}
                                 </span>
                               )}
                             </div>
+
+                            {/* Card Body Slot */}
                             <div 
                               onClick={() => {
                                 if (hasDoc) {
                                   setSelectedPreviewLabel(label);
+                                  setPreviewZoom(1);
+                                  setPreviewRotation(0);
                                 }
                               }}
                               className={`flex items-center justify-between border ${
                                 isSelected 
-                                  ? 'border-[#104080] bg-[#eaf0f8] ring-1 ring-[#104080]' 
-                                  : 'border-[#a2b5cd] bg-white'
-                              } p-2 relative group hover:border-[#316ac5] transition-all rounded-sm h-[46px] overflow-hidden ${
-                                hasDoc ? 'cursor-pointer' : ''
-                              }`}
+                                  ? 'border-[#104080] bg-[#eef4fc] ring-1 ring-[#104080] shadow-xs' 
+                                  : hasDoc 
+                                    ? 'border-[#a2b5cd] bg-white hover:border-[#316ac5] hover:bg-[#fbfdff] shadow-xs cursor-pointer' 
+                                    : 'border-dashed border-[#a2b5cd] bg-white hover:border-[#104080] hover:bg-[#f8faff]'
+                              } p-1.5 relative group transition-all rounded-sm h-[52px] overflow-hidden`}
                             >
                               {!hasDoc && (
                                 <input 
@@ -485,20 +542,32 @@ export default function CreateRetailCifForm() {
                                   title=" " 
                                 />
                               )}
+
                               {hasDoc ? (
-                                <div className="flex items-center justify-between w-full h-full pr-1 z-20">
-                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <div className="flex items-center justify-between w-full h-full z-20">
+                                  <div className="flex items-center gap-2 flex-1 min-w-0 pr-1">
                                     {curIsPdf ? (
-                                      <span className="bg-red-100 text-red-700 text-[9px] font-bold px-1.5 py-0.5 border border-red-300 rounded flex-shrink-0">PDF</span>
+                                      <div className="w-9 h-9 bg-red-50 border border-red-300 text-red-700 font-extrabold text-[10px] rounded-sm flex items-center justify-center flex-shrink-0 shadow-xs">
+                                        PDF
+                                      </div>
                                     ) : (
-                                      <img src={documents[label]} alt={label} className="h-8 w-8 object-cover rounded-sm border border-gray-300 flex-shrink-0" />
+                                      <img 
+                                        src={documents[label]} 
+                                        alt={label} 
+                                        className="w-9 h-9 object-cover rounded-sm border border-gray-300 flex-shrink-0 shadow-xs" 
+                                      />
                                     )}
                                     <div className="flex flex-col min-w-0 flex-1 leading-tight">
-                                      <span className="text-[#104080] font-semibold text-[11px] truncate">{curFile?.name || 'Document uploaded'}</span>
-                                      <span className="text-[9px] text-gray-500">Click to view preview</span>
+                                      <span className="text-[#104080] font-bold text-[11px] truncate">
+                                        {curFile?.name || 'Document uploaded'}
+                                      </span>
+                                      <span className="text-[9px] text-gray-500 truncate mt-0.5">
+                                        {curFile ? `${Math.round(curFile.size / 1024)} KB` : 'Click to inspect'}
+                                      </span>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-1">
+                                  
+                                  <div className="flex items-center gap-1 flex-shrink-0">
                                     <button
                                       type="button"
                                       onClick={(e) => {
@@ -506,8 +575,8 @@ export default function CreateRetailCifForm() {
                                         e.stopPropagation();
                                         setPreviewDoc({ url: documents[label], label, isPdf: curIsPdf });
                                       }}
-                                      className="text-[#316ac5] hover:text-[#104080] p-1 text-xs cursor-pointer"
-                                      title="Open modal preview"
+                                      className="text-[#104080] hover:bg-[#dbe8f9] p-1 text-xs rounded transition-colors cursor-pointer"
+                                      title="Open Fullscreen Dialog"
                                     >
                                       ⤢
                                     </button>
@@ -522,7 +591,7 @@ export default function CreateRetailCifForm() {
                                           setSelectedPreviewLabel(null);
                                         }
                                       }}
-                                      className="text-gray-400 hover:text-red-600 font-bold px-1 text-xs cursor-pointer"
+                                      className="text-gray-400 hover:text-red-600 hover:bg-red-50 font-bold p-1 text-xs rounded transition-colors cursor-pointer"
                                       title="Remove document"
                                     >
                                       ✕
@@ -530,22 +599,24 @@ export default function CreateRetailCifForm() {
                                   </div>
                                 </div>
                               ) : (
-                                <>
-                                  <div className="flex items-center gap-2.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#316ac5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                      <polyline points="17 8 12 3 7 8"></polyline>
-                                      <line x1="12" y1="3" x2="12" y2="15"></line>
-                                    </svg>
-                                    <div className="flex flex-col leading-tight">
-                                      <span className="text-[#316ac5] font-semibold text-[11px]">Upload file</span>
-                                      <span className="text-[9px] text-gray-500 mt-[1px]">JPG, PNG or PDF</span>
+                                <div className="flex items-center justify-between w-full h-full px-1">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-[#eef4fc] flex items-center justify-center text-[#104080]">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                      </svg>
+                                    </div>
+                                    <div className="flex flex-col leading-none">
+                                      <span className="text-[#104080] font-semibold text-[10px]">Select file</span>
+                                      <span className="text-[8.5px] text-gray-400 mt-0.5">JPG / PNG / PDF</span>
                                     </div>
                                   </div>
-                                  <div className="bg-[#316ac5] border border-[#104080] px-3 py-1 text-white font-semibold text-[10px] rounded-sm shadow-sm group-hover:bg-[#104080] transition-colors pointer-events-none">
+                                  <div className="bg-[#f0f4f9] group-hover:bg-[#104080] text-[#104080] group-hover:text-white border border-[#a2b5cd] px-2 py-0.5 font-bold text-[9.5px] rounded-sm transition-colors pointer-events-none shadow-xs">
                                     Browse
                                   </div>
-                                </>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -555,29 +626,77 @@ export default function CreateRetailCifForm() {
                   </div>
                 </div>
 
-                {/* Right Column: Live Document Preview in the empty white space */}
-                <div className="flex-1 w-full bg-[#f4f7fc] border border-[#a2b5cd] p-4 flex flex-col gap-3 shadow-sm min-h-[500px]">
-                  <div className="flex items-center justify-between border-b border-[#a2b5cd] pb-2">
+                {/* Right Column: Finacle Premium KYC Document Inspector */}
+                <div className="flex-1 w-full bg-white border border-[#a2b5cd] flex flex-col shadow-sm min-h-[520px] rounded-sm overflow-hidden">
+                  {/* Inspector Header */}
+                  <div className="bg-[#eaf0f8] border-b border-[#a2b5cd] px-3 py-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-[#104080] text-[12px]">Document Preview:</span>
+                      <div className="w-5 h-5 rounded bg-[#104080] text-white flex items-center justify-center font-serif text-[10px] font-bold shadow-xs">
+                        i
+                      </div>
+                      <span className="font-extrabold text-[#104080] text-[12px] uppercase tracking-wide">
+                        Document Inspector
+                      </span>
                       {activeLabel ? (
-                        <span className="font-bold text-[#104080] bg-white px-2.5 py-0.5 border border-[#a2b5cd] rounded text-[11px] shadow-sm">
+                        <span className="font-bold text-[#104080] bg-white px-2.5 py-0.5 border border-[#a2b5cd] rounded text-[11px] shadow-xs flex items-center gap-1.5 ml-1">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                           {activeLabel}
                         </span>
                       ) : (
-                        <span className="text-gray-400 text-[11px] italic">No document selected</span>
+                        <span className="text-gray-400 text-[11px] italic ml-1">No Document Selected</span>
                       )}
                     </div>
+
+                    {/* Toolbar Controls */}
                     {activeDocUrl && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-gray-600 truncate max-w-[200px]" title={activeFile?.name}>
-                          {activeFile?.name}
-                        </span>
+                      <div className="flex items-center gap-1.5">
+                        {!isPdf && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewRotation(r => (r + 90) % 360)}
+                              className="bg-white hover:bg-[#eef4fc] text-[#104080] border border-[#a2b5cd] px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                              title="Rotate 90 degrees"
+                            >
+                              <span>↻</span>
+                              <span>Rotate</span>
+                            </button>
+                            <div className="flex items-center bg-white border border-[#a2b5cd] rounded text-[10px] overflow-hidden shadow-xs">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewZoom(z => Math.max(0.5, Number((z - 0.25).toFixed(2))))}
+                                className="px-1.5 py-0.5 hover:bg-[#eef4fc] text-[#104080] font-bold border-r border-[#a2b5cd] cursor-pointer"
+                                title="Zoom Out"
+                              >
+                                －
+                              </button>
+                              <span className="px-2 py-0.5 font-bold text-[#104080] min-w-[42px] text-center bg-[#f8fafc]">
+                                {Math.round(previewZoom * 100)}%
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewZoom(z => Math.min(3, Number((z + 0.25).toFixed(2))))}
+                                className="px-1.5 py-0.5 hover:bg-[#eef4fc] text-[#104080] font-bold border-l border-[#a2b5cd] cursor-pointer"
+                                title="Zoom In"
+                              >
+                                ＋
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => { setPreviewZoom(1); setPreviewRotation(0); }}
+                              className="bg-white hover:bg-[#eef4fc] text-[#104080] border border-[#a2b5cd] px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer shadow-xs"
+                              title="Reset Zoom & Rotation"
+                            >
+                              Reset
+                            </button>
+                          </>
+                        )}
                         <button
                           type="button"
                           onClick={() => setPreviewDoc({ url: activeDocUrl, label: activeLabel || '', isPdf })}
-                          className="bg-white border border-[#a2b5cd] hover:border-[#104080] text-[#104080] font-semibold text-[10px] px-2.5 py-1 rounded shadow-sm hover:bg-[#eaf0f8] transition-colors cursor-pointer flex items-center gap-1"
-                          title="Full Screen Preview"
+                          className="bg-[#104080] hover:bg-[#0c3162] text-white px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                          title="Open Fullscreen View"
                         >
                           <span>Fullscreen</span>
                           <span>⤢</span>
@@ -586,8 +705,8 @@ export default function CreateRetailCifForm() {
                           href={activeDocUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="bg-white border border-[#a2b5cd] hover:border-[#104080] text-[#104080] font-semibold text-[10px] px-2.5 py-1 rounded shadow-sm hover:bg-[#eaf0f8] transition-colors flex items-center gap-1"
-                          title="Open in new window"
+                          className="bg-white hover:bg-[#eef4fc] text-[#104080] border border-[#a2b5cd] px-2 py-0.5 rounded text-[10px] font-semibold transition-colors flex items-center gap-1 shadow-xs"
+                          title="Open file in new tab"
                         >
                           <span>Open Tab</span>
                           <span>↗</span>
@@ -596,27 +715,79 @@ export default function CreateRetailCifForm() {
                     )}
                   </div>
 
-                  <div className="flex-1 flex flex-col items-center justify-center bg-white border border-[#a2b5cd] p-3 rounded-sm min-h-[460px] overflow-auto">
+                  {/* Quick Jump Strip */}
+                  <div className="bg-[#edf2f9] border-b border-[#a2b5cd] px-3 py-1 flex items-center gap-1 overflow-x-auto text-[10px]">
+                    <span className="font-bold text-[#104080] text-[10px] mr-1 flex-shrink-0">
+                      Quick View:
+                    </span>
+                    {docItems.map(({ label, short }) => {
+                      const hasDoc = Boolean(documents[label]);
+                      const isCur = activeLabel === label;
+
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => {
+                            setSelectedPreviewLabel(label);
+                            setPreviewZoom(1);
+                            setPreviewRotation(0);
+                          }}
+                          className={`px-2 py-0.5 rounded text-[10px] flex items-center gap-1 transition-all cursor-pointer flex-shrink-0 ${
+                            isCur 
+                              ? 'bg-[#104080] text-white font-bold shadow-xs' 
+                              : hasDoc 
+                                ? 'bg-white text-[#104080] border border-[#a2b5cd] font-semibold hover:bg-[#dbe8f9]' 
+                                : 'text-gray-400 hover:text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {hasDoc && (
+                            <span className={`w-1.5 h-1.5 rounded-full ${isCur ? 'bg-white' : 'bg-emerald-500'}`}></span>
+                          )}
+                          <span>{short}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Inspection Canvas Area */}
+                  <div 
+                    className="flex-1 w-full flex flex-col items-center justify-center p-4 relative min-h-[460px] overflow-auto"
+                    style={{ 
+                      backgroundColor: '#eef3f9', 
+                      backgroundImage: 'radial-gradient(#c6d4e5 1px, transparent 1px)', 
+                      backgroundSize: '16px 16px' 
+                    }}
+                  >
                     {activeDocUrl ? (
                       isPdf ? (
-                        <iframe 
-                          src={activeDocUrl} 
-                          title={activeLabel || 'Document'} 
-                          className="w-full h-[520px] border border-gray-200 rounded" 
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center w-full h-full min-h-[420px] p-2">
-                          <img 
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <iframe 
                             src={activeDocUrl} 
-                            alt={activeLabel || 'Preview'} 
-                            className="max-w-full max-h-[500px] object-contain rounded shadow-sm border border-gray-200" 
+                            title={activeLabel || 'Document'} 
+                            className="w-full h-[520px] bg-white border border-[#a2b5cd] rounded-sm shadow-md" 
                           />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-3 overflow-hidden">
+                          <div 
+                            className="relative inline-block transition-transform duration-150 ease-out bg-white p-2 border-2 border-white rounded-sm shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
+                            style={{ 
+                              transform: `scale(${previewZoom}) rotate(${previewRotation}deg)` 
+                            }}
+                          >
+                            <img 
+                              src={activeDocUrl} 
+                              alt={activeLabel || 'Preview'} 
+                              className="max-w-full max-h-[460px] object-contain rounded-xs select-none pointer-events-none" 
+                            />
+                          </div>
                         </div>
                       )
                     ) : (
-                      <div className="flex flex-col items-center justify-center text-center p-8">
-                        <div className="w-16 h-16 rounded-full bg-[#f0f4f9] border border-[#a2b5cd] flex items-center justify-center text-[#316ac5] mb-3 shadow-inner">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="flex flex-col items-center justify-center text-center p-8 bg-white/80 border border-[#c0d2e5] rounded-md shadow-xs max-w-md">
+                        <div className="w-14 h-14 rounded-full bg-[#eef4fc] border border-[#a2b5cd] flex items-center justify-center text-[#104080] mb-3 shadow-inner">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
                             <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -624,19 +795,40 @@ export default function CreateRetailCifForm() {
                             <polyline points="10 9 9 9 8 9"></polyline>
                           </svg>
                         </div>
-                        <div className="font-bold text-[#104080] text-[13px] mb-1">
-                          Document Live Preview
+                        <div className="font-extrabold text-[#104080] text-[13px] mb-1 uppercase tracking-wide">
+                          KYC Document Inspection Canvas
                         </div>
                         <p className="text-gray-500 text-[11px] max-w-xs mb-3 leading-relaxed">
-                          Upload any document on the left or click on an uploaded document to view a live preview in this space.
+                          Select any uploaded document from the left vault or upload a new file to inspect high-resolution details, stamps, and legibility.
                         </p>
-                        <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-gray-50 px-2.5 py-1 rounded border border-gray-200">
+                        <div className="flex items-center gap-2 text-[10px] text-gray-500 bg-[#f4f7fc] px-3 py-1 rounded border border-[#a2b5cd]">
                           <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          <span>Supports JPG, PNG & PDF files</span>
+                          <span>Inspection tools: 90° Rotate • Zoom 50%-300% • Fullscreen</span>
                         </div>
                       </div>
                     )}
                   </div>
+
+                  {/* Inspector Footer / Metadata Bar */}
+                  {activeDocUrl && (
+                    <div className="bg-[#f8fafc] border-t border-[#a2b5cd] px-3 py-1.5 text-[10px] text-gray-600 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span>Document: <b className="text-black">{activeLabel}</b></span>
+                        <span className="text-gray-300">|</span>
+                        <span className="truncate max-w-[260px]">File: {activeFile?.name || 'Uploaded File'}</span>
+                        {activeFile && (
+                          <>
+                            <span className="text-gray-300">|</span>
+                            <span>Size: {Math.round(activeFile.size / 1024)} KB</span>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>Inspection Ready</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -781,23 +973,85 @@ export default function CreateRetailCifForm() {
         </div>
 
         {/* Form Actions */}
-        <div className="mt-6 flex gap-2 border-t border-gray-300 pt-4">
-          <button className="bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white">
-            Save
-          </button>
-          <button 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className={`bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white ${
-              isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit'}
-          </button>
-          <button className="bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white">
-            Close
-          </button>
-        </div>
+        {(() => {
+          const currentTabIndex = tabs.indexOf(activeTab);
+          const isFirstTab = currentTabIndex === 0;
+          const isLastTab = currentTabIndex === tabs.length - 1;
+
+          const handleBack = () => {
+            if (!isFirstTab) {
+              setActiveTab(tabs[currentTabIndex - 1]);
+            }
+          };
+
+          const handleNext = () => {
+            if (!isLastTab) {
+              setActiveTab(tabs[currentTabIndex + 1]);
+            }
+          };
+
+          return (
+            <div className="mt-6 flex items-center justify-between border-t border-gray-300 pt-4">
+              <div className="flex items-center gap-2">
+                {/* Back Button */}
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  disabled={isFirstTab}
+                  className={`bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 select-none font-semibold text-[12px] text-black ${
+                    isFirstTab 
+                      ? 'opacity-40 cursor-not-allowed' 
+                      : 'hover:bg-[#e4e4f0] active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white cursor-pointer'
+                  }`}
+                >
+                  &lt; Back
+                </button>
+
+                {/* Next Button */}
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={isLastTab}
+                  className={`bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 select-none font-semibold text-[12px] text-black ${
+                    isLastTab 
+                      ? 'opacity-40 cursor-not-allowed' 
+                      : 'hover:bg-[#e4e4f0] active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white cursor-pointer'
+                  }`}
+                >
+                  Next &gt;
+                </button>
+
+                {/* Submit Button */}
+                <button 
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className={`bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 select-none font-bold text-[12px] active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white cursor-pointer hover:bg-[#e4e4f0] ${
+                    isLastTab ? 'text-[#104080] border-b-[#104080] border-r-[#104080]' : 'text-black'
+                  } ${
+                    isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
+                </button>
+
+                {/* Close Button */}
+                <button 
+                  type="button"
+                  onClick={() => setStep('selection')}
+                  className="bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-gray-500 border-r-gray-500 px-4 py-1 select-none font-semibold text-[12px] text-black hover:bg-[#e4e4f0] active:border-t-gray-500 active:border-l-gray-500 active:border-b-white active:border-r-white cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+
+              {/* Step indicator text on the right */}
+              <div className="text-[11px] text-gray-500 font-semibold pr-2">
+                Step {currentTabIndex + 1} of {tabs.length}: <span className="text-[#104080] font-bold">{activeTab}</span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {isSubmitted && (
