@@ -6,7 +6,9 @@ export type FinacleScreen =
   | 'VIEW RETAIL CIF'
   | 'ORDER ENTRY'
   | 'CREDIT ENTRY'
-  | 'AED COLLECTON';
+  | 'AED COLLECTON'
+  | 'RECEIVED AED'
+  | 'AED SUMMARY & REPORTS';
 
 export type StaffPermissions = Record<FinacleScreen, boolean>;
 
@@ -19,6 +21,8 @@ export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
   'ORDER ENTRY': true,
   'CREDIT ENTRY': true,
   'AED COLLECTON': true,
+  'RECEIVED AED': true,
+  'AED SUMMARY & REPORTS': true,
 };
 
 export interface StaffMember {

@@ -172,6 +172,8 @@ export const initialStaffMembers: StaffMember[] = [
       'ORDER ENTRY': false,
       'CREDIT ENTRY': true,
       'AED COLLECTON': false,
+      'RECEIVED AED': false,
+      'AED SUMMARY & REPORTS': false,
     },
     createdAt: '2026-10-14T09:00:00.000Z',
     emailSentAt: '2026-10-14T09:00:00.000Z',

@@ -6,6 +6,8 @@ import VerifyRetailCif from '../components/VerifyRetailCif';
 import ViewRetailCif from '../components/ViewRetailCif';
 import CreditEntryForm from '../components/CreditEntryForm';
 import OrderEntryForm from '../components/OrderEntryForm';
+import ReceivedAedScreen from '../components/ReceivedAedScreen';
+import AedReportsScreen from '../components/AedReportsScreen';
 import AddStaffForm from '../components/AddStaffForm';
 import StaffManagement from '../components/StaffManagement';
 import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
@@ -17,6 +19,7 @@ export default function FincorePage() {
   const navigate = useNavigate();
   const [activeScreen, setActiveScreen] = useState<string>('DASHBOARD');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isAedExpanded, setIsAedExpanded] = useState<boolean>(true);
   const userRole = dbService.getUserRole();
 
   // Enforce mandatory first-login password change
@@ -31,8 +34,11 @@ export default function FincorePage() {
   const currentStaff = userRole === 'staff' ? dbService.getCurrentUserStaff() : null;
   const permissions = currentStaff ? currentStaff.permissions : DEFAULT_STAFF_PERMISSIONS;
 
-  // Build dynamic menu items based on Role and Staff Permissions
-  const menuItems = userRole === 'super_admin' ? [
+  // Has permission for AED section
+  const hasAedAccess = userRole === 'super_admin' || permissions['AED COLLECTON'] || permissions['ORDER ENTRY'];
+
+  // Base Menu items (excluding AED collection children which are rendered in the tree)
+  const generalMenuItems = userRole === 'super_admin' ? [
     "DASHBOARD",
     "ADD STAFF",
     "STAFF MANAGEMENT",
@@ -43,18 +49,20 @@ export default function FincorePage() {
     "VERIFY RETAIL CIF CREATION",
     "VERIFY RETAIL CIF MODIFICATION",
     "VIEW RETAIL CIF",
-    "ORDER ENTRY",
-    "CREDIT ENTRY",
-    "AED COLLECTON"
+    "CREDIT ENTRY"
   ] : [
     ...(permissions['DASHBOARD'] ? ["DASHBOARD"] : []),
     ...(permissions['CREATE RETAIL CIF'] ? ["CREATE RETAIL CIF"] : []),
     ...(permissions['VIEW RETAIL CIF'] ? ["VIEW RETAIL CIF"] : []),
-    ...(permissions['ORDER ENTRY'] ? ["ORDER ENTRY"] : []),
     ...(permissions['CREDIT ENTRY'] ? ["CREDIT ENTRY"] : []),
-    ...(permissions['AED COLLECTON'] ? ["AED COLLECTON"] : []),
     ...(permissions['VERIFY RETAIL CIF CREATION'] ? ["VERIFY RETAIL CIF CREATION"] : []),
     ...(permissions['VERIFY RETAIL CIF MODIFICATION'] ? ["VERIFY RETAIL CIF MODIFICATION"] : [])
+  ];
+
+  const aedSubItems = [
+    { name: "ORDER ENTRY", label: "ORDER ENTRY" },
+    { name: "RECEIVED AED", label: "RECEIVED AED" },
+    { name: "AED SUMMARY & REPORTS", label: "SUMMARY & REPORTS" }
   ];
 
   const handleShortcutSelect = (screen: string) => {
@@ -63,6 +71,12 @@ export default function FincorePage() {
       setActiveScreen('ADD STAFF');
     } else if (upper.includes('STAF') || upper === 'STFMGMT' || upper === 'STFM') {
       setActiveScreen('STAFF MANAGEMENT');
+    } else if (upper.includes('RCV') || upper.includes('RECEIVED')) {
+      setActiveScreen('RECEIVED AED');
+    } else if (upper.includes('REPORT') || upper.includes('SUMMARY')) {
+      setActiveScreen('AED SUMMARY & REPORTS');
+    } else if (upper.includes('ORDER')) {
+      setActiveScreen('ORDER ENTRY');
     } else {
       setActiveScreen(screen);
     }
@@ -72,6 +86,18 @@ export default function FincorePage() {
   const isScreenAllowed = () => {
     if (userRole === 'super_admin') return true;
     if (activeScreen === 'ADD STAFF' || activeScreen === 'STAFF MANAGEMENT') return false;
+
+    // AED collection children
+    if (
+      activeScreen === 'ORDER ENTRY' || 
+      activeScreen === 'RECEIVED AED' || 
+      activeScreen === 'AED SUMMARY & REPORTS' || 
+      activeScreen === 'AED COLLECTON' || 
+      activeScreen === 'AED REPORTS'
+    ) {
+      return !!hasAedAccess;
+    }
+
     const key = activeScreen as FinacleScreen;
     if (key in permissions) {
       return !!permissions[key];
@@ -94,7 +120,9 @@ export default function FincorePage() {
           <div className="w-[320px] flex flex-col border-r border-[#a0a0a0] bg-[#f8f9fa] flex-shrink-0">
             {/* Sidebar Header */}
             <div className="bg-[#e4e4e4] flex items-center justify-between px-2 py-0.5 border-b border-[#a0a0a0] text-[11px] font-bold text-black">
-              <span>Menu</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-[#104080]">📁</span> Finacle Function Tree
+              </span>
               <button 
                 className="font-sans text-xs border border-gray-400 px-1 bg-[#d4d0c8] hover:bg-[#e4e4e4] leading-none h-4 flex items-center justify-center cursor-pointer"
                 onClick={() => setIsSidebarOpen(false)}
@@ -103,24 +131,71 @@ export default function FincorePage() {
               </button>
             </div>
             
-            {/* Sidebar List */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-1 custom-scrollbar">
-              {menuItems.map((item, idx) => (
+            {/* Sidebar Tree List */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 custom-scrollbar text-[13px]">
+              {/* General Upper Menu Items */}
+              {generalMenuItems.map((item, idx) => (
                 <div 
                   key={idx} 
-                  className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] tracking-wide text-[#000080] ${activeScreen === item ? 'bg-[#316ac5] text-white' : ''}`}
+                  className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group tracking-wide text-[#000080] rounded-xs ${activeScreen === item ? 'bg-[#316ac5] text-white font-semibold' : ''}`}
                   onClick={() => {
                     setActiveScreen(item);
-                    setIsSidebarOpen(false);
                   }}
                 >
-                  {/* File Icon */}
-                  <div className={`w-[16px] h-[18px] relative flex-shrink-0 bg-white border-2 border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === item ? 'border-white' : 'group-hover:border-white'}`}>
-                    <div className={`w-[6px] h-[6px] ${activeScreen === item ? 'bg-white' : 'bg-[#3b73b9] group-hover:bg-white'}`} />
+                  {/* Finacle Leaf Icon */}
+                  <div className={`w-[15px] h-[16px] relative flex-shrink-0 bg-white border-2 border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === item ? 'border-white' : 'group-hover:border-white'}`}>
+                    <div className={`w-[5px] h-[5px] ${activeScreen === item ? 'bg-white' : 'bg-[#3b73b9] group-hover:bg-white'}`} />
                   </div>
                   <span className="truncate">{item}</span>
                 </div>
               ))}
+
+              {/* AED COLLECTION Tree Group */}
+              {hasAedAccess && (
+                <div className="mt-1 pt-1 border-t border-gray-200">
+                  {/* Folder Header */}
+                  <div 
+                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#e6edf8] text-[#104080] font-bold select-none group rounded-xs"
+                    onClick={() => setIsAedExpanded(!isAedExpanded)}
+                  >
+                    <div className="flex items-center gap-2">
+                      {/* Plus/Minus Box */}
+                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[10px] leading-none font-mono text-[#104080] font-bold">
+                        {isAedExpanded ? '−' : '+'}
+                      </span>
+                      <span className="text-[#104080] font-extrabold text-[13px] tracking-wide flex items-center gap-1.5">
+                        <span className="text-[14px]">📂</span> AED COLLECTION
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 font-normal">
+                      ({aedSubItems.length})
+                    </span>
+                  </div>
+
+                  {/* Children Branch */}
+                  {isAedExpanded && (
+                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-[#9eb3cd] space-y-0.5 mt-0.5">
+                      {aedSubItems.map((sub, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[13px] text-[#000080] rounded-xs ${
+                            activeScreen === sub.name ? 'bg-[#316ac5] text-white font-bold' : ''
+                          }`}
+                          onClick={() => {
+                            setActiveScreen(sub.name);
+                          }}
+                        >
+                          {/* Sub Item Bullet */}
+                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === sub.name ? 'border-white' : 'group-hover:border-white'}`}>
+                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? 'bg-white' : 'bg-[#3b73b9] group-hover:bg-white'}`} />
+                          </div>
+                          <span className="truncate">{sub.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -163,6 +238,10 @@ export default function FincorePage() {
             <CreditEntryForm />
           ) : activeScreen === 'ORDER ENTRY' ? (
             <OrderEntryForm />
+          ) : activeScreen === 'RECEIVED AED' || activeScreen === 'AED COLLECTON' ? (
+            <ReceivedAedScreen />
+          ) : activeScreen === 'AED SUMMARY & REPORTS' || activeScreen === 'AED REPORTS' ? (
+            <AedReportsScreen />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <h1 className="text-[44px] font-bold text-black tracking-wide" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
