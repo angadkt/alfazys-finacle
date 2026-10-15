@@ -783,23 +783,7 @@ export default function OrderEntryForm() {
           >
             Refresh Orders
           </span>
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span
-            className="cursor-pointer hover:underline tracking-wide"
-            onClick={() => setIsReceivedAedModalOpen(true)}
-          >
-            Received AED
-          </span>
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span
-            className="cursor-pointer hover:underline tracking-wide"
-            onClick={() => {
-              setIsViewReceivedAedOpen(true);
-              fetchReceivedAed(1, viewDateFilter, viewModeFilter);
-            }}
-          >
-            View Received AED
-          </span>
+
         </div>
 
         <div className="p-4 bg-white overflow-auto flex-1">
