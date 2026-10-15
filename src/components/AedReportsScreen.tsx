@@ -21,11 +21,11 @@ export default function AedReportsScreen() {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const res = await api.get('/records/customers');
-        const list = (res.data || []).map((c: any) => ({
+        const res = await api.get('/records/parties');
+        const list = (res.data?.records || []).map((c: any) => ({
           id: c.cif_no || c.id,
           internal_id: String(c.id),
-          name: `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.cif_no || 'Unknown',
+          name: `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.short_name || c.cif_no || 'Unknown',
         }));
         setCustomers(list);
       } catch {
