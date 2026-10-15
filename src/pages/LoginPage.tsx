@@ -66,7 +66,7 @@ export default function LoginPage() {
       let submitPassword = password.trim();
 
       // Normalize shortcut logins for convenience
-      if (submitEmail === 'admin' || submitEmail === 'super_admin' || submitEmail === 'ubsadmin') {
+      if (submitEmail === 'admin' || submitEmail === 'super_admin' || submitEmail === 'ubsadmin' || submitEmail === 'admin@admin.com') {
         submitEmail = 'admin@admin.com';
         if (submitPassword === 'admin' || submitPassword === 'user' || !submitPassword) {
           submitPassword = 'adminPassword123!';
@@ -117,18 +117,7 @@ export default function LoginPage() {
         }
       }
 
-      // 2. Fallback for offline or local Super Admin demo
-      if (submitEmail === 'admin@admin.com' && (submitPassword === 'adminPassword123!' || submitPassword === 'admin' || submitPassword === 'user')) {
-        localStorage.setItem('infazys_token', 'infazys-admin-master-token');
-        localStorage.setItem('infazys_user_name', 'UBSADMIN');
-        localStorage.setItem('infazys_user_email', 'admin@admin.com');
-        localStorage.setItem('infazys_finacle_active_role', 'super_admin');
-        localStorage.removeItem('infazys_must_change_password');
-        toast.success('Welcome back, Super Admin!');
-        navigate('/fincore');
-        setLoading(false);
-        return;
-      }
+      // 2. Authenticate directly against backend API
 
       const response = await api.post('/auth/login', {
         email: submitEmail,
