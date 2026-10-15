@@ -104,7 +104,7 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
           password: staffPassword,
           role: 'staff',
           sendEmail
-        });
+        }, { timeout: 7000 });
 
         if (res.data?.emailDispatched) {
           backendSmtpSent = true;
