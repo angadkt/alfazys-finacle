@@ -266,7 +266,7 @@ export default function OrderEntryForm() {
   const [receivedAedTotal, setReceivedAedTotal] = useState(0);
   const [receivedAedPage, setReceivedAedPage] = useState(1);
   const [receivedAedLoading, setReceivedAedLoading] = useState(false);
-  const [viewDateFilter, setViewDateFilter] = useState('');
+  const [viewDateFilter, setViewDateFilter] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [viewModeFilter, setViewModeFilter] = useState('');
   const [editingReceivedAedId, setEditingReceivedAedId] = useState<number | null>(null);
 
@@ -785,7 +785,12 @@ export default function OrderEntryForm() {
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span
             className="cursor-pointer hover:underline tracking-wide"
-            onClick={() => { setIsViewReceivedAedOpen(true); fetchReceivedAed(1, viewDateFilter, viewModeFilter); }}
+            onClick={() => {
+              const d = viewDateFilter || new Date().toLocaleDateString('en-CA');
+              setViewDateFilter(d);
+              setIsViewReceivedAedOpen(true);
+              fetchReceivedAed(1, d, viewModeFilter);
+            }}
           >
             View Received AED
           </span>

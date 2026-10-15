@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import finacleLogo from '../assets/finacle-logo.png';
 import CostRateModal from './CostRateModal';
+import api from '../services/api';
 
 export default function Header({ 
   hideLogo = false, 
@@ -18,7 +19,12 @@ export default function Header({
   const [shortcutText, setShortcutText] = useState('');
   const [isCostRateModalOpen, setIsCostRateModalOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // ignore
+    }
     localStorage.removeItem('infazys_token');
     localStorage.removeItem('infazys_finacle_active_role');
     navigate('/');
