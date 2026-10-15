@@ -31,10 +31,23 @@ export default function EmailSentModal({ notification, onClose }: EmailSentModal
         {/* Modal Body */}
         <div className="bg-white border border-[#a0a0a0] m-1.5 p-4 flex flex-col overflow-auto">
           
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d8d8] text-green-700 font-bold text-[13px]">
-            <span className="w-5 h-5 rounded-full bg-green-100 border border-green-500 flex items-center justify-center text-xs">✓</span>
-            <span>Credential Email Successfully Dispatched to Staff Member</span>
-          </div>
+          {notification.smtpDispatched ? (
+            <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d8d8] text-green-700 font-bold text-[13px]">
+              <span className="w-5 h-5 rounded-full bg-green-100 border border-green-500 flex items-center justify-center text-xs">✓</span>
+              <span>Credentials Successfully Dispatched via Live SMTP Email Server</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5 pb-3 border-b border-[#d8d8d8]">
+              <div className="flex items-center gap-2 text-[#b45309] font-bold text-[13px]">
+                <span className="w-5 h-5 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center text-xs">ℹ</span>
+                <span>Staff Account Created &amp; Dispatch Scheduled</span>
+              </div>
+              <div className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded-xs">
+                <strong>Direct Inbox Delivery Notice:</strong> To send emails directly to real inboxes (e.g. Gmail/Outlook), configure <code>SMTP_USER</code> and <code>SMTP_PASS</code> (e.g. Gmail App Password) in your Render backend Environment Settings. 
+                {notification.smtpMessage && <div className="mt-1 text-gray-700 font-mono text-[10px]">{notification.smtpMessage}</div>}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-[140px_1fr] gap-y-1.5 text-[12px] py-3 border-b border-[#e5e5e5]">
             <span className="font-bold text-[#444]">Recipient Email:</span>

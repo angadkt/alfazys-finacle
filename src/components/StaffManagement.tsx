@@ -16,6 +16,7 @@ import {
   RotateCw, 
   SlidersHorizontal 
 } from 'lucide-react';
+import api from '../services/api';
 
 interface StaffManagementProps {
   onNavigateToAddStaff?: () => void;
@@ -66,21 +67,46 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
     }
   };
 
-  // Resend credentials email
-  const handleResendCredentials = (staff: StaffMember) => {
+  // Resend credentials email via backend SMTP
+  const handleResendCredentials = async (staff: StaffMember) => {
     const notification = dbService.resendStaffCredentials(staff.id);
-    if (notification) {
-      toast.success(`Credentials email resent to ${staff.email}`);
-      setPreviewNotification(notification);
-      loadStaff();
-    } else {
+    if (!notification) {
       toast.error('Failed to resend credentials.');
+      return;
     }
+
+    let backendSent = false;
+    let backendNotice = '';
+    try {
+      const cleanId = staff.id.replace('STF', '');
+      const res = await api.post(`/users/${cleanId}/resend-credentials`, {
+        password: staff.password
+      });
+      if (res.data?.emailDispatched) {
+        backendSent = true;
+        toast.success(`Credentials dispatched to ${staff.email} via live SMTP!`);
+      } else if (res.data?.mailResult?.error) {
+        backendNotice = res.data.mailResult.error;
+        toast.info(`Notice: ${backendNotice}`);
+      } else {
+        toast.success(`Credentials re-issued for ${staff.email}`);
+      }
+    } catch (e: any) {
+      console.warn('Backend resend notice:', e?.response?.data || e?.message);
+      toast.success(`Credentials regenerated for ${staff.email}`);
+    }
+
+    setPreviewNotification({
+      ...notification,
+      smtpDispatched: backendSent,
+      smtpMessage: backendNotice
+    });
+    loadStaff();
   };
 
-  // Reset password & enforce first login change
-  const handleResetPassword = (staff: StaffMember) => {
-    const newTemp = `Fin@${Math.floor(10000 + Math.random() * 90000)}`;
+  // Reset password & enforce first login change via backend SMTP
+  const handleResetPassword = async (staff: StaffMember) => {
+    const newTemp = `Fin@${Math.floor(100000 + Math.random() * 900000)}!`;
     const updated = dbService.updateStaffMember(staff.id, {
       password: newTemp,
       mustChangePassword: true,
@@ -90,8 +116,36 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
 
     if (updated) {
       const notification = dbService.resendStaffCredentials(staff.id);
-      toast.success(`Password reset. Mandatory first-login change re-enacted for ${staff.email}`);
-      if (notification) setPreviewNotification(notification);
+      let backendSent = false;
+      let backendNotice = '';
+      try {
+        const cleanId = staff.id.replace('STF', '');
+        const res = await api.post(`/users/${cleanId}/reset-password`, {
+          password: newTemp,
+          sendEmail: true
+        });
+        if (res.data?.emailDispatched) {
+          backendSent = true;
+          toast.success(`Password reset and delivered to ${staff.email} via live SMTP!`);
+        } else if (res.data?.mailResult?.error) {
+          backendNotice = res.data.mailResult.error;
+          toast.info(`Notice: ${backendNotice}`);
+        } else {
+          toast.success(`Password reset. Mandatory first-login change re-enacted for ${staff.email}`);
+        }
+      } catch (e: any) {
+        console.warn('Backend reset notice:', e?.response?.data || e?.message);
+        toast.success(`Password reset. Mandatory first-login change re-enacted for ${staff.email}`);
+      }
+
+      if (notification) {
+        setPreviewNotification({
+          ...notification,
+          temporaryPassword: newTemp,
+          smtpDispatched: backendSent,
+          smtpMessage: backendNotice
+        });
+      }
       loadStaff();
     }
   };

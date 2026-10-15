@@ -22,6 +22,7 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
 
   const [permissions, setPermissions] = useState<StaffPermissions>({ ...DEFAULT_STAFF_PERMISSIONS });
   const [dispatchedNotification, setDispatchedNotification] = useState<StaffEmailNotification | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const generateRandomPassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
@@ -48,7 +49,7 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
     setPermissions(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email.trim()) {
@@ -69,26 +70,51 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
       return;
     }
 
+    setIsSubmitting(true);
     try {
+      const staffPassword = password.trim() || `Fin@${Math.floor(100000 + Math.random() * 900000)}!`;
+
+      // 1. Create locally in Finacle offline store
       const { staff, emailNotification } = dbService.addStaffMember({
         email: email.trim(),
-        password: password.trim() || undefined,
+        password: staffPassword,
         permissions,
         sendEmail
       });
 
-      // Synchronize with remote backend API if active
-      api.post('/users', {
-        fullName: email.split('@')[0],
-        email: email.trim().toLowerCase(),
-        password: staff.password,
-        role: 'staff'
-      }).catch((e) => {
-        console.warn('Backend API sync notice:', e?.response?.data || e?.message);
-      });
+      let backendSmtpSent = false;
+      let backendNotice = '';
 
-      toast.success(`Staff ${staff.id} created successfully! Password dispatched.`);
-      setDispatchedNotification(emailNotification);
+      // 2. Dispatch to live backend API which sends real SMTP email
+      try {
+        const res = await api.post('/users', {
+          fullName: email.split('@')[0],
+          email: email.trim().toLowerCase(),
+          password: staffPassword,
+          role: 'staff',
+          sendEmail
+        });
+
+        if (res.data?.emailDispatched) {
+          backendSmtpSent = true;
+          toast.success(`Staff created & credentials delivered to ${staff.email} via live SMTP!`);
+        } else if (res.data?.mailResult?.error) {
+          backendNotice = res.data.mailResult.error;
+          toast.info(`Staff created! SMTP delivery notice: ${backendNotice}`);
+        } else {
+          toast.success(`Staff ${staff.id} created successfully!`);
+        }
+      } catch (apiErr: any) {
+        console.warn('Backend API sync notice:', apiErr?.response?.data || apiErr?.message);
+        backendNotice = apiErr?.response?.data?.message || 'Remote backend sync skipped';
+        toast.success(`Staff ${staff.id} created! Credentials generated.`);
+      }
+
+      setDispatchedNotification({
+        ...emailNotification,
+        smtpDispatched: backendSmtpSent,
+        smtpMessage: backendNotice
+      });
 
       // Reset fields
       setEmail('');
@@ -96,6 +122,8 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
       setPermissions({ ...DEFAULT_STAFF_PERMISSIONS });
     } catch (err: any) {
       toast.error(err?.message || 'Failed to create staff member.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -321,9 +349,17 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
         <div className="flex items-center gap-2 pt-1 pb-4">
           <button 
             type="submit"
-            className="bg-[#104080] text-white border-t-2 border-l-2 border-[#3b73b9] border-b-2 border-r-2 border-b-[#082040] border-r-[#082040] text-[12px] font-bold px-4 py-1 hover:bg-[#1a559e] active:border-t-[#082040] active:border-l-[#082040]"
+            disabled={isSubmitting}
+            className="bg-[#104080] text-white border-t-2 border-l-2 border-[#3b73b9] border-b-2 border-r-2 border-b-[#082040] border-r-[#082040] text-[12px] font-bold px-4 py-1 hover:bg-[#1a559e] active:border-t-[#082040] active:border-l-[#082040] disabled:opacity-60 flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed"
           >
-            Submit & Create Staff Account
+            {isSubmitting ? (
+              <>
+                <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block"></span>
+                <span>Dispatching Credentials via Email...</span>
+              </>
+            ) : (
+              <span>Submit & Create Staff Account</span>
+            )}
           </button>
           
           <button 

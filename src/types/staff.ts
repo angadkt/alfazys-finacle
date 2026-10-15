@@ -47,4 +47,6 @@ export interface StaffEmailNotification {
   sentAt: string;
   subject: string;
   htmlBody: string;
+  smtpDispatched?: boolean;
+  smtpMessage?: string;
 }
