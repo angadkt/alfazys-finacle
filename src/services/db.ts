@@ -245,39 +245,69 @@ export const createStaffEmailContent = (toEmail: string, staffId: string, tempor
                 An authorized administrative session has provisioned your user account on the <strong>Infazys Finacle Universal Banking Core</strong>. Your terminal profile has been established with module-level access permissions.
               </p>
 
-              <!-- Credentials Card -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; margin: 20px 0; overflow: hidden; border-left: 4px solid #104080;">
+              <!-- HERO PASSWORD SHOWCASE CARD -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(180deg, #f0f7ff 0%, #e2edf8 100%); border: 2px solid #104080; border-radius: 10px; margin: 26px 0; overflow: hidden; box-shadow: 0 6px 18px rgba(16,64,128,0.12);">
                 <tr>
-                  <td style="padding: 18px 20px;">
+                  <td style="background-color: #104080; padding: 8px 18px; text-align: center;">
+                    <span style="color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">
+                      &#128274; OFFICIAL SINGLE-USE TEMPORARY PASSWORD
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 24px 20px; text-align: center;">
+                    
+                    <div style="font-size: 11px; font-weight: 700; color: #556987; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+                      Your Temporary Access Key
+                    </div>
+
+                    <!-- Monospace Highlighted Password Box -->
+                    <div style="background-color: #ffffff; border: 2px dashed #0c3b77; border-radius: 8px; padding: 14px 28px; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
+                      <span style="font-family: 'Consolas', 'Courier New', Courier, monospace; font-size: 26px; font-weight: 800; color: #9c0f3d; letter-spacing: 2px;">
+                        ${temporaryPassword}
+                      </span>
+                    </div>
+
+                    <div style="font-size: 12px; font-weight: 600; color: #0c3b77; margin-top: 12px;">
+                      &#9888; Please copy this password to enter your terminal. You will be mandated to change it upon first login.
+                    </div>
+
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Account Summary Details Table -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 26px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 16px 20px;">
                     
                     <div style="font-size: 11px; font-weight: 800; color: #104080; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
-                      AUTHENTICATION CREDENTIALS
+                      ACCOUNT IDENTIFICATION DETAILS
                     </div>
 
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size: 13px;">
                       <tr>
-                        <td width="150" style="padding: 6px 0; color: #64748b; font-weight: 600;">Staff ID Code:</td>
-                        <td style="padding: 6px 0; font-family: monospace; font-weight: 700; color: #0f172a; font-size: 14px;">
-                          <span style="background-color: #e2e8f0; padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e1;">${staffId}</span>
+                        <td width="160" style="padding: 7px 0; color: #64748b; font-weight: 600;">Staff ID:</td>
+                        <td style="padding: 7px 0; font-family: monospace; font-weight: 800; color: #0f172a; font-size: 14px;">
+                          <span style="background-color: #e2e8f0; padding: 3px 10px; border-radius: 4px; border: 1px solid #cbd5e1; color: #104080;">${staffId}</span>
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Login User ID / Email:</td>
-                        <td style="padding: 6px 0; font-weight: 700; color: #104080; font-size: 14px;">
+                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Login User ID / Email:</td>
+                        <td style="padding: 7px 0; font-weight: 700; color: #104080; font-size: 14px;">
                           ${toEmail}
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-weight: 600;" valign="top">Temporary Access Key:</td>
-                        <td style="padding: 8px 0;">
-                          <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 3px solid #dc2626; padding: 6px 12px; border-radius: 4px; display: inline-block;">
-                            <span style="font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: 800; color: #991b1b; letter-spacing: 1.5px;">
-                              ${temporaryPassword}
-                            </span>
-                          </div>
-                          <div style="font-size: 11px; color: #dc2626; font-weight: 600; margin-top: 4px;">
-                            &#9888; Single-use temporary access key
-                          </div>
+                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Assigned Role:</td>
+                        <td style="padding: 7px 0; font-weight: 700; color: #047857;">
+                          Staff Banking Operator
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Portal Address:</td>
+                        <td style="padding: 7px 0;">
+                          <a href="${loginUrl}" style="color: #104080; font-weight: 600; text-decoration: underline;">${loginUrl}</a>
                         </td>
                       </tr>
                     </table>
@@ -286,10 +316,10 @@ export const createStaffEmailContent = (toEmail: string, staffId: string, tempor
                 </tr>
               </table>
 
-              <!-- Action CTA Button -->
-              <div style="text-align: center; margin: 26px 0 22px 0;">
-                <a href="${loginUrl}" target="_blank" style="background: linear-gradient(180deg, #104080 0%, #0a2540 100%); color: #ffffff; text-decoration: none; padding: 13px 30px; font-size: 13px; font-weight: 700; border-radius: 6px; display: inline-block; box-shadow: 0 4px 10px rgba(16,64,128,0.25); letter-spacing: 0.5px;">
-                  ACCESS FINACLE TERMINAL &rarr;
+              <!-- Big Primary CTA Button -->
+              <div style="text-align: center; margin: 30px 0 26px 0;">
+                <a href="${loginUrl}" target="_blank" style="background: linear-gradient(180deg, #104080 0%, #0a2540 100%); color: #ffffff; text-decoration: none; padding: 15px 38px; font-size: 14px; font-weight: 800; border-radius: 6px; display: inline-block; box-shadow: 0 6px 16px rgba(16,64,128,0.35); letter-spacing: 0.5px; border: 1px solid #082040;">
+                  LOGIN TO FINACLE TERMINAL &rarr;
                 </a>
               </div>
 
