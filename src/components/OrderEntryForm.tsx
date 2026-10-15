@@ -200,6 +200,28 @@ export default function OrderEntryForm() {
   const [filterDate, setFilterDate] = useState('');
   const [filterAgent, setFilterAgent] = useState('');
   const [orderExecutionDate, setOrderExecutionDate] = useState(() => new Date().toLocaleDateString('en-CA'));
+  const [existingDailyOrder, setExistingDailyOrder] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!selectedPartyId || !orderExecutionDate) {
+      setExistingDailyOrder(null);
+      return;
+    }
+    const checkOrder = async () => {
+      try {
+        const res = await api.get(`/records/orders?party_id=${selectedPartyId}&date=${orderExecutionDate}&limit=1`);
+        const rec = res.data?.records?.[0];
+        if (rec && rec.status !== 'cancelled') {
+          setExistingDailyOrder(rec);
+        } else {
+          setExistingDailyOrder(null);
+        }
+      } catch {
+        setExistingDailyOrder(null);
+      }
+    };
+    checkOrder();
+  }, [selectedPartyId, orderExecutionDate]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
@@ -613,8 +635,8 @@ export default function OrderEntryForm() {
         fetchOrders(currentPage, searchQuery);
         setIsFormModalOpen(false);
       } else {
-        await api.post('/records/orders', apiPayload);
-        const ref = `ORD-${Date.now().toString().slice(-6)}`;
+        const res = await api.post('/records/orders', apiPayload);
+        const ref = res.data?.record?.order_no || `ORD-${Date.now().toString().slice(-6)}`;
         setOrderRef(ref);
         setIsFormModalOpen(false);
         setIsSubmitted(true);
@@ -1442,6 +1464,21 @@ export default function OrderEntryForm() {
                     </div>
                   </div>
 
+                  {/* Existing Daily Order Alert Banner */}
+                  {existingDailyOrder && !editingOrderId && (
+                    <div className="col-span-2 bg-[#eef5fc] border border-[#a2c5ea] text-[#104080] px-4 py-2.5 rounded text-xs flex items-center justify-between shadow-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base leading-none">ℹ️</span>
+                        <span>
+                          Existing order <strong>{existingDailyOrder.order_no || `OR-${existingDailyOrder.id}`}</strong> found for this customer on {orderExecutionDate.split('-').reverse().join('/')}. New accounts will be <strong>appended</strong> to this order upon submission.
+                        </span>
+                      </div>
+                      <span className="bg-[#d2e4f7] px-2 py-0.5 rounded text-[10px] font-bold text-[#104080] whitespace-nowrap">
+                        {(Array.isArray(existingDailyOrder.receivers_data) ? existingDailyOrder.receivers_data.length : 1)} current account(s)
+                      </span>
+                    </div>
+                  )}
+
                   {/* Second Box Section */}
                   <div className="col-span-4 grid grid-cols-subgrid gap-y-3 bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-4 px-6 -mx-6 relative">
                     <div className="absolute top-[-1px] left-[-1px] bg-[#1a4a8c] text-white text-[11px] font-medium px-3 py-1 rounded-tl-md rounded-br-md">Beneficiary Bank Details</div>
@@ -1666,7 +1703,7 @@ export default function OrderEntryForm() {
                       isSubmitting ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                   >
-                    {isSubmitting ? (editingOrderId ? 'Updating...' : 'Processing...') : (editingOrderId ? 'Update Order' : 'Create Order (Go)')}
+                    {isSubmitting ? (editingOrderId ? 'Updating...' : 'Processing...') : (editingOrderId ? 'Update Order' : existingDailyOrder ? `Append to ${existingDailyOrder.order_no || 'Order'} (Go)` : 'Create Order (Go)')}
                   </button>
                   <button 
                     onClick={handleClear}
@@ -1696,7 +1733,7 @@ export default function OrderEntryForm() {
                     i
                   </div>
                   <div className="text-[12px] text-black">
-                    <div className="font-bold text-[#1e4676]">Order {orderRef} Registered Successfully.</div>
+                    <div className="font-bold text-[#1e4676]">{existingDailyOrder ? `Accounts Appended to Order ${orderRef} Successfully.` : `Order ${orderRef} Registered Successfully.`}</div>
                   </div>
                 </div>
               </div>
