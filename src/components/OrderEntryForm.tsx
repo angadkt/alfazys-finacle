@@ -1,3 +1,4 @@
+import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 import { FileSpreadsheet, FileText } from 'lucide-react';
@@ -794,14 +795,13 @@ export default function OrderEntryForm() {
                 {/* Date Filter */}
                 <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
                   <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
-                  <input 
-                    type="date"
+                  <FinacleDatePicker
                     value={filterDate}
                     onChange={(e) => {
                       setFilterDate(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
+                    className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
                   />
                   {filterDate ? (
                     <button 
@@ -1395,11 +1395,10 @@ export default function OrderEntryForm() {
                       Value Execution Date
                     </div>
                     <div>
-                      <input 
-                        type="date" 
+                      <FinacleDatePicker 
                         value={orderExecutionDate}
                         onChange={(e) => setOrderExecutionDate(e.target.value)}
-                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
+                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-3 bg-white text-xs"
                       />
                     </div>
 
@@ -1751,11 +1750,10 @@ export default function OrderEntryForm() {
                   <label className="font-medium text-black whitespace-nowrap">
                     Date <span className="text-red-600">*</span>
                   </label>
-                  <input
-                    type="date"
+                  <FinacleDatePicker
                     value={entryDate}
                     onChange={(e) => setEntryDate(e.target.value)}
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-3 bg-white w-full text-xs"
                   />
 
                   {/* Agent / Customer */}
@@ -1943,11 +1941,10 @@ export default function OrderEntryForm() {
               <div className="px-5 py-3 bg-[#f4f7fb] border-b border-[#c4d4ec] flex flex-wrap items-center gap-3 shrink-0">
                 <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
                   <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
-                  <input
-                    type="date"
+                  <FinacleDatePicker
                     value={viewDateFilter}
                     onChange={(e) => { setViewDateFilter(e.target.value); fetchReceivedAed(1, e.target.value, viewModeFilter); }}
-                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
+                    className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
                   />
                   {viewDateFilter && (
                     <button onClick={() => { setViewDateFilter(''); fetchReceivedAed(1, '', viewModeFilter); }} className="text-gray-400 hover:text-red-500 font-bold text-xs">✕</button>

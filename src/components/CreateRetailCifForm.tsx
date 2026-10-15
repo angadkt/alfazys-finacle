@@ -1,3 +1,4 @@
+import FinacleDatePicker from './FinacleDatePicker';
 import React, { useState, useEffect } from 'react';
 
 import api from '../services/api';
@@ -917,11 +918,11 @@ export default function CreateRetailCifForm() {
 
                   <div className="flex items-center">
                     <span className="w-36 font-semibold">Address Valid From</span>
-                    <input type="date" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none text-[10px]" />
+                    <FinacleDatePicker className="flex-1 border border-[#7f9db9] px-2 h-[30px] bg-white text-[10px]" />
                   </div>
                   <div className="flex items-center">
                     <span className="w-36 font-semibold">Address Valid Till</span>
-                    <input type="date" className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none text-[10px]" />
+                    <FinacleDatePicker className="flex-1 border border-[#7f9db9] px-2 h-[30px] bg-white text-[10px]" />
                   </div>
 
                   <div className="flex items-center">

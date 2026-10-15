@@ -1,3 +1,4 @@
+import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 
@@ -285,11 +286,10 @@ export default function AedReportsScreen() {
             {/* Custom Date Input */}
             <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
               <span className="text-[#1e4676] font-bold text-[11px]">Select Date:</span>
-              <input
-                type="date"
+              <FinacleDatePicker
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
-                className="bg-transparent text-xs text-gray-700 focus:outline-none"
+                className="bg-transparent text-xs text-gray-700 min-w-[110px]"
               />
               {filterDate && (
                 <button

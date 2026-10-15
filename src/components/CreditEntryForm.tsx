@@ -1,3 +1,4 @@
+import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect } from 'react';
 import { RefreshCw, FileSpreadsheet, FileText } from 'lucide-react';
 import api from '../services/api';
@@ -613,11 +614,10 @@ Generated on: ${new Date().toLocaleString()}`;
 
                 <div className="flex items-center gap-1">
                   <span className="font-semibold text-black">Date:</span>
-                  <input 
-                    type="date"
+                  <FinacleDatePicker
                     value={filterDate}
                     onChange={(e) => setFilterDate(e.target.value)}
-                    className="border border-[#7f9db9] bg-white px-1.5 h-[24px] text-[11px] text-gray-800 focus:outline-none"
+                    className="border border-[#7f9db9] bg-white px-2 h-[24px] text-[11px] text-gray-800 min-w-[125px]"
                   />
                   {filterDate && (
                     <button
@@ -1052,11 +1052,10 @@ Generated on: ${new Date().toLocaleString()}`;
                           <span className="w-40 font-semibold text-black">
                             Transaction Date
                           </span>
-                          <input 
-                            type="date" 
+                          <FinacleDatePicker 
                             value={formData.transactionDate}
                             onChange={(e) => setFormData({ ...formData, transactionDate: e.target.value })}
-                            className="flex-1 border border-[#7f9db9] px-2 h-[38px] focus:outline-none uppercase text-[11px]"
+                            className="flex-1 border border-[#7f9db9] px-2 h-[38px] uppercase text-[11px] bg-white"
                           />
                         </div>
 
@@ -1160,11 +1159,10 @@ Generated on: ${new Date().toLocaleString()}`;
                           <span className="w-44 font-semibold text-black">
                             Payment Value Date <span className="text-red-600">*</span>
                           </span>
-                          <input 
-                            type="date" 
+                          <FinacleDatePicker 
                             value={formData.paymentDate}
                             onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
-                            className="flex-1 border border-[#7f9db9] px-2 h-[38px] focus:outline-none text-[11px]"
+                            className="flex-1 border border-[#7f9db9] px-2 h-[38px] text-[11px] bg-white"
                           />
                         </div>
 

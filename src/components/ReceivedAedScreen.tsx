@@ -1,3 +1,4 @@
+import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 
@@ -195,11 +196,10 @@ export default function ReceivedAedScreen() {
             {/* Date Filter */}
             <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
               <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
-              <input
-                type="date"
+              <FinacleDatePicker
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
+                className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
               />
               {dateFilter && (
                 <button
@@ -420,11 +420,10 @@ export default function ReceivedAedScreen() {
                   <label className="font-medium text-black whitespace-nowrap">
                     Date <span className="text-red-600">*</span>
                   </label>
-                  <input
-                    type="date"
+                  <FinacleDatePicker
                     value={entryDate}
                     onChange={(e) => setEntryDate(e.target.value)}
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-3 bg-white w-full text-xs text-gray-800"
                   />
 
                   {/* Agent / Customer */}

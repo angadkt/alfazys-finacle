@@ -1,3 +1,4 @@
+import FinacleDatePicker from './FinacleDatePicker';
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
@@ -142,11 +143,10 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
               <span>Date: <span className="text-red-600">*</span></span>
               {loading && <span className="text-gray-400 font-normal italic text-[10px]">Loading...</span>}
             </label>
-            <input 
-              type="date"
+            <FinacleDatePicker 
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-white border border-[#7f9db9] px-2 py-1.5 text-xs text-black outline-none focus:border-[#1e4676] rounded-[2px]"
+              className="bg-white border border-[#7f9db9] px-2 py-1.5 text-xs text-black rounded-[2px]"
               required
             />
             {hasSavedRate && (
