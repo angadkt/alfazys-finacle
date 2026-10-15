@@ -79,12 +79,19 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
     let backendNotice = '';
     try {
       const cleanId = staff.id.replace('STF', '');
-      const res = await api.post(`/users/${cleanId}/resend-credentials`, {
+      const res = await api.post(`/users/by-email/${encodeURIComponent(staff.email)}/resend-credentials`, {
+        email: staff.email,
         password: staff.password
+      }).catch(() => {
+        return api.post(`/users/${cleanId}/resend-credentials`, {
+          email: staff.email,
+          password: staff.password
+        });
       });
+
       if (res.data?.emailDispatched) {
         backendSent = true;
-        toast.success(`Credentials dispatched to ${staff.email} via live SMTP!`);
+        toast.success(`Credentials dispatched to ${staff.email}!`);
       } else if (res.data?.mailResult?.error) {
         backendNotice = res.data.mailResult.error;
         toast.info(`Notice: ${backendNotice}`);
@@ -120,13 +127,21 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
       let backendNotice = '';
       try {
         const cleanId = staff.id.replace('STF', '');
-        const res = await api.post(`/users/${cleanId}/reset-password`, {
+        const res = await api.post(`/users/by-email/${encodeURIComponent(staff.email)}/resend-credentials`, {
+          email: staff.email,
           password: newTemp,
           sendEmail: true
+        }).catch(() => {
+          return api.post(`/users/${cleanId}/reset-password`, {
+            email: staff.email,
+            password: newTemp,
+            sendEmail: true
+          });
         });
+
         if (res.data?.emailDispatched) {
           backendSent = true;
-          toast.success(`Password reset and delivered to ${staff.email} via live SMTP!`);
+          toast.success(`Password reset and delivered to ${staff.email}!`);
         } else if (res.data?.mailResult?.error) {
           backendNotice = res.data.mailResult.error;
           toast.info(`Notice: ${backendNotice}`);
