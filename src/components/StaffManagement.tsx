@@ -160,12 +160,24 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
     }
   };
 
-  // Delete staff
-  const handleDeleteStaff = (staff: StaffMember) => {
+  // Delete staff from both local and remote database
+  const handleDeleteStaff = async (staff: StaffMember) => {
     if (window.confirm(`Are you sure you want to permanently delete staff ${staff.email} (${staff.id})?`)) {
+      // 1. Delete locally
       const ok = dbService.deleteStaffMember(staff.id);
+      
+      // 2. Delete remotely on backend database
+      try {
+        const cleanId = staff.id.replace('STF', '');
+        await api.delete(`/users/${cleanId}`).catch(() => {
+          return api.delete(`/users/by-email/${encodeURIComponent(staff.email)}`);
+        });
+      } catch (err: any) {
+        console.warn('Backend delete notice:', err?.response?.data || err?.message);
+      }
+
       if (ok) {
-        toast.success(`Staff ${staff.id} deleted successfully.`);
+        toast.success(`Staff ${staff.email} deleted successfully.`);
         loadStaff();
       } else {
         toast.error('Could not delete staff.');

@@ -63,24 +63,35 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
       return;
     }
 
-    // Check duplicate email
-    const existing = dbService.getStaffByEmail(email);
-    if (existing) {
-      toast.error(`Staff user with email "${email}" already exists (ID: ${existing.id}).`);
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const staffPassword = password.trim() || `Fin@${Math.floor(100000 + Math.random() * 900000)}!`;
 
-      // 1. Create locally in Finacle offline store
-      const { staff, emailNotification } = dbService.addStaffMember({
-        email: email.trim(),
-        password: staffPassword,
-        permissions,
-        sendEmail
-      });
+      // 1. Create or re-provision in local store
+      const existing = dbService.getStaffByEmail(email.trim());
+      let staff: any;
+      let emailNotification: any;
+
+      if (existing) {
+        dbService.updateStaffMember(existing.id, {
+          password: staffPassword,
+          permissions,
+          mustChangePassword: true,
+          status: 'pending_first_login',
+          lastSentPassword: staffPassword
+        });
+        staff = dbService.getStaffById(existing.id) || existing;
+        emailNotification = dbService.resendStaffCredentials(existing.id);
+      } else {
+        const added = dbService.addStaffMember({
+          email: email.trim(),
+          password: staffPassword,
+          permissions,
+          sendEmail
+        });
+        staff = added.staff;
+        emailNotification = added.emailNotification;
+      }
 
       let backendSmtpSent = false;
       let backendNotice = '';
