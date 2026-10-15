@@ -196,8 +196,9 @@ export default function OrderEntryForm() {
   const [fetchedOrders, setFetchedOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterDate, setFilterDate] = useState(() => new Date().toLocaleDateString('en-CA'));
+  const [filterDate, setFilterDate] = useState('');
   const [filterAgent, setFilterAgent] = useState('');
+  const [orderExecutionDate, setOrderExecutionDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
@@ -266,7 +267,7 @@ export default function OrderEntryForm() {
   const [receivedAedTotal, setReceivedAedTotal] = useState(0);
   const [receivedAedPage, setReceivedAedPage] = useState(1);
   const [receivedAedLoading, setReceivedAedLoading] = useState(false);
-  const [viewDateFilter, setViewDateFilter] = useState(() => new Date().toLocaleDateString('en-CA'));
+  const [viewDateFilter, setViewDateFilter] = useState('');
   const [viewModeFilter, setViewModeFilter] = useState('');
   const [editingReceivedAedId, setEditingReceivedAedId] = useState<number | null>(null);
 
@@ -576,6 +577,7 @@ export default function OrderEntryForm() {
     }
     
     setTransactionThrough(o.transaction_through || '');
+    setOrderExecutionDate(o.order_date ? o.order_date.split('T')[0] : new Date().toLocaleDateString('en-CA'));
     setSelectedFunction('A-ADD');
     setIsFormModalOpen(true);
   };
@@ -594,7 +596,7 @@ export default function OrderEntryForm() {
       party_id: party_id || null,
       buyer_id: null, 
       txn: "gateway", 
-      order_date: new Date().toISOString().split('T')[0],
+      order_date: orderExecutionDate || new Date().toLocaleDateString('en-CA'),
       account_id: null,
       transaction_through: transactionThrough.trim() || null,
       payment_status: "Pending",
@@ -616,7 +618,12 @@ export default function OrderEntryForm() {
         setIsFormModalOpen(false);
         setIsSubmitted(true);
         fetchBeneficiaries();
-        fetchOrders(1, searchQuery);
+        if (filterDate && filterDate !== (orderExecutionDate || new Date().toLocaleDateString('en-CA'))) {
+          setFilterDate('');
+          fetchOrders(1, searchQuery, '', filterAgent);
+        } else {
+          fetchOrders(1, searchQuery, filterDate, filterAgent);
+        }
       }
     } catch (err: any) {
       alert('Error submitting order to server: ' + (err.response?.data?.message || err.message));
@@ -638,6 +645,7 @@ export default function OrderEntryForm() {
       servicer: ''
     });
     setTransactionThrough('');
+    setOrderExecutionDate(new Date().toLocaleDateString('en-CA'));
     setSelectedFunction('A-ADD');
     setEditingOrderId(null);
   };
@@ -786,10 +794,8 @@ export default function OrderEntryForm() {
           <span
             className="cursor-pointer hover:underline tracking-wide"
             onClick={() => {
-              const d = viewDateFilter || new Date().toLocaleDateString('en-CA');
-              setViewDateFilter(d);
               setIsViewReceivedAedOpen(true);
-              fetchReceivedAed(1, d, viewModeFilter);
+              fetchReceivedAed(1, viewDateFilter, viewModeFilter);
             }}
           >
             View Received AED
@@ -813,13 +819,22 @@ export default function OrderEntryForm() {
                     }}
                     className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
                   />
-                  {filterDate && (
+                  {filterDate ? (
                     <button 
                       onClick={() => { setFilterDate(''); setCurrentPage(1); }}
                       className="text-gray-400 hover:text-red-500 font-bold text-xs ml-0.5"
-                      title="Clear Date"
+                      title="Clear Date (Show All Dates)"
                     >
                       &times;
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setFilterDate(new Date().toLocaleDateString('en-CA')); setCurrentPage(1); }}
+                      className="text-[10px] text-[#1a4a8c] hover:underline font-semibold ml-0.5 cursor-pointer"
+                      title="Filter for today's orders"
+                    >
+                      Today
                     </button>
                   )}
                 </div>
@@ -877,10 +892,10 @@ export default function OrderEntryForm() {
                 </div>
 
                 {/* Reset Filters */}
-                {(filterDate !== new Date().toLocaleDateString('en-CA') || filterAgent || searchQuery) && (
+                {(filterDate !== '' || filterAgent || searchQuery) && (
                   <button
                     onClick={() => {
-                      setFilterDate(new Date().toLocaleDateString('en-CA'));
+                      setFilterDate('');
                       setFilterAgent('');
                       setSearchQuery('');
                       setCurrentPage(1);
@@ -1398,7 +1413,8 @@ export default function OrderEntryForm() {
                     <div>
                       <input 
                         type="date" 
-                        defaultValue={new Date().toISOString().split('T')[0]}
+                        value={orderExecutionDate}
+                        onChange={(e) => setOrderExecutionDate(e.target.value)}
                         className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none"
                       />
                     </div>
