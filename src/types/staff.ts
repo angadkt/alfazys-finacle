@@ -27,6 +27,9 @@ export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
 
 export interface StaffMember {
   id: string;               // e.g. "STF0010"
+  fullName: string;         // e.g. "SHANIF KS" or "aman"
+  staffCode: string;        // e.g. "F2345" or "123"
+  loginUsername: string;    // e.g. "aman123" (combined name + staffCode)
   email: string;
   password: string;          // Current active or temporary password
   role: 'staff';
@@ -43,6 +46,9 @@ export interface StaffMember {
 export interface StaffEmailNotification {
   toEmail: string;
   staffId: string;
+  fullName?: string;
+  staffCode?: string;
+  loginUsername?: string;
   temporaryPassword: string;
   sentAt: string;
   subject: string;

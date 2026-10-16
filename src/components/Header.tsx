@@ -56,6 +56,15 @@ export default function Header({
     setShortcutText('');
   };
 
+  const activeRole = localStorage.getItem('infazys_finacle_active_role');
+  const isSuperAdmin = activeRole === 'super_admin' || activeRole === 'admin';
+  const userName = localStorage.getItem('infazys_user_name') || (isSuperAdmin ? 'Super Admin' : 'STAFF');
+  const staffCode = localStorage.getItem('infazys_staff_code') || (isSuperAdmin ? 'ADM001' : 'F2345');
+
+  const now = new Date();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const formattedHeaderDate = `${now.getDate()} ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
   return (
     <div className="w-full flex flex-col font-sans antialiased shrink-0">
       {/* Top Utility Navbar */}
@@ -64,9 +73,9 @@ export default function Header({
         {/* Left Side Navigation Info */}
         <div className="flex items-center h-full">
           <div className="text-[#1e4676] font-semibold flex items-center gap-1.5">
-            <span>User: {localStorage.getItem('infazys_user_name') || (localStorage.getItem('infazys_finacle_active_role') === 'super_admin' ? 'UBSADMIN' : 'STAFF')}</span>
+            <span>User: {userName}</span>
             <span className="text-[9px] bg-[#1e4676] text-white px-1.5 py-0.2 rounded uppercase font-bold">
-              {localStorage.getItem('infazys_finacle_active_role') === 'super_admin' ? 'ADMIN' : 'STAFF'}
+              {isSuperAdmin ? 'ADMIN' : 'STAFF'}
             </span>
           </div>
           <div className="w-[1px] h-4 bg-gray-300 mx-5"></div>
@@ -178,7 +187,11 @@ export default function Header({
         </span>
         
         <div className="flex items-center text-black text-[12px] h-[22px] font-normal" style={{ fontWeight: 400 }}>
-          <span style={{ fontWeight: 400 }}>{localStorage.getItem('infazys_user_name') || (localStorage.getItem('infazys_finacle_active_role') === 'super_admin' ? 'UBSADMIN' : 'STAFF')} | 25/02/2014 | Menu Shortcut:</span>
+          <span style={{ fontWeight: 400 }}>
+            {isSuperAdmin 
+              ? `Super Admin | 25/02/2014 | Menu Shortcut:` 
+              : `${formattedHeaderDate} | User ${userName} | ${staffCode} | Menu Shortcut:`}
+          </span>
           <input 
             type="text" 
             value={shortcutText}

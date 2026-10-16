@@ -43,8 +43,12 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
   }, []);
 
   const filteredStaff = staffList.filter(s => {
-    const matchesSearch = s.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = s.email.toLowerCase().includes(term) || 
+                          (s.fullName && s.fullName.toLowerCase().includes(term)) ||
+                          (s.loginUsername && s.loginUsername.toLowerCase().includes(term)) ||
+                          (s.staffCode && s.staffCode.toLowerCase().includes(term)) ||
+                          s.id.toLowerCase().includes(term);
     const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -81,11 +85,17 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
       const cleanId = staff.id.replace('STF', '');
       const res = await api.post(`/users/by-email/${encodeURIComponent(staff.email)}/resend-credentials`, {
         email: staff.email,
-        password: staff.password
+        password: staff.password,
+        fullName: staff.fullName,
+        staffCode: staff.staffCode,
+        username: staff.loginUsername
       }).catch(() => {
         return api.post(`/users/${cleanId}/resend-credentials`, {
           email: staff.email,
-          password: staff.password
+          password: staff.password,
+          fullName: staff.fullName,
+          staffCode: staff.staffCode,
+          username: staff.loginUsername
         });
       });
 
@@ -105,6 +115,9 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
 
     setPreviewNotification({
       ...notification,
+      fullName: staff.fullName,
+      staffCode: staff.staffCode,
+      loginUsername: staff.loginUsername,
       smtpDispatched: backendSent,
       smtpMessage: backendNotice
     });
@@ -130,12 +143,17 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
         const res = await api.post(`/users/by-email/${encodeURIComponent(staff.email)}/resend-credentials`, {
           email: staff.email,
           password: newTemp,
+          fullName: staff.fullName,
+          staffCode: staff.staffCode,
+          username: staff.loginUsername,
           sendEmail: true
         }).catch(() => {
           return api.post(`/users/${cleanId}/reset-password`, {
             email: staff.email,
             password: newTemp,
-            sendEmail: true
+            fullName: staff.fullName,
+            staffCode: staff.staffCode,
+            username: staff.loginUsername
           });
         });
 
@@ -291,12 +309,12 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
           <table className="w-full text-left border-collapse text-[12px]">
             <thead className="bg-[#e4ebf3] text-[#104080] border-b border-[#a0b8d0] sticky top-0 z-10 font-bold">
               <tr>
-                <th className="py-2 px-3 border-r border-[#cad6e4] w-[90px]">Staff ID</th>
-                <th className="py-2 px-3 border-r border-[#cad6e4]">Staff User ID / Email</th>
-                <th className="py-2 px-3 border-r border-[#cad6e4] w-[140px]">Account Status</th>
-                <th className="py-2 px-3 border-r border-[#cad6e4] w-[150px]">1st Login Policy</th>
-                <th className="py-2 px-3 border-r border-[#cad6e4] w-[180px]">Authorized Modules</th>
-                <th className="py-2 px-3 border-r border-[#cad6e4] w-[120px]">Created On</th>
+                <th className="py-2 px-3 border-r border-[#cad6e4] w-[110px]">Staff Code / ID</th>
+                <th className="py-2 px-3 border-r border-[#cad6e4]">Staff Name &amp; Login User ID</th>
+                <th className="py-2 px-3 border-r border-[#cad6e4] w-[130px]">Account Status</th>
+                <th className="py-2 px-3 border-r border-[#cad6e4] w-[140px]">1st Login Policy</th>
+                <th className="py-2 px-3 border-r border-[#cad6e4] w-[170px]">Authorized Modules</th>
+                <th className="py-2 px-3 border-r border-[#cad6e4] w-[110px]">Created On</th>
                 <th className="py-2 px-3 text-center w-[220px]">Terminal Actions</th>
               </tr>
             </thead>
@@ -318,16 +336,28 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
                       className={`hover:bg-[#f2f7fc] ${idx % 2 === 1 ? 'bg-[#fbfcfd]' : 'bg-white'}`}
                     >
                       <td className="py-2 px-3 border-r border-[#e5e5e5] font-mono font-bold text-[#104080]">
-                        {staff.id}
+                        <div className="text-[12px]">{staff.staffCode || staff.id}</div>
+                        <span className="text-[10px] text-gray-400 font-sans block">{staff.id}</span>
                       </td>
 
-                      <td className="py-2 px-3 border-r border-[#e5e5e5] font-medium text-gray-900">
-                        {staff.email}
-                        {staff.lastLoginAt && (
-                          <span className="block text-[10px] text-gray-400">
-                            Last seen: {new Date(staff.lastLoginAt).toLocaleDateString()}
+                      <td className="py-2 px-3 border-r border-[#e5e5e5]">
+                        <div className="font-bold text-[#104080] text-[13px]">
+                          {staff.fullName || staff.email.split('@')[0].toUpperCase()}
+                        </div>
+                        <div className="text-[11px] font-mono text-[#0b3c75] flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] font-bold text-gray-500 font-sans">Login User ID:</span>
+                          <span className="bg-[#eaf2fd] border border-[#a8c5eb] px-1.5 py-0.2 rounded-xs font-bold text-[#104080]">
+                            {staff.loginUsername || staff.email}
                           </span>
-                        )}
+                        </div>
+                        <div className="text-[11px] text-gray-500 mt-0.5">
+                          {staff.email}
+                          {staff.lastLoginAt && (
+                            <span className="ml-2 text-[10px] text-gray-400">
+                              (Last seen: {new Date(staff.lastLoginAt).toLocaleDateString()})
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="py-2 px-3 border-r border-[#e5e5e5]">

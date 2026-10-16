@@ -50,11 +50,19 @@ export default function EmailSentModal({ notification, onClose }: EmailSentModal
           )}
 
           <div className="grid grid-cols-[140px_1fr] gap-y-1.5 text-[12px] py-3 border-b border-[#e5e5e5]">
-            <span className="font-bold text-[#444]">Recipient Email:</span>
-            <span className="text-[#104080] font-semibold">{notification.toEmail}</span>
+            <span className="font-bold text-[#444]">Staff Name:</span>
+            <span className="text-[#104080] font-bold">{notification.fullName || notification.toEmail.split('@')[0].toUpperCase()}</span>
 
-            <span className="font-bold text-[#444]">Staff ID:</span>
-            <span className="font-mono font-bold text-[#9c0f3d]">{notification.staffId}</span>
+            <span className="font-bold text-[#444]">Staff Code / ID:</span>
+            <span className="font-mono font-bold text-[#9c0f3d]">{notification.staffCode || notification.staffId}</span>
+
+            <span className="font-bold text-[#444]">Login User ID:</span>
+            <span className="font-mono font-bold text-[#104080] bg-blue-50 border border-blue-200 px-1.5 py-0.5 inline-block w-fit">
+              {notification.loginUsername || notification.toEmail}
+            </span>
+
+            <span className="font-bold text-[#444]">Recipient Email:</span>
+            <span className="text-[#444] font-medium">{notification.toEmail}</span>
 
             <span className="font-bold text-[#444]">Temporary Password:</span>
             <span className="font-mono font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 inline-block w-fit">
@@ -79,14 +87,15 @@ export default function EmailSentModal({ notification, onClose }: EmailSentModal
           {/* Action buttons */}
           <div className="mt-4 pt-3 border-t border-[#d8d8d8] flex justify-between items-center">
             <span className="text-[11px] text-gray-500 italic">
-              Staff will be mandated to change this password on their first login.
+              Staff will use this Login User ID &amp; Password to enter the terminal.
             </span>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(`User: ${notification.toEmail}\nPassword: ${notification.temporaryPassword}`);
-                  alert('Credentials copied to clipboard!');
+                  const uid = notification.loginUsername || notification.toEmail;
+                  navigator.clipboard.writeText(`User ID: ${uid}\nPassword: ${notification.temporaryPassword}\nPortal: https://alfazys-finacle.vercel.app`);
+                  alert('Login credentials copied to clipboard!');
                 }}
                 className="bg-[#e4e4e4] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-3 py-1 text-[12px] font-bold hover:bg-[#eaeaea] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d]"
               >

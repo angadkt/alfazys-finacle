@@ -78,8 +78,8 @@ export default function LoginPage() {
         }
       }
 
-      // 1. Check local Staff Member database first
-      const staffMember = dbService.getStaffByEmail(submitEmail);
+      // 1. Check local Staff Member database first (by combined login username, staff code, or email)
+      const staffMember = dbService.getStaffByCredential(submitEmail) || dbService.getStaffByEmail(submitEmail);
       if (staffMember) {
         if (staffMember.status === 'suspended') {
           setError('This staff account has been suspended. Please contact the administrator.');
@@ -90,7 +90,9 @@ export default function LoginPage() {
 
         if (staffMember.password === submitPassword) {
           localStorage.setItem('infazys_token', `infazys-staff-token-${staffMember.id}`);
-          localStorage.setItem('infazys_user_name', staffMember.email.split('@')[0].toUpperCase());
+          localStorage.setItem('infazys_user_name', staffMember.fullName || staffMember.email.split('@')[0].toUpperCase());
+          localStorage.setItem('infazys_staff_code', staffMember.staffCode || staffMember.id);
+          localStorage.setItem('infazys_staff_username', staffMember.loginUsername || staffMember.email.split('@')[0]);
           localStorage.setItem('infazys_user_email', staffMember.email);
           localStorage.setItem('infazys_finacle_active_role', 'staff');
 
@@ -109,7 +111,7 @@ export default function LoginPage() {
             navigate('/change-password?mandatory=true');
           } else {
             localStorage.removeItem('infazys_must_change_password');
-            toast.success(`Welcome back, ${staffMember.email}!`);
+            toast.success(`Welcome back, ${staffMember.fullName || staffMember.email}!`);
             navigate('/fincore');
           }
           setLoading(false);
@@ -118,13 +120,12 @@ export default function LoginPage() {
       }
 
       // 2. Authenticate directly against backend API
-
       const response = await api.post('/auth/login', {
         email: submitEmail,
         password: submitPassword
       });
 
-      // API returns { token, user: { id, fullName, email, role } }
+      // API returns { token, user: { id, fullName, email, role, staffCode, username } }
       const { token, user } = response.data;
       const role = user?.role || response.data.role || 'staff';
       
@@ -133,6 +134,12 @@ export default function LoginPage() {
       if (user?.fullName) {
         localStorage.setItem('infazys_user_name', user.fullName);
       }
+      if (user?.staffCode) {
+        localStorage.setItem('infazys_staff_code', user.staffCode);
+      }
+      if (user?.username) {
+        localStorage.setItem('infazys_staff_username', user.username);
+      }
       if (user?.email) {
         localStorage.setItem('infazys_user_email', user.email);
       }
@@ -140,6 +147,9 @@ export default function LoginPage() {
       // Map 'admin' from backend to 'super_admin' in frontend role state
       const resolvedRole = (role === 'admin' || role === 'super_admin') ? 'super_admin' : role; 
       localStorage.setItem('infazys_finacle_active_role', resolvedRole);
+      if (resolvedRole === 'super_admin' && !localStorage.getItem('infazys_staff_code')) {
+        localStorage.setItem('infazys_staff_code', 'ADM001');
+      }
 
       const loginTimeStr = new Date().toLocaleString(undefined, {
         month: 'short',

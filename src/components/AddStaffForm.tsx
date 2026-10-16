@@ -15,6 +15,8 @@ interface AddStaffFormProps {
 export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormProps) {
   const toast = useToast();
 
+  const [fullName, setFullName] = useState('');
+  const [staffCode, setStaffCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -23,6 +25,10 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
   const [permissions, setPermissions] = useState<StaffPermissions>({ ...DEFAULT_STAFF_PERMISSIONS });
   const [dispatchedNotification, setDispatchedNotification] = useState<StaffEmailNotification | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const cleanName = fullName.trim().toLowerCase().replace(/\s+/g, '');
+  const cleanCode = staffCode.trim().toLowerCase();
+  const combinedUsername = (cleanName && cleanCode) ? `${cleanName}${cleanCode}` : (cleanName || cleanCode || '');
 
   const generateRandomPassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
@@ -52,6 +58,16 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!fullName.trim()) {
+      toast.error('Please enter the Staff Name / User.');
+      return;
+    }
+
+    if (!staffCode.trim()) {
+      toast.error('Please enter the Staff Code / User ID.');
+      return;
+    }
+
     if (!email.trim()) {
       toast.error('Please enter a valid staff email address.');
       return;
@@ -74,6 +90,9 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
 
       if (existing) {
         dbService.updateStaffMember(existing.id, {
+          fullName: fullName.trim(),
+          staffCode: staffCode.trim(),
+          loginUsername: combinedUsername,
           password: staffPassword,
           permissions,
           mustChangePassword: true,
@@ -84,6 +103,9 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
         emailNotification = dbService.resendStaffCredentials(existing.id);
       } else {
         const added = dbService.addStaffMember({
+          fullName: fullName.trim(),
+          staffCode: staffCode.trim(),
+          loginUsername: combinedUsername,
           email: email.trim(),
           password: staffPassword,
           permissions,
@@ -99,7 +121,9 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
       // 2. Dispatch to live backend API which sends real SMTP email
       try {
         const res = await api.post('/users', {
-          fullName: email.split('@')[0],
+          fullName: fullName.trim(),
+          staffCode: staffCode.trim(),
+          username: combinedUsername,
           email: email.trim().toLowerCase(),
           password: staffPassword,
           role: 'staff',
@@ -113,21 +137,26 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
           backendNotice = res.data.mailResult.error;
           toast.info(`Staff created! SMTP delivery notice: ${backendNotice}`);
         } else {
-          toast.success(`Staff ${staff.id} created successfully!`);
+          toast.success(`Staff ${staff.loginUsername || staff.id} created successfully!`);
         }
       } catch (apiErr: any) {
         console.warn('Backend API sync notice:', apiErr?.response?.data || apiErr?.message);
         backendNotice = apiErr?.response?.data?.message || 'Remote backend sync skipped';
-        toast.success(`Staff ${staff.id} created! Credentials generated.`);
+        toast.success(`Staff ${staff.loginUsername || staff.id} created! Credentials generated.`);
       }
 
       setDispatchedNotification({
         ...emailNotification,
+        fullName: staff.fullName,
+        staffCode: staff.staffCode,
+        loginUsername: staff.loginUsername,
         smtpDispatched: backendSmtpSent,
         smtpMessage: backendNotice
       });
 
       // Reset fields
+      setFullName('');
+      setStaffCode('');
       setEmail('');
       setPassword('');
       setPermissions({ ...DEFAULT_STAFF_PERMISSIONS });
@@ -139,6 +168,8 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
   };
 
   const handleClear = () => {
+    setFullName('');
+    setStaffCode('');
     setEmail('');
     setPassword('');
     setPermissions({ ...DEFAULT_STAFF_PERMISSIONS });
@@ -192,6 +223,42 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
+              {/* Staff Name / User */}
+              <div>
+                <label className="block text-[12px] font-bold text-[#222] mb-1">
+                  Staff Name / User <span className="text-red-600 font-bold">*</span>
+                </label>
+                <input 
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. aman or SHANIF KS"
+                  className="w-full h-[28px] border border-[#a5a5a5] px-2 text-[12px] focus:outline-none focus:border-[#104080] shadow-[inset_1px_1px_2px_rgba(0,0,0,0.1)]"
+                  required
+                />
+                <span className="text-[10px] text-gray-500 mt-0.5 block">
+                  Enter staff operator name (e.g. aman).
+                </span>
+              </div>
+
+              {/* User ID / Staff Code */}
+              <div>
+                <label className="block text-[12px] font-bold text-[#222] mb-1">
+                  Staff Code / User ID <span className="text-red-600 font-bold">*</span>
+                </label>
+                <input 
+                  type="text"
+                  value={staffCode}
+                  onChange={(e) => setStaffCode(e.target.value)}
+                  placeholder="e.g. 123 or F2345"
+                  className="w-full h-[28px] border border-[#a5a5a5] px-2 text-[12px] focus:outline-none focus:border-[#104080] shadow-[inset_1px_1px_2px_rgba(0,0,0,0.1)] font-mono"
+                  required
+                />
+                <span className="text-[10px] text-gray-500 mt-0.5 block">
+                  Enter staff identifier (e.g. 123). Combined with name for login.
+                </span>
+              </div>
+
               {/* Email Address */}
               <div>
                 <label className="block text-[12px] font-bold text-[#222] mb-1">
@@ -206,7 +273,7 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
                   required
                 />
                 <span className="text-[10px] text-gray-500 mt-0.5 block">
-                  Staff User ID will match this email for logging into the terminal.
+                  Official email for delivering login credentials dispatch.
                 </span>
               </div>
 
@@ -244,11 +311,28 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
                   </button>
                 </div>
                 <span className="text-[10px] text-gray-500 mt-0.5 block">
-                  Leave blank to auto-generate a secure random 8-character string.
+                  Leave blank to auto-generate a secure random password.
                 </span>
               </div>
 
             </div>
+
+            {/* Generated Combined Login User ID Preview Banner */}
+            {combinedUsername && (
+              <div className="mt-3.5 p-2 bg-[#f0f6ff] border border-[#90b8e8] flex items-center justify-between rounded-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-[#104080] uppercase tracking-wide">
+                    Login User ID for Staff:
+                  </span>
+                  <span className="font-mono font-bold text-[13px] bg-white border border-[#104080] text-[#104080] px-2 py-0.5 shadow-xs">
+                    {combinedUsername}
+                  </span>
+                </div>
+                <span className="text-[10px] text-gray-600">
+                  Staff will use <strong className="text-[#104080] font-mono">{combinedUsername}</strong> to log into the terminal.
+                </span>
+              </div>
+            )}
 
             {/* Email Dispatch & First Login Policy Info Box */}
             <div className="mt-4 p-2.5 bg-[#f5f9ff] border border-[#bcd2e8] rounded-xs flex flex-col gap-2">

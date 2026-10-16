@@ -146,6 +146,9 @@ export interface DbSchema {
 export const initialStaffMembers: StaffMember[] = [
   {
     id: 'STF0001',
+    fullName: 'SHANIF KS',
+    staffCode: 'F2345',
+    loginUsername: 'shanifksf2345',
     email: 'staff@finacle.io',
     password: 'user',
     role: 'staff',
@@ -158,6 +161,9 @@ export const initialStaffMembers: StaffMember[] = [
   },
   {
     id: 'STF0002',
+    fullName: 'AMAN',
+    staffCode: '123',
+    loginUsername: 'aman123',
     email: 'newstaff@infazys.com',
     password: 'TempPassword123!',
     role: 'staff',
@@ -181,10 +187,19 @@ export const initialStaffMembers: StaffMember[] = [
   }
 ];
 
-export const createStaffEmailContent = (toEmail: string, staffId: string, temporaryPassword: string): StaffEmailNotification => {
+export const createStaffEmailContent = (
+  toEmail: string, 
+  staffId: string, 
+  temporaryPassword: string,
+  extra?: { fullName?: string; staffCode?: string; loginUsername?: string }
+): StaffEmailNotification => {
   const loginUrl = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : 'https://alfazys-finacle.vercel.app';
   const dispatchId = 'FIN-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Date.now().toString().slice(-4);
   const sentDate = new Date().toUTCString();
+
+  const fullName = extra?.fullName || toEmail.split('@')[0].toUpperCase();
+  const staffCode = extra?.staffCode || staffId;
+  const loginUsername = extra?.loginUsername || toEmail;
 
   const htmlBody = `<!DOCTYPE html>
 <html lang="en">
@@ -241,7 +256,7 @@ export const createStaffEmailContent = (toEmail: string, staffId: string, tempor
                 Operator Account Successfully Provisioned
               </h1>
               <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                Dear Staff Member,<br>
+                Dear ${fullName},<br>
                 An authorized administrative session has provisioned your user account on the <strong>Infazys Finacle Universal Banking Core</strong>. Your terminal profile has been established with module-level access permissions.
               </p>
 
@@ -287,14 +302,26 @@ export const createStaffEmailContent = (toEmail: string, staffId: string, tempor
 
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size: 13px;">
                       <tr>
-                        <td width="160" style="padding: 7px 0; color: #64748b; font-weight: 600;">Staff ID:</td>
-                        <td style="padding: 7px 0; font-family: monospace; font-weight: 800; color: #0f172a; font-size: 14px;">
-                          <span style="background-color: #e2e8f0; padding: 3px 10px; border-radius: 4px; border: 1px solid #cbd5e1; color: #104080;">${staffId}</span>
+                        <td width="160" style="padding: 7px 0; color: #64748b; font-weight: 600;">Staff Name:</td>
+                        <td style="padding: 7px 0; font-weight: 700; color: #0f172a; font-size: 14px;">
+                          ${fullName}
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Login User ID / Email:</td>
-                        <td style="padding: 7px 0; font-weight: 700; color: #104080; font-size: 14px;">
+                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Staff Code / ID:</td>
+                        <td style="padding: 7px 0; font-family: monospace; font-weight: 800; color: #0f172a; font-size: 14px;">
+                          <span style="background-color: #e2e8f0; padding: 3px 10px; border-radius: 4px; border: 1px solid #cbd5e1; color: #104080;">${staffCode}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Login User ID:</td>
+                        <td style="padding: 7px 0; font-family: monospace; font-weight: 800; color: #104080; font-size: 15px;">
+                          <span style="background-color: #e0edff; padding: 3px 10px; border-radius: 4px; border: 1px solid #90b8e8; color: #0b3c75;">${loginUsername}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Registered Email:</td>
+                        <td style="padding: 7px 0; font-weight: 600; color: #475569; font-size: 13px;">
                           ${toEmail}
                         </td>
                       </tr>
@@ -721,10 +748,24 @@ export const dbService = {
   getStaffByEmail: (email: string): StaffMember | undefined => {
     const staffList = dbService.getStaffMembers();
     const clean = email.trim().toLowerCase();
-    return staffList.find(s => s.email.toLowerCase() === clean);
+    return staffList.find(s => s.email.toLowerCase() === clean || (s.loginUsername && s.loginUsername.toLowerCase() === clean));
+  },
+
+  getStaffByCredential: (credential: string): StaffMember | undefined => {
+    const staffList = dbService.getStaffMembers();
+    const clean = credential.trim().toLowerCase();
+    return staffList.find(s => 
+      (s.loginUsername && s.loginUsername.toLowerCase() === clean) ||
+      s.email.toLowerCase() === clean ||
+      (s.staffCode && s.staffCode.toLowerCase() === clean) ||
+      s.id.toLowerCase() === clean
+    );
   },
 
   addStaffMember: (data: { 
+    fullName?: string;
+    staffCode?: string;
+    loginUsername?: string;
     email: string; 
     password?: string; 
     permissions?: StaffPermissions;
@@ -754,8 +795,17 @@ export const dbService = {
       ? data.password.trim() 
       : `Finacle@${Math.floor(1000 + Math.random() * 9000)}`;
 
+    const fullName = data.fullName?.trim() || data.email.split('@')[0].toUpperCase();
+    const staffCode = data.staffCode?.trim() || staffId;
+    const cleanName = fullName.toLowerCase().replace(/\s+/g, '');
+    const cleanCode = staffCode.toLowerCase();
+    const loginUsername = data.loginUsername?.trim().toLowerCase() || `${cleanName}${cleanCode}`;
+
     const newStaff: StaffMember = {
       id: staffId,
+      fullName,
+      staffCode,
+      loginUsername,
       email: data.email.trim().toLowerCase(),
       password: rawPassword,
       role: 'staff',
@@ -770,7 +820,11 @@ export const dbService = {
     db.staffMembers.push(newStaff);
 
     // Create simulated corporate email dispatch
-    const emailNotification = createStaffEmailContent(newStaff.email, newStaff.id, rawPassword);
+    const emailNotification = createStaffEmailContent(newStaff.email, newStaff.id, rawPassword, {
+      fullName: newStaff.fullName,
+      staffCode: newStaff.staffCode,
+      loginUsername: newStaff.loginUsername
+    });
     db.emailLogs.unshift(emailNotification);
 
     saveDb(db);
@@ -805,7 +859,11 @@ export const dbService = {
     const staff = db.staffMembers.find(s => s.id === id);
     if (!staff) return null;
 
-    const emailNotification = createStaffEmailContent(staff.email, staff.id, staff.password);
+    const emailNotification = createStaffEmailContent(staff.email, staff.id, staff.password, {
+      fullName: staff.fullName,
+      staffCode: staff.staffCode,
+      loginUsername: staff.loginUsername
+    });
     staff.emailSentAt = new Date().toISOString();
     staff.lastSentPassword = staff.password;
     if (!db.emailLogs) db.emailLogs = [];
