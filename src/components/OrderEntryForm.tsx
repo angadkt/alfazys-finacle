@@ -1630,52 +1630,92 @@ export default function OrderEntryForm() {
                   </div>
                 </div>
 
-                {accounts.length > 0 && (
-                  <div className="mt-2">
-                    <div className="font-medium text-[#1e4676] mb-2 text-[14px]">Added Accounts ({accounts.length})</div>
-                    <div className="border border-[#c4d4ec] rounded-md overflow-hidden">
-                      <table className="w-full text-left text-[13px] border-collapse">
-                        <thead className="bg-[#eef2f9] border-b border-[#c4d4ec]">
-                          <tr>
-                            <th className="p-3 font-medium text-black">Client Name</th>
-                            <th className="p-3 font-medium text-black">Account Number</th>
-                            <th className="p-3 font-medium text-black">Amount</th>
-                            <th className="p-3 font-medium text-black">Bank (IFSC)</th>
-                            <th className="p-3 font-medium text-black">Branch</th>
-                            <th className="p-3 font-medium text-black text-center">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {accounts.map((acc, idx) => (
-                            <tr key={idx} className="border-b border-[#e4e4e4] last:border-0 hover:bg-[#f9fafc] bg-white">
-                              <td className="p-3 border-r border-[#e4e4e4]">{acc.clientName}</td>
-                              <td className="p-3 border-r border-[#e4e4e4]">{acc.accountNumber}</td>
-                              <td className="p-3 border-r border-[#e4e4e4]">₹{acc.orderAmount}</td>
-                              <td className="p-3 border-r border-[#e4e4e4]">{acc.bankName} ({acc.ifscCode})</td>
-                              <td className="p-3 border-r border-[#e4e4e4]">{acc.branchName}</td>
-                              <td className="p-3 text-center flex items-center justify-center gap-4">
-                                <button 
-                                  type="button" 
-                                  onClick={() => editAccount(idx)} 
-                                  className="text-[#1a4a8c] hover:underline font-medium"
-                                >
-                                  Edit
-                                </button>
-                                <button 
-                                  type="button" 
-                                  onClick={() => removeAccount(idx)} 
-                                  className="text-red-600 hover:underline font-medium"
-                                >
-                                  Remove
-                                </button>
+                {accounts.length > 0 && (() => {
+                  let totalAddedInr = 0;
+                  let totalAddedAed = 0;
+                  for (const acc of accounts) {
+                    const inr = parseFloat(String(acc.orderAmount || 0).replace(/,/g, '')) || 0;
+                    const rate = parseFloat(String(acc.confirmOrderAmount || 0).replace(/,/g, '')) || 0;
+                    const aed = rate > 0 ? (inr / rate) : (parseFloat(String((acc as any).aedAmount || 0).replace(/,/g, '')) || 0);
+                    totalAddedInr += inr;
+                    totalAddedAed += aed;
+                  }
+
+                  return (
+                    <div className="mt-2">
+                      <div className="font-medium text-[#1e4676] mb-2 text-[14px]">Added Accounts ({accounts.length})</div>
+                      <div className="border border-[#c4d4ec] rounded-md overflow-hidden shadow-xs">
+                        <table className="w-full text-left text-[13px] border-collapse">
+                          <thead className="bg-[#eef2f9] border-b border-[#c4d4ec]">
+                            <tr>
+                              <th className="p-3 font-medium text-black">Client Name</th>
+                              <th className="p-3 font-medium text-black">Account Number</th>
+                              <th className="p-3 font-medium text-black">Bank (IFSC)</th>
+                              <th className="p-3 font-medium text-black">Branch</th>
+                              <th className="p-3 font-medium text-black">Amount</th>
+                              <th className="p-3 font-medium text-black">AED</th>
+                              <th className="p-3 font-medium text-black text-center">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {accounts.map((acc, idx) => {
+                              const inr = parseFloat(String(acc.orderAmount || 0).replace(/,/g, '')) || 0;
+                              const rate = parseFloat(String(acc.confirmOrderAmount || 0).replace(/,/g, '')) || 0;
+                              const aed = rate > 0 ? (inr / rate) : (parseFloat(String((acc as any).aedAmount || 0).replace(/,/g, '')) || 0);
+
+                              return (
+                                <tr key={idx} className="border-b border-[#e4e4e4] last:border-0 hover:bg-[#f9fafc] bg-white">
+                                  <td className="p-3 border-r border-[#e4e4e4]">{acc.clientName}</td>
+                                  <td className="p-3 border-r border-[#e4e4e4]">{acc.accountNumber}</td>
+                                  <td className="p-3 border-r border-[#e4e4e4]">{acc.bankName} ({acc.ifscCode})</td>
+                                  <td className="p-3 border-r border-[#e4e4e4]">{acc.branchName}</td>
+                                  <td className="p-3 border-r border-[#e4e4e4] font-medium text-[#1e4676]">
+                                    ₹{inr.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                  </td>
+                                  <td className="p-3 border-r border-[#e4e4e4] font-semibold text-gray-800">
+                                    {aed > 0 ? `${aed.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED` : '-'}
+                                  </td>
+                                  <td className="p-3 text-center flex items-center justify-center gap-4">
+                                    <button 
+                                      type="button" 
+                                      onClick={() => editAccount(idx)} 
+                                      className="text-[#1a4a8c] hover:underline font-medium"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button 
+                                      type="button" 
+                                      onClick={() => removeAccount(idx)} 
+                                      className="text-red-600 hover:underline font-medium"
+                                    >
+                                      Remove
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                          <tfoot className="bg-[#eef2f9] border-t-2 border-[#c4d4ec] font-bold text-[13px]">
+                            <tr>
+                              <td colSpan={4} className="p-3 text-right text-[#1e4676] uppercase tracking-wider text-[12px] border-r border-[#c4d4ec]">
+                                Total:
+                              </td>
+                              <td className="p-3 text-[#1e4676] border-r border-[#c4d4ec]">
+                                ₹{totalAddedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                              <td className="p-3 text-[#0f5132] border-r border-[#c4d4ec]">
+                                {totalAddedAed.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED
+                              </td>
+                              <td className="p-3 text-center text-gray-500 text-[11px] font-normal italic">
+                                ({accounts.length} {accounts.length === 1 ? 'account' : 'accounts'})
                               </td>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </tfoot>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Buttons */}
                 <div className="flex gap-4 mt-2">
