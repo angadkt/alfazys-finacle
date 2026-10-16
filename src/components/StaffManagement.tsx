@@ -17,6 +17,7 @@ import {
   SlidersHorizontal 
 } from 'lucide-react';
 import api from '../services/api';
+import { dispatchStaffCredentialsEmail } from '../services/emailDispatch';
 
 interface StaffManagementProps {
   onNavigateToAddStaff?: () => void;
@@ -81,9 +82,30 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
 
     let backendSent = false;
     let backendNotice = '';
+
+    // Direct Brevo email dispatch with Dual Hero Credentials box
+    try {
+      const directResult = await dispatchStaffCredentialsEmail({
+        toEmail: staff.email,
+        fullName: staff.fullName || staff.email.split('@')[0].toUpperCase(),
+        staffCode: staff.staffCode || staff.id,
+        loginUsername: staff.loginUsername || staff.email.split('@')[0],
+        temporaryPassword: staff.password
+      });
+      if (directResult.success) {
+        backendSent = true;
+        toast.success(`Credentials dispatched to ${staff.email}!`);
+      } else {
+        backendNotice = directResult.error || '';
+      }
+    } catch (dErr: any) {
+      console.warn('Direct dispatch warning:', dErr);
+    }
+
+    // Also notify backend API
     try {
       const cleanId = staff.id.replace('STF', '');
-      const res = await api.post(`/users/by-email/${encodeURIComponent(staff.email)}/resend-credentials`, {
+      await api.post(`/users/by-email/${encodeURIComponent(staff.email)}/resend-credentials`, {
         email: staff.email,
         password: staff.password,
         fullName: staff.fullName,
@@ -98,19 +120,8 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
           username: staff.loginUsername
         });
       });
-
-      if (res.data?.emailDispatched) {
-        backendSent = true;
-        toast.success(`Credentials dispatched to ${staff.email}!`);
-      } else if (res.data?.mailResult?.error) {
-        backendNotice = res.data.mailResult.error;
-        toast.info(`Notice: ${backendNotice}`);
-      } else {
-        toast.success(`Credentials re-issued for ${staff.email}`);
-      }
     } catch (e: any) {
       console.warn('Backend resend notice:', e?.response?.data || e?.message);
-      toast.success(`Credentials regenerated for ${staff.email}`);
     }
 
     setPreviewNotification({
@@ -138,15 +149,35 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
       const notification = dbService.resendStaffCredentials(staff.id);
       let backendSent = false;
       let backendNotice = '';
+
+      // Direct Brevo email dispatch with Dual Hero Credentials box
+      try {
+        const directResult = await dispatchStaffCredentialsEmail({
+          toEmail: staff.email,
+          fullName: staff.fullName || staff.email.split('@')[0].toUpperCase(),
+          staffCode: staff.staffCode || staff.id,
+          loginUsername: staff.loginUsername || staff.email.split('@')[0],
+          temporaryPassword: newTemp
+        });
+        if (directResult.success) {
+          backendSent = true;
+          toast.success(`Password reset and delivered to ${staff.email}!`);
+        } else {
+          backendNotice = directResult.error || '';
+        }
+      } catch (dErr: any) {
+        console.warn('Direct dispatch warning:', dErr);
+      }
+
       try {
         const cleanId = staff.id.replace('STF', '');
-        const res = await api.post(`/users/by-email/${encodeURIComponent(staff.email)}/resend-credentials`, {
+        await api.post(`/users/by-email/${encodeURIComponent(staff.email)}/resend-credentials`, {
           email: staff.email,
           password: newTemp,
           fullName: staff.fullName,
           staffCode: staff.staffCode,
           username: staff.loginUsername,
-          sendEmail: true
+          sendEmail: !backendSent
         }).catch(() => {
           return api.post(`/users/${cleanId}/reset-password`, {
             email: staff.email,
@@ -156,19 +187,8 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
             username: staff.loginUsername
           });
         });
-
-        if (res.data?.emailDispatched) {
-          backendSent = true;
-          toast.success(`Password reset and delivered to ${staff.email}!`);
-        } else if (res.data?.mailResult?.error) {
-          backendNotice = res.data.mailResult.error;
-          toast.info(`Notice: ${backendNotice}`);
-        } else {
-          toast.success(`Password reset. Mandatory first-login change re-enacted for ${staff.email}`);
-        }
       } catch (e: any) {
         console.warn('Backend reset notice:', e?.response?.data || e?.message);
-        toast.success(`Password reset. Mandatory first-login change re-enacted for ${staff.email}`);
       }
 
       if (notification) {

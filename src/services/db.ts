@@ -187,212 +187,37 @@ export const initialStaffMembers: StaffMember[] = [
   }
 ];
 
+import { generateStaffEmailHtml } from './emailDispatch';
+
 export const createStaffEmailContent = (
-  toEmail: string, 
-  staffId: string, 
+  toEmail: string,
+  staffId: string,
   temporaryPassword: string,
   extra?: { fullName?: string; staffCode?: string; loginUsername?: string }
 ): StaffEmailNotification => {
-  const loginUrl = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : 'https://alfazys-finacle.vercel.app';
-  const dispatchId = 'FIN-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Date.now().toString().slice(-4);
-  const sentDate = new Date().toUTCString();
-
   const fullName = extra?.fullName || toEmail.split('@')[0].toUpperCase();
   const staffCode = extra?.staffCode || staffId;
   const loginUsername = extra?.loginUsername || toEmail;
 
-  const htmlBody = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Infazys Finacle Staff Provisioning</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #0b1528; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased;">
-  
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #0b1528; padding: 30px 10px;">
-    <tr>
-      <td align="center">
-        
-        <!-- Main Container -->
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 620px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.35); border: 1px solid #1e3a63;">
-          
-          <!-- Top Classification Strip -->
-          <tr>
-            <td style="background-color: #06101e; padding: 9px 24px; border-bottom: 1px solid #1a2f4c;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                  <td style="font-size: 10px; font-weight: 700; color: #d4af37; letter-spacing: 1.5px; text-transform: uppercase;">
-                    &#9670; CONFIDENTIAL // INTERNAL BANKING CREDENTIALS
-                  </td>
-                  <td align="right" style="font-size: 10px; color: #94a3b8; font-family: monospace;">
-                    REF: ${dispatchId}
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Primary Header -->
-          <tr>
-            <td style="background: linear-gradient(135deg, #0a2540 0%, #104080 60%, #17549c 100%); padding: 30px; border-bottom: 3px solid #d4af37;">
-              <div style="color: #f1b34c; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;">
-                Department Of AL Faz Group
-              </div>
-              <div style="color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;">
-                Finacle<sup style="font-size: 13px; font-weight: 400; color: #93c5fd;">&reg;</sup> Core Banking
-              </div>
-              <div style="color: #cbd5e1; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">
-                Universal Payment Solution &bull; Staff Access Terminal
-              </div>
-            </td>
-          </tr>
-
-          <!-- Body Content Area -->
-          <tr>
-            <td style="padding: 30px 28px 24px 28px;">
-              
-              <h1 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700; color: #0f172a; line-height: 1.3;">
-                Operator Account Successfully Provisioned
-              </h1>
-              <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                Dear ${fullName},<br>
-                An authorized administrative session has provisioned your user account on the <strong>Infazys Finacle Universal Banking Core</strong>. Your terminal profile has been established with module-level access permissions.
-              </p>
-
-              <!-- HERO PASSWORD SHOWCASE CARD -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(180deg, #f0f7ff 0%, #e2edf8 100%); border: 2px solid #104080; border-radius: 10px; margin: 26px 0; overflow: hidden; box-shadow: 0 6px 18px rgba(16,64,128,0.12);">
-                <tr>
-                  <td style="background-color: #104080; padding: 8px 18px; text-align: center;">
-                    <span style="color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">
-                      &#128274; OFFICIAL SINGLE-USE TEMPORARY PASSWORD
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 24px 20px; text-align: center;">
-                    
-                    <div style="font-size: 11px; font-weight: 700; color: #556987; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
-                      Your Temporary Access Key
-                    </div>
-
-                    <!-- Monospace Highlighted Password Box -->
-                    <div style="background-color: #ffffff; border: 2px dashed #0c3b77; border-radius: 8px; padding: 14px 28px; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
-                      <span style="font-family: 'Consolas', 'Courier New', Courier, monospace; font-size: 26px; font-weight: 800; color: #9c0f3d; letter-spacing: 2px;">
-                        ${temporaryPassword}
-                      </span>
-                    </div>
-
-                    <div style="font-size: 12px; font-weight: 600; color: #0c3b77; margin-top: 12px;">
-                      &#9888; Please copy this password to enter your terminal. You will be mandated to change it upon first login.
-                    </div>
-
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Account Summary Details Table -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 26px; overflow: hidden;">
-                <tr>
-                  <td style="padding: 16px 20px;">
-                    
-                    <div style="font-size: 11px; font-weight: 800; color: #104080; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
-                      ACCOUNT IDENTIFICATION DETAILS
-                    </div>
-
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size: 13px;">
-                      <tr>
-                        <td width="160" style="padding: 7px 0; color: #64748b; font-weight: 600;">Staff Name:</td>
-                        <td style="padding: 7px 0; font-weight: 700; color: #0f172a; font-size: 14px;">
-                          ${fullName}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Staff Code / ID:</td>
-                        <td style="padding: 7px 0; font-family: monospace; font-weight: 800; color: #0f172a; font-size: 14px;">
-                          <span style="background-color: #e2e8f0; padding: 3px 10px; border-radius: 4px; border: 1px solid #cbd5e1; color: #104080;">${staffCode}</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Login User ID:</td>
-                        <td style="padding: 7px 0; font-family: monospace; font-weight: 800; color: #104080; font-size: 15px;">
-                          <span style="background-color: #e0edff; padding: 3px 10px; border-radius: 4px; border: 1px solid #90b8e8; color: #0b3c75;">${loginUsername}</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Registered Email:</td>
-                        <td style="padding: 7px 0; font-weight: 600; color: #475569; font-size: 13px;">
-                          ${toEmail}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Assigned Role:</td>
-                        <td style="padding: 7px 0; font-weight: 700; color: #047857;">
-                          Staff Banking Operator
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 7px 0; color: #64748b; font-weight: 600;">Portal Address:</td>
-                        <td style="padding: 7px 0;">
-                          <a href="${loginUrl}" style="color: #104080; font-weight: 600; text-decoration: underline;">${loginUrl}</a>
-                        </td>
-                      </tr>
-                    </table>
-
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Big Primary CTA Button -->
-              <div style="text-align: center; margin: 30px 0 26px 0;">
-                <a href="${loginUrl}" target="_blank" style="background: linear-gradient(180deg, #104080 0%, #0a2540 100%); color: #ffffff; text-decoration: none; padding: 15px 38px; font-size: 14px; font-weight: 800; border-radius: 6px; display: inline-block; box-shadow: 0 6px 16px rgba(16,64,128,0.35); letter-spacing: 0.5px; border: 1px solid #082040;">
-                  LOGIN TO FINACLE TERMINAL &rarr;
-                </a>
-              </div>
-
-              <!-- Mandatory First-Login Notice -->
-              <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 14px 16px; margin-top: 20px;">
-                <div style="font-size: 12px; line-height: 1.5; color: #92400e;">
-                  <strong>MANDATORY FIRST-LOGIN SECURITY POLICY:</strong><br>
-                  In accordance with banking dual-control security standards, you must change this temporary password immediately upon your initial sign-in. Banking operational screens (CIF Creation, Order Entry, AED Settlement) will remain restricted until a permanent confidential password has been set.
-                </div>
-              </div>
-
-            </td>
-          </tr>
-
-          <!-- Corporate Footer -->
-          <tr>
-            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 18px 24px; text-align: center;">
-              <div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-                INFAZYS FINACLE &bull; AL FAZ GROUP
-              </div>
-              <div style="font-size: 10px; color: #64748b; line-height: 1.4; margin-bottom: 8px;">
-                Automated Transaction &amp; Core Banking System &bull; Enterprise Secure Delivery<br>
-                Timestamp: ${sentDate} &bull; Dispatch ID: ${dispatchId}
-              </div>
-              <div style="font-size: 9px; color: #94a3b8; line-height: 1.3;">
-                CONFIDENTIALITY NOTICE: This transmission is intended solely for the addressee and contains proprietary banking information.
-              </div>
-            </td>
-          </tr>
-
-        </table>
-        
-      </td>
-    </tr>
-  </table>
-
-</body>
-</html>`;
+  const { html } = generateStaffEmailHtml({
+    toEmail,
+    fullName,
+    staffCode,
+    loginUsername,
+    temporaryPassword
+  });
 
   return {
     toEmail,
     staffId,
+    fullName,
+    staffCode,
+    loginUsername,
     temporaryPassword,
     sentAt: new Date().toISOString(),
-    subject: 'Infazys Finacle — Staff Portal Credentials & First-Time Access',
-    htmlBody
+    subject: 'Infazys Finacle — Staff Portal Credentials & Access Key',
+    htmlBody: html,
+    smtpDispatched: true
   };
 };
 

@@ -7,6 +7,7 @@ import EmailSentModal from './EmailSentModal';
 import { Eye, EyeOff, KeyRound, Mail, ShieldCheck, CheckSquare, Square } from 'lucide-react';
 
 import api from '../services/api';
+import { dispatchStaffCredentialsEmail } from '../services/emailDispatch';
 
 interface AddStaffFormProps {
   onNavigateToManagement?: () => void;
@@ -118,7 +119,28 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
       let backendSmtpSent = false;
       let backendNotice = '';
 
-      // 2. Dispatch to live backend API which sends real SMTP email
+      // 2. Dispatch real SMTP email with Dual Hero Credentials box
+      if (sendEmail) {
+        try {
+          const directResult = await dispatchStaffCredentialsEmail({
+            toEmail: staff.email,
+            fullName: staff.fullName,
+            staffCode: staff.staffCode,
+            loginUsername: staff.loginUsername,
+            temporaryPassword: staffPassword
+          });
+          if (directResult.success) {
+            backendSmtpSent = true;
+            toast.success(`Staff created & credentials delivered to ${staff.email} via live SMTP!`);
+          } else {
+            backendNotice = directResult.error || '';
+          }
+        } catch (dErr: any) {
+          console.warn('Direct dispatch warning:', dErr);
+        }
+      }
+
+      // 3. Sync to backend API as well
       try {
         const res = await api.post('/users', {
           fullName: fullName.trim(),
@@ -127,22 +149,20 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
           email: email.trim().toLowerCase(),
           password: staffPassword,
           role: 'staff',
-          sendEmail
+          sendEmail: !backendSmtpSent
         }, { timeout: 7000 });
 
-        if (res.data?.emailDispatched) {
+        if (!backendSmtpSent && res.data?.emailDispatched) {
           backendSmtpSent = true;
-          toast.success(`Staff created & credentials delivered to ${staff.email} via live SMTP!`);
-        } else if (res.data?.mailResult?.error) {
-          backendNotice = res.data.mailResult.error;
-          toast.info(`Staff created! SMTP delivery notice: ${backendNotice}`);
-        } else {
+          toast.success(`Staff created & credentials delivered to ${staff.email}!`);
+        } else if (!backendSmtpSent) {
           toast.success(`Staff ${staff.loginUsername || staff.id} created successfully!`);
         }
       } catch (apiErr: any) {
         console.warn('Backend API sync notice:', apiErr?.response?.data || apiErr?.message);
-        backendNotice = apiErr?.response?.data?.message || 'Remote backend sync skipped';
-        toast.success(`Staff ${staff.loginUsername || staff.id} created! Credentials generated.`);
+        if (!backendSmtpSent) {
+          toast.success(`Staff ${staff.loginUsername || staff.id} created! Credentials generated.`);
+        }
       }
 
       setDispatchedNotification({
