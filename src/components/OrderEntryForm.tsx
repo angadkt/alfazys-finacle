@@ -194,6 +194,18 @@ export default function OrderEntryForm() {
   const activeRole = localStorage.getItem('infazys_finacle_active_role');
   const isAdmin = activeRole === 'super_admin' || activeRole === 'admin';
 
+  // Delete Individual Receiver State
+  const [deleteReceiverTarget, setDeleteReceiverTarget] = useState<{
+    orderId: string;
+    orderNo: string;
+    receiverIndex: number;
+    clientName: string;
+    accountNumber: string;
+    inrAmount: string | number;
+    aedAmount: string | number;
+  } | null>(null);
+  const [isDeletingReceiver, setIsDeletingReceiver] = useState(false);
+
   // View Orders State
   const [fetchedOrders, setFetchedOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -583,6 +595,50 @@ export default function OrderEntryForm() {
       } catch (err: any) {
         alert('Error deleting order: ' + (err.response?.data?.message || err.message));
       }
+    }
+  };
+
+  const handleConfirmDeleteReceiver = async () => {
+    if (!deleteReceiverTarget) return;
+    const { orderId, receiverIndex } = deleteReceiverTarget;
+    const order = fetchedOrders.find(o => String(o.id) === String(orderId));
+    if (!order) return;
+
+    let recs = order.receivers_data;
+    if (typeof recs === 'string') {
+      try { recs = JSON.parse(recs); } catch { recs = []; }
+    }
+    if (!Array.isArray(recs)) return;
+
+    const remainingAccounts = recs.filter((_, idx) => idx !== receiverIndex);
+
+    setIsDeletingReceiver(true);
+    try {
+      const apiPayload = {
+        party_id: order.party_id || null,
+        buyer_id: order.buyer_id || null,
+        txn: order.txn || "gateway",
+        order_date: order.order_date ? order.order_date.split('T')[0] : new Date().toLocaleDateString('en-CA'),
+        account_id: order.account_id || null,
+        transaction_through: order.transaction_through || null,
+        payment_status: order.payment_status || "Pending",
+        accounts: remainingAccounts,
+        note: order.note || "Order marking the sale yet to happen"
+      };
+
+      const res = await api.put(`/records/orders/${orderId}`, apiPayload);
+      const updatedRecord = res.data?.record;
+      if (updatedRecord) {
+        setFetchedOrders(prev => prev.map(item =>
+          String(item.id) === String(orderId) ? { ...item, ...updatedRecord } : item
+        ));
+      }
+      fetchOrders(currentPage, searchQuery, filterDate, filterAgent);
+      setDeleteReceiverTarget(null);
+    } catch (err: any) {
+      alert('Failed to delete receiver: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsDeletingReceiver(false);
     }
   };
 
@@ -1255,6 +1311,9 @@ export default function OrderEntryForm() {
                                         <th className="p-1.5 border border-[#c4d4ec] font-bold">AED Amount</th>
                                         <th className="p-1.5 border border-[#c4d4ec] font-bold">Servicer</th>
                                         <th className="p-1.5 border border-[#c4d4ec] font-bold">Payment Status</th>
+                                        {isAdmin && (
+                                          <th className="p-1.5 border border-[#c4d4ec] font-bold text-center">Action</th>
+                                        )}
                                       </tr>
                                     </thead>
                                     <tbody>
@@ -1320,6 +1379,26 @@ export default function OrderEntryForm() {
                                                 </button>
                                               )}
                                             </td>
+                                            {isAdmin && (
+                                              <td className="p-1.5 border border-[#c4d4ec] text-center" onClick={e => e.stopPropagation()}>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setDeleteReceiverTarget({
+                                                    orderId: String(o.id),
+                                                    orderNo: o.order_no || `OR-${o.id}`,
+                                                    receiverIndex: idx,
+                                                    clientName: rec.clientName || 'Beneficiary',
+                                                    accountNumber: rec.accountNumber || '-',
+                                                    inrAmount: rec.orderAmount || 0,
+                                                    aedAmount: recAed
+                                                  })}
+                                                  className="bg-white border border-red-300 text-red-600 hover:bg-red-50 hover:border-red-600 font-bold px-2 py-0.5 rounded text-[10px] transition-colors cursor-pointer shadow-2xs"
+                                                  title="Delete this beneficiary from order"
+                                                >
+                                                  Delete
+                                                </button>
+                                              </td>
+                                            )}
                                           </tr>
                                         );
                                       })}
@@ -2127,6 +2206,83 @@ export default function OrderEntryForm() {
         initialDate={filterDate || new Date().toISOString().slice(0, 10)}
         onRateSaved={handleCostRateSaved}
       />
+
+      {/* Confirm Delete Receiver Modal (Admin/Super Admin only) */}
+      {deleteReceiverTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
+            onClick={() => !isDeletingReceiver && setDeleteReceiverTarget(null)}
+          ></div>
+          <div className="bg-white border-2 border-[#1e4676] rounded-md shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Title Bar */}
+            <div className="bg-[#1e4676] text-white px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-sm tracking-wide">
+                <span>⚠️</span>
+                <span>Confirm Beneficiary Deletion</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => !isDeletingReceiver && setDeleteReceiverTarget(null)}
+                className="text-white hover:text-red-300 text-lg font-bold leading-none cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 text-xs text-gray-700 space-y-4">
+              <p className="text-[13px] text-gray-800">
+                Are you sure you want to permanently delete this beneficiary from Order <strong className="text-[#1e4676] font-bold">{deleteReceiverTarget.orderNo}</strong>?
+              </p>
+
+              {/* Summary Card */}
+              <div className="bg-[#f8fafc] border border-[#cbd5e1] rounded p-3 space-y-2">
+                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
+                  <span className="text-gray-500 font-medium">Client / Beneficiary:</span>
+                  <span className="font-bold text-gray-900">{deleteReceiverTarget.clientName}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
+                  <span className="text-gray-500 font-medium">Account Number:</span>
+                  <span className="font-mono font-bold text-gray-900">{deleteReceiverTarget.accountNumber}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
+                  <span className="text-gray-500 font-medium">INR Amount:</span>
+                  <span className="font-bold text-black">₹{parseFloat(String(deleteReceiverTarget.inrAmount).replace(/,/g, '') || '0').toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">AED Amount:</span>
+                  <span className="font-bold text-emerald-700">{deleteReceiverTarget.aedAmount} AED</span>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 rounded text-[11px] leading-relaxed">
+                <strong>Notice:</strong> This action permanently removes this entry from the database. The order's total INR, AED, and receiver count will automatically recalculate.
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-[#f1f5f9] border-t border-[#cbd5e1] px-4 py-3 flex justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={isDeletingReceiver}
+                onClick={() => setDeleteReceiverTarget(null)}
+                className="px-4 py-1.5 bg-white border border-[#cbd5e1] text-gray-700 hover:bg-gray-100 rounded text-xs font-semibold cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingReceiver}
+                onClick={handleConfirmDeleteReceiver}
+                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+              >
+                {isDeletingReceiver ? 'Deleting...' : 'Yes, Delete Beneficiary'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
