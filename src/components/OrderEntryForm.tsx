@@ -1272,25 +1272,25 @@ export default function OrderEntryForm() {
                                               : 'bg-amber-100 text-amber-800 border-amber-300';
                                         return (
                                           <tr key={idx} className="hover:bg-[#eef3fb] bg-white">
-                                            <td className="p-1.5 border border-[#c4d4ec] text-gray-500">{idx + 1}</td>
-                                            <td className="p-1.5 border border-[#c4d4ec] font-medium">{rec.clientName || '-'}</td>
-                                            <td className="p-1.5 border border-[#c4d4ec] font-mono">{rec.accountNumber || '-'}</td>
-                                            <td className="p-1.5 border border-[#c4d4ec] font-mono text-gray-600">{rec.ifscCode || '-'}</td>
-                                            <td className="p-1.5 border border-[#c4d4ec] text-gray-700">
-                                              <div className="font-medium">{rec.bankName || '-'}</div>
-                                              {rec.branchName && <div className="text-gray-400 text-[10px]">{rec.branchName}</div>}
+                                            <td className="p-1.5 border border-[#c4d4ec] font-bold text-gray-600">{idx + 1}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-bold text-gray-900">{rec.clientName || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-bold font-mono text-gray-900">{rec.accountNumber || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-bold font-mono text-gray-700">{rec.ifscCode || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] text-gray-800">
+                                              <div className="font-bold">{rec.bankName || '-'}</div>
+                                              {rec.branchName && <div className="text-gray-600 font-bold text-[10px]">{rec.branchName}</div>}
                                             </td>
-                                            <td className="p-1.5 border border-[#c4d4ec] font-semibold">
+                                            <td className="p-1.5 border border-[#c4d4ec] font-bold text-black">
                                               <div>₹ {rec.orderAmount || '-'}</div>
                                               {recStatus.toLowerCase() === 'partial' && (
-                                                <div className="text-[9.5px] font-normal text-blue-700 mt-0.5">
+                                                <div className="text-[9.5px] font-bold text-blue-700 mt-0.5">
                                                   Paid: ₹{(parseFloat(rec.paid_amount) || 0).toLocaleString('en-IN')}
                                                 </div>
                                               )}
                                             </td>
-                                            <td className="p-1.5 border border-[#c4d4ec]">{rec.confirmOrderAmount || '-'}</td>
-                                            <td className="p-1.5 border border-[#c4d4ec] font-semibold text-emerald-700">AED {recAed}</td>
-                                            <td className="p-1.5 border border-[#c4d4ec] text-gray-700">{rec.servicer || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-bold text-gray-900">{rec.confirmOrderAmount || '-'}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-bold text-emerald-700">AED {recAed}</td>
+                                            <td className="p-1.5 border border-[#c4d4ec] font-bold text-gray-800">{rec.servicer || '-'}</td>
                                             <td className="p-1.5 border border-[#c4d4ec]">
                                               <select
                                                 value={recStatus}
