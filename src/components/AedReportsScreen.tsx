@@ -1,6 +1,7 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
+import CostRateModal from './CostRateModal';
 
 interface Customer {
   id: string;
@@ -14,8 +15,8 @@ export default function AedReportsScreen() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [receivedAedTotalSum, setReceivedAedTotalSum] = useState<number>(0);
-  const [receivedRecords, setReceivedRecords] = useState<any[]>([]);
   const [currentCostRate, setCurrentCostRate] = useState<number | null>(null);
+  const [isCostRateModalOpen, setIsCostRateModalOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
   // Fetch Customers list
@@ -37,22 +38,27 @@ export default function AedReportsScreen() {
   }, []);
 
   // Fetch Cost Rate
-  useEffect(() => {
-    const fetchCostRate = async () => {
-      try {
-        const dateParam = filterDate || new Date().toISOString().slice(0, 10);
-        const res = await api.get(`/records/rates/daily?date=${dateParam}`);
-        if (res.data && res.data.cost_rate) {
-          setCurrentCostRate(parseFloat(res.data.cost_rate));
-        } else {
-          setCurrentCostRate(null);
-        }
-      } catch {
+  const fetchCostRate = async () => {
+    try {
+      const dateParam = filterDate || new Date().toISOString().slice(0, 10);
+      const res = await api.get(`/records/cost-rate?date=${encodeURIComponent(dateParam)}`);
+      if (res.data?.cost_rate !== null && res.data?.cost_rate !== undefined) {
+        setCurrentCostRate(parseFloat(res.data.cost_rate));
+      } else {
         setCurrentCostRate(null);
       }
-    };
+    } catch {
+      setCurrentCostRate(null);
+    }
+  };
+
+  useEffect(() => {
     fetchCostRate();
   }, [filterDate]);
+
+  const handleCostRateSaved = (_date: string, rate: number) => {
+    setCurrentCostRate(rate);
+  };
 
   // Fetch Orders and Received AED data
   const fetchData = async () => {
@@ -76,12 +82,6 @@ export default function AedReportsScreen() {
       }
       const aedSumRes = await api.get(aedSumUrl);
       setReceivedAedTotalSum(parseFloat(aedSumRes.data?.totalAedSum || 0));
-
-      // 3. Fetch Received AED items for mode breakdown
-      let recUrl = `/records/received-aed?limit=100`;
-      if (filterDate) recUrl += `&date=${encodeURIComponent(filterDate)}`;
-      const recRes = await api.get(recUrl);
-      setReceivedRecords(recRes.data?.records || []);
     } catch (err) {
       console.error('Failed to load AED report data:', err);
     } finally {
@@ -215,16 +215,66 @@ export default function AedReportsScreen() {
     };
   }, [orders, currentCostRate, receivedAedTotalSum]);
 
-  // Mode breakdown for chart
-  const modeBreakdown = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const r of receivedRecords) {
-      const mode = (r.mode_of_txn || 'OTHER').toUpperCase();
-      const amt = parseFloat(r.aed_amount || 0);
-      map[mode] = (map[mode] || 0) + amt;
+  // Top Agents / Counterparties Leaderboard by Volume
+  const agentLeaderboard = useMemo(() => {
+    const map: Record<string, { name: string; aed: number; inr: number; count: number }> = {};
+    for (const o of orders) {
+      if (!o) continue;
+      let name = (o.party_name || o.agent_customer || '').trim();
+      if (!name && o.party_id) {
+        const match = customers.find(c => String(c.internal_id) === String(o.party_id) || c.id === o.party_id);
+        name = match ? match.name : `CIF: ${o.party_id}`;
+      }
+      if (!name) name = 'Direct / Counter Client';
+
+      // Calculate order AED
+      let aed = 0;
+      if (o.aed_amount !== undefined && o.aed_amount !== null && o.aed_amount !== '') {
+        const parsed = typeof o.aed_amount === 'number' ? o.aed_amount : parseFloat(String(o.aed_amount).replace(/,/g, ''));
+        if (!isNaN(parsed) && isFinite(parsed)) aed = parsed;
+      }
+      if (aed === 0 && o.receivers_data) {
+        let recs = o.receivers_data;
+        if (typeof recs === 'string') {
+          try { recs = JSON.parse(recs); } catch { recs = []; }
+        }
+        if (Array.isArray(recs)) {
+          aed = recs.reduce((sum: number, acc: any) => {
+            const amt = parseFloat(String(acc?.orderAmount || '').replace(/,/g, ''));
+            const rate = parseFloat(String(acc?.confirmOrderAmount || '').replace(/,/g, ''));
+            return (!isNaN(amt) && !isNaN(rate) && rate > 0) ? sum + (amt / rate) : sum;
+          }, 0);
+        }
+      }
+
+      // Calculate order INR
+      let inr = 0;
+      if (o.inr_value !== undefined && o.inr_value !== null && o.inr_value !== '') {
+        const parsed = typeof o.inr_value === 'number' ? o.inr_value : parseFloat(String(o.inr_value).replace(/,/g, ''));
+        if (!isNaN(parsed) && isFinite(parsed)) inr = parsed;
+      } else if (o.receivers_data) {
+        let recs = o.receivers_data;
+        if (typeof recs === 'string') {
+          try { recs = JSON.parse(recs); } catch { recs = []; }
+        }
+        if (Array.isArray(recs)) {
+          inr = recs.reduce((sum: number, acc: any) => {
+            const amt = parseFloat(String(acc?.orderAmount || '').replace(/,/g, ''));
+            return !isNaN(amt) ? sum + amt : sum;
+          }, 0);
+        }
+      }
+
+      if (!map[name]) {
+        map[name] = { name, aed: 0, inr: 0, count: 0 };
+      }
+      map[name].aed += aed;
+      map[name].inr += inr;
+      map[name].count += 1;
     }
-    return map;
-  }, [receivedRecords]);
+
+    return Object.values(map).sort((a, b) => b.aed - a.aed);
+  }, [orders, customers]);
 
   return (
     <div className="flex-1 bg-[#d4d0c8] flex flex-col h-full overflow-hidden select-none" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
@@ -341,61 +391,61 @@ export default function AedReportsScreen() {
           </div>
         </div>
 
-        {/* SUMMARY CARDS SECTION — Preserved exactly as in OrderEntryForm */}
-        <div className="p-4 space-y-4">
+        {/* SUMMARY CARDS SECTION — Ultra-Compact Slim Mode matching OrderEntryForm */}
+        <div className="p-3 space-y-2.5">
           {/* ── Group 1: AED Collections (3 Cards) ── */}
-          <div>
-            <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#104080] mb-1.5 flex items-center gap-1.5">
+          <div className="mb-2">
+            <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080] mb-1 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#104080]"></span>
               AED Collections (Agent Receivables)
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {/* 1. Total AED */}
-              <div className="bg-[#f4f7fb] border border-[#a2b5cd] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+              <div className="bg-[#f4f7fb] border border-[#a2b5cd] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#104080]">Total AED Amount</span>
-                    <span className="text-[10px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] px-2 py-0.5 rounded-full">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080]">Total AED Amount</span>
+                    <span className="text-[9px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] px-1.5 py-0.2 rounded-full">
                       {orderCount} Order{orderCount !== 1 ? 's' : ''}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-[11px] font-bold text-[#104080]">AED</span>
-                    <span className="text-[20px] font-extrabold text-[#104080] tracking-tight font-mono">
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-[10px] font-bold text-[#104080]">AED</span>
+                    <span className="text-[15px] font-extrabold text-[#104080] tracking-tight font-mono">
                       {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
-                <div className="text-[9.5px] text-gray-500 mt-2 pt-1.5 border-t border-[#d0dbe8] flex items-center justify-between">
+                <div className="text-[9px] text-gray-500 mt-1.5 pt-1 border-t border-[#d0dbe8] flex items-center justify-between">
                   <span>Gross Order Value</span>
                   <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
                 </div>
               </div>
 
               {/* 2. Received AED */}
-              <div className="bg-[#f0fbf4] border border-[#7ec89b] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+              <div className="bg-[#f0fbf4] border border-[#7ec89b] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0f5132]">Received AED</span>
-                    <span className="text-[10px] font-bold text-[#0f5132] bg-[#dcf5e3] border border-[#9ed9b4] px-2 py-0.5 rounded-full">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#0f5132]">Received AED</span>
+                    <span className="text-[9px] font-bold text-[#0f5132] bg-[#dcf5e3] border border-[#9ed9b4] px-1.5 py-0.2 rounded-full">
                       {aedCollectionPct.toFixed(1)}% Collected
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-[11px] font-bold text-[#0f5132]">AED</span>
-                    <span className="text-[20px] font-extrabold text-[#0f5132] tracking-tight font-mono">
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-[10px] font-bold text-[#0f5132]">AED</span>
+                    <span className="text-[15px] font-extrabold text-[#0f5132] tracking-tight font-mono">
                       {receivedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
-                <div className="mt-2 pt-1.5 border-t border-[#c6e6cf]">
-                  <div className="flex items-center justify-between text-[9.5px] text-[#0f5132] font-semibold mb-1">
+                <div className="mt-1.5 pt-1 border-t border-[#c6e6cf]">
+                  <div className="flex items-center justify-between text-[9px] text-[#0f5132] font-semibold mb-0.5">
                     <span>Collection Progress</span>
                     <span>{aedCollectionPct.toFixed(1)}%</span>
                   </div>
-                  <div className="w-full bg-[#d5ecd9] h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-[#d5ecd9] h-1 rounded-full overflow-hidden">
                     <div 
-                      className="bg-[#0f5132] h-full rounded-full transition-all duration-300"
+                      className="bg-[#0f5132] h-full rounded-full transition-all duration-300" 
                       style={{ width: `${aedCollectionPct}%` }}
                     ></div>
                   </div>
@@ -403,22 +453,22 @@ export default function AedReportsScreen() {
               </div>
 
               {/* 3. Pending AED */}
-              <div className="bg-[#fef9ec] border border-[#fae29c] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+              <div className="bg-[#fef9ec] border border-[#fae29c] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#92400e]">Pending AED</span>
-                    <span className="text-[10px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#92400e]">Pending AED</span>
+                    <span className="text-[9px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-1.5 py-0.2 rounded-full">
                       {pendingAed === 0 ? "Fully Cleared" : "Awaiting Receipt"}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-[11px] font-bold text-[#92400e]">AED</span>
-                    <span className="text-[20px] font-extrabold text-[#92400e] tracking-tight font-mono">
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-[10px] font-bold text-[#92400e]">AED</span>
+                    <span className="text-[15px] font-extrabold text-[#92400e] tracking-tight font-mono">
                       {pendingAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
-                <div className="text-[9.5px] text-[#92400e] mt-2 pt-1.5 border-t border-[#fae6b2] flex items-center justify-between">
+                <div className="text-[9px] text-[#92400e] mt-1.5 pt-1 border-t border-[#fae6b2] flex items-center justify-between">
                   <span>Outstanding Balance</span>
                   <span className="font-semibold">{pendingAed === 0 ? "All Collected" : "Pending from Agents"}</span>
                 </div>
@@ -427,58 +477,58 @@ export default function AedReportsScreen() {
           </div>
 
           {/* ── Group 2: INR Remittances (3 Cards) ── */}
-          <div>
-            <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#1e4676] mb-1.5 flex items-center gap-1.5">
+          <div className="mb-2">
+            <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#1e4676] mb-1 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#1e4676]"></span>
               INR Remittances (Beneficiary Payouts)
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {/* 4. Total INR */}
-              <div className="bg-[#f8f9fc] border border-[#c4d4ec] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+              <div className="bg-[#f8f9fc] border border-[#c4d4ec] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#1e4676]">Total INR Amount</span>
-                    <span className="text-[10px] font-bold text-[#1e4676] bg-[#eef3fb] border border-[#c4d4ec] px-2 py-0.5 rounded-full">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#1e4676]">Total INR Amount</span>
+                    <span className="text-[9px] font-bold text-[#1e4676] bg-[#eef3fb] border border-[#c4d4ec] px-1.5 py-0.2 rounded-full">
                       Total Obligation
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-[11px] font-bold text-[#1e4676]">INR</span>
-                    <span className="text-[20px] font-extrabold text-[#1e4676] tracking-tight font-mono">
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-[10px] font-bold text-[#1e4676]">INR</span>
+                    <span className="text-[15px] font-extrabold text-[#1e4676] tracking-tight font-mono">
                       ₹ {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
-                <div className="text-[9.5px] text-gray-500 mt-2 pt-1.5 border-t border-[#d8e2ef] flex items-center justify-between">
+                <div className="text-[9px] text-gray-500 mt-1.5 pt-1 border-t border-[#d8e2ef] flex items-center justify-between">
                   <span>Remittance Volume</span>
                   <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
                 </div>
               </div>
 
               {/* 5. Transferred INR */}
-              <div className="bg-[#f0fbf6] border border-[#7ed8a7] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+              <div className="bg-[#f0fbf6] border border-[#7ed8a7] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0d6e5a]">Transferred INR</span>
-                    <span className="text-[10px] font-bold text-[#0d6e5a] bg-[#d6f5e8] border border-[#a2e8c8] px-2 py-0.5 rounded-full">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#0d6e5a]">Transferred INR</span>
+                    <span className="text-[9px] font-bold text-[#0d6e5a] bg-[#d6f5e8] border border-[#a2e8c8] px-1.5 py-0.2 rounded-full">
                       {inrTransferPct.toFixed(1)}% Dispatched
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-[11px] font-bold text-[#0d6e5a]">INR</span>
-                    <span className="text-[20px] font-extrabold text-[#0d6e5a] tracking-tight font-mono">
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-[10px] font-bold text-[#0d6e5a]">INR</span>
+                    <span className="text-[15px] font-extrabold text-[#0d6e5a] tracking-tight font-mono">
                       ₹ {transferredInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
-                <div className="mt-2 pt-1.5 border-t border-[#bce8d2]">
-                  <div className="flex items-center justify-between text-[9.5px] text-[#0d6e5a] font-semibold mb-1">
+                <div className="mt-1.5 pt-1 border-t border-[#bce8d2]">
+                  <div className="flex items-center justify-between text-[9px] text-[#0d6e5a] font-semibold mb-0.5">
                     <span>Payout Progress ({paidOrdersCount} Paid{partialOrdersCount > 0 ? `, ${partialOrdersCount} Partial` : ''})</span>
                     <span>{inrTransferPct.toFixed(1)}%</span>
                   </div>
-                  <div className="w-full bg-[#d0f0e0] h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-[#d0f0e0] h-1 rounded-full overflow-hidden">
                     <div 
-                      className="bg-[#0d6e5a] h-full rounded-full transition-all duration-300"
+                      className="bg-[#0d6e5a] h-full rounded-full transition-all duration-300" 
                       style={{ width: `${inrTransferPct}%` }}
                     ></div>
                   </div>
@@ -486,22 +536,22 @@ export default function AedReportsScreen() {
               </div>
 
               {/* 6. Uncleared INR */}
-              <div className="bg-[#fffbf2] border border-[#f5d58f] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+              <div className="bg-[#fffbf2] border border-[#f5d58f] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#854d0e]">Uncleared INR</span>
-                    <span className="text-[10px] font-bold text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#854d0e]">Uncleared INR</span>
+                    <span className="text-[9px] font-bold text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] px-1.5 py-0.2 rounded-full">
                       {unclearedInr === 0 ? "All Paid" : "Remaining to Pay"}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-[11px] font-bold text-[#854d0e]">INR</span>
-                    <span className="text-[20px] font-extrabold text-[#854d0e] tracking-tight font-mono">
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-[10px] font-bold text-[#854d0e]">INR</span>
+                    <span className="text-[15px] font-extrabold text-[#854d0e] tracking-tight font-mono">
                       ₹ {unclearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
-                <div className="text-[9.5px] text-[#854d0e] mt-2 pt-1.5 border-t border-[#fae6b2] flex items-center justify-between">
+                <div className="text-[9px] text-[#854d0e] mt-1.5 pt-1 border-t border-[#fae6b2] flex items-center justify-between">
                   <span>Pending Beneficiary Payouts</span>
                   <span className="font-semibold text-gray-700">
                     {unclearedInr === 0 ? "All Beneficiaries Paid" : "Awaiting Bank Settlement"}
@@ -520,8 +570,27 @@ export default function AedReportsScreen() {
                   Net Profit & Forex Yield Audit
                 </span>
               </div>
-              <div className="text-xs text-gray-600">
-                Current Cost Rate: <strong className="text-[#1e4676]">{currentCostRate ? currentCostRate.toFixed(4) : 'Not configured'}</strong>
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <span>Current Cost Rate:</span>
+                {currentCostRate ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsCostRateModalOpen(true)}
+                    className="font-bold text-[#0d6e5a] bg-[#d6f5e8] border border-[#a2e8c8] hover:bg-[#bbf0d8] px-2.5 py-0.5 rounded-full transition-colors cursor-pointer text-xs"
+                    title="Click to view or edit cost rate"
+                  >
+                    Cost: {currentCostRate.toFixed(4)}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsCostRateModalOpen(true)}
+                    className="font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] hover:bg-[#dbe8f9] px-2.5 py-0.5 rounded-full transition-colors cursor-pointer text-xs"
+                    title="Click to set daily cost rate"
+                  >
+                    Set Rate
+                  </button>
+                )}
               </div>
             </div>
 
@@ -647,28 +716,69 @@ export default function AedReportsScreen() {
                 </div>
               </div>
 
-              {/* Mode Breakdown Pie/Metric Card */}
-              <div className="bg-[#f8f9fa] border border-[#c4d4ec] rounded p-3 flex flex-col justify-between">
+              {/* Top Agents / Counterparties Leaderboard Card */}
+              <div className="bg-[#f8f9fa] border border-[#c4d4ec] rounded p-3 flex flex-col justify-between shadow-xs">
                 <div>
-                  <span className="text-[11px] font-bold text-[#1e4676] uppercase tracking-wider block mb-2 border-b border-[#e4e4e4] pb-1">
-                    Collection Channels Share
-                  </span>
-                  {Object.keys(modeBreakdown).length === 0 ? (
-                    <div className="text-center py-8 text-gray-400 text-xs">No collections recorded for this filter.</div>
+                  <div className="flex items-center justify-between mb-2 border-b border-[#e4e4e4] pb-1.5">
+                    <span className="text-[11px] font-bold text-[#1e4676] uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-[#1e4676]"></span>
+                      Top Agents by Volume
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-semibold">
+                      {agentLeaderboard.length} {agentLeaderboard.length === 1 ? 'Counterparty' : 'Counterparties'}
+                    </span>
+                  </div>
+
+                  {agentLeaderboard.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400 text-xs">No orders recorded for this filter.</div>
                   ) : (
-                    <div className="space-y-2 mt-2">
-                      {Object.entries(modeBreakdown).map(([mode, amt]) => {
-                        const pct = receivedAed > 0 ? ((amt / receivedAed) * 100).toFixed(1) : '0';
+                    <div className="space-y-2 max-h-[225px] overflow-y-auto pr-0.5 custom-scrollbar">
+                      {agentLeaderboard.slice(0, 5).map((item, idx) => {
+                        const pct = totalAed > 0 ? ((item.aed / totalAed) * 100).toFixed(1) : '0';
+                        const rankColors = [
+                          'bg-[#d97706] text-white', // Gold #1
+                          'bg-[#64748b] text-white', // Silver #2
+                          'bg-[#b45309] text-white', // Bronze #3
+                          'bg-[#2563eb] text-white', // Blue #4
+                          'bg-[#475569] text-white'  // Slate #5
+                        ];
+                        const badgeColor = rankColors[idx] || 'bg-[#64748b] text-white';
+
                         return (
-                          <div key={mode} className="bg-white border border-[#e4e4e4] p-2 rounded">
-                            <div className="flex justify-between text-xs font-bold mb-1">
-                              <span className="text-[#1e4676]">{mode}</span>
-                              <span className="text-gray-800">{amt.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</span>
+                          <div key={item.name} className="bg-white border border-[#e2e8f0] p-2 rounded hover:border-[#a2b5cd] transition-all">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-1.5 overflow-hidden">
+                                <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded ${badgeColor} shrink-0`}>
+                                  #{idx + 1}
+                                </span>
+                                <span className="text-xs font-bold text-[#1e4676] truncate" title={item.name}>
+                                  {item.name}
+                                </span>
+                              </div>
+                              <span className="text-[10px] bg-[#f0f4f8] text-[#1e4676] font-semibold px-1.5 py-0.2 rounded border border-[#d2dfec] shrink-0">
+                                {item.count} {item.count === 1 ? 'order' : 'orders'}
+                              </span>
                             </div>
-                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                              <div className="bg-[#1e4676] h-full rounded-full" style={{ width: `${pct}%` }}></div>
+
+                            <div className="flex justify-between items-baseline text-xs mb-1">
+                              <span className="text-[10px] text-gray-500">
+                                Vol: ₹{item.inr.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                              </span>
+                              <span className="font-bold text-gray-800">
+                                {item.aed.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED
+                              </span>
                             </div>
-                            <span className="text-[9.5px] text-gray-500 mt-0.5 block text-right">{pct}% of received</span>
+
+                            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                              <div 
+                                className="bg-[#1e4676] h-full rounded-full transition-all duration-300" 
+                                style={{ width: `${Math.min(100, Math.max(2, parseFloat(pct)))}%` }}
+                              ></div>
+                            </div>
+                            <div className="flex justify-between items-center text-[9px] text-gray-400 mt-0.5">
+                              <span>Share of turnover</span>
+                              <span className="font-semibold text-gray-600">{pct}%</span>
+                            </div>
                           </div>
                         );
                       })}
@@ -676,15 +786,24 @@ export default function AedReportsScreen() {
                   )}
                 </div>
 
-                <div className="mt-3 pt-2 border-t border-[#e4e4e4] text-[10px] text-gray-500 flex justify-between">
-                  <span>Data Source: Verified Database Ledger</span>
-                  <span>Currency: AED / INR</span>
+                <div className="mt-2.5 pt-2 border-t border-[#e4e4e4] text-[10px] text-gray-500 flex justify-between items-center">
+                  <span>Source: Booked Orders Ledger</span>
+                  <span className="font-semibold text-[#1e4676]">
+                    {agentLeaderboard.length > 5 ? `Top 5 of ${agentLeaderboard.length} shown` : 'Live Order Ranking'}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <CostRateModal
+        isOpen={isCostRateModalOpen}
+        onClose={() => setIsCostRateModalOpen(false)}
+        initialDate={filterDate || new Date().toISOString().slice(0, 10)}
+        onRateSaved={handleCostRateSaved}
+      />
     </div>
   );
 }

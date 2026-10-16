@@ -937,78 +937,61 @@ export default function OrderEntryForm() {
               </div>
             </div>
 
-            {/* Executive Banking Summary Dashboard: 4 Cards */}
-            {/* ── Executive Dashboard (6 Cards: 3 AED, 3 INR) ── */}
-            <div className="mb-4 bg-white border border-[#c4d4ec] rounded-md p-3.5 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#e1e9f4]">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#1e4676]"></span>
-                  <h4 className="text-[12px] font-extrabold text-[#1e4676] uppercase tracking-wider m-0">
-                    Executive Remittance & Liquidity Dashboard
-                  </h4>
-                  <span className="text-[10px] text-gray-500 font-medium hidden sm:inline">
-                    • Dual-Currency Collections & Payout Reconciliation
-                  </span>
-                </div>
+            {/* ── Executive Dashboard (6 Cards: 3 AED, 3 INR) - Ultra-Compact Slim Mode ── */}
+            <div className="mb-2.5 bg-white border border-[#c4d4ec] rounded-md px-3 py-2 shadow-2xs">
 
-                <div className="flex items-center gap-2 text-[10.5px]">
-                  <span className="bg-[#f0f4f9] text-[#1e4676] border border-[#c4d4ec] font-bold px-2 py-0.5 rounded">
-                    Orders: {orderCount}
-                  </span>
-                </div>
-              </div>
 
               {/* ── Group 1: AED Collections (3 Cards) ── */}
-              <div className="mb-3">
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#104080] mb-1.5 flex items-center gap-1.5">
+              <div className="mb-2">
+                <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080] mb-1 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#104080]"></span>
                   AED Collections (Agent / Customer)
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   {/* 1. Total AED Amount */}
-                  <div className="bg-[#f4f7fc] border border-[#a2b5cd] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div className="bg-[#f4f7fc] border border-[#a2b5cd] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#104080]">Total AED Amount</span>
-                        <span className="text-[10px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] px-2 py-0.5 rounded-full">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080]">Total AED Amount</span>
+                        <span className="text-[9px] font-bold text-[#104080] bg-[#eaf0f8] border border-[#a2b5cd] px-1.5 py-0.2 rounded-full">
                           {orderCount} {orderCount === 1 ? 'Order' : 'Orders'}
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className="text-[11px] font-bold text-[#104080]">AED</span>
-                        <span className="text-[20px] font-extrabold text-[#104080] tracking-tight font-mono">
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-[10px] font-bold text-[#104080]">AED</span>
+                        <span className="text-[15px] font-extrabold text-[#104080] tracking-tight font-mono">
                           {totalAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
-                    <div className="text-[9.5px] text-gray-500 mt-2 pt-1.5 border-t border-[#d0dbe8] flex items-center justify-between">
+                    <div className="text-[9px] text-gray-500 mt-1.5 pt-1 border-t border-[#d0dbe8] flex items-center justify-between">
                       <span>Total Booked</span>
                       <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
                     </div>
                   </div>
 
                   {/* 2. Received AED */}
-                  <div className="bg-[#f2f9f4] border border-[#8ce0b0] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div className="bg-[#f2f9f4] border border-[#8ce0b0] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0f5132]">Received AED</span>
-                        <span className="text-[10px] font-bold text-[#0f5132] bg-[#d1e7dd] border border-[#badbcc] px-2 py-0.5 rounded-full">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#0f5132]">Received AED</span>
+                        <span className="text-[9px] font-bold text-[#0f5132] bg-[#d1e7dd] border border-[#badbcc] px-1.5 py-0.2 rounded-full">
                           {aedCollectionPct.toFixed(1)}% Collected
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className="text-[11px] font-bold text-[#0f5132]">AED</span>
-                        <span className="text-[20px] font-extrabold text-[#0f5132] tracking-tight font-mono">
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-[10px] font-bold text-[#0f5132]">AED</span>
+                        <span className="text-[15px] font-extrabold text-[#0f5132] tracking-tight font-mono">
                           {receivedAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
-                    <div className="mt-2 pt-1.5 border-t border-[#c6e6cf]">
-                      <div className="flex items-center justify-between text-[9.5px] text-[#0f5132] font-semibold mb-1">
+                    <div className="mt-1.5 pt-1 border-t border-[#c6e6cf]">
+                      <div className="flex items-center justify-between text-[9px] text-[#0f5132] font-semibold mb-0.5">
                         <span>Collection Progress</span>
                         <span>{aedCollectionPct.toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-[#d5ecd9] h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#d5ecd9] h-1 rounded-full overflow-hidden">
                         <div 
                           className="bg-[#0f5132] h-full rounded-full transition-all duration-300"
                           style={{ width: `${aedCollectionPct}%` }}
@@ -1018,22 +1001,22 @@ export default function OrderEntryForm() {
                   </div>
 
                   {/* 3. Pending AED */}
-                  <div className="bg-[#fef9ec] border border-[#fae29c] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div className="bg-[#fef9ec] border border-[#fae29c] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#92400e]">Pending AED</span>
-                        <span className="text-[10px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#92400e]">Pending AED</span>
+                        <span className="text-[9px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-1.5 py-0.2 rounded-full">
                           {pendingAed === 0 ? "Fully Cleared" : "Awaiting Receipt"}
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className="text-[11px] font-bold text-[#92400e]">AED</span>
-                        <span className="text-[20px] font-extrabold text-[#92400e] tracking-tight font-mono">
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-[10px] font-bold text-[#92400e]">AED</span>
+                        <span className="text-[15px] font-extrabold text-[#92400e] tracking-tight font-mono">
                           {pendingAed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
-                    <div className="text-[9.5px] text-[#92400e] mt-2 pt-1.5 border-t border-[#fae6b2] flex items-center justify-between">
+                    <div className="text-[9px] text-[#92400e] mt-1.5 pt-1 border-t border-[#fae6b2] flex items-center justify-between">
                       <span>Outstanding Balance</span>
                       <span className="font-semibold">{pendingAed === 0 ? "All Collected" : "Pending from Agents"}</span>
                     </div>
@@ -1043,55 +1026,55 @@ export default function OrderEntryForm() {
 
               {/* ── Group 2: INR Remittances (3 Cards) ── */}
               <div>
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#1e4676] mb-1.5 flex items-center gap-1.5">
+                <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#1e4676] mb-1 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#1e4676]"></span>
                   INR Remittances (Beneficiary Payouts)
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   {/* 4. Total INR */}
-                  <div className="bg-[#f8f9fc] border border-[#c4d4ec] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div className="bg-[#f8f9fc] border border-[#c4d4ec] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#1e4676]">Total INR Amount</span>
-                        <span className="text-[10px] font-bold text-[#1e4676] bg-[#eef3fb] border border-[#c4d4ec] px-2 py-0.5 rounded-full">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#1e4676]">Total INR Amount</span>
+                        <span className="text-[9px] font-bold text-[#1e4676] bg-[#eef3fb] border border-[#c4d4ec] px-1.5 py-0.2 rounded-full">
                           Total Obligation
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className="text-[11px] font-bold text-[#1e4676]">INR</span>
-                        <span className="text-[20px] font-extrabold text-[#1e4676] tracking-tight font-mono">
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-[10px] font-bold text-[#1e4676]">INR</span>
+                        <span className="text-[15px] font-extrabold text-[#1e4676] tracking-tight font-mono">
                           ₹ {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
-                    <div className="text-[9.5px] text-gray-500 mt-2 pt-1.5 border-t border-[#d8e2ef] flex items-center justify-between">
+                    <div className="text-[9px] text-gray-500 mt-1.5 pt-1 border-t border-[#d8e2ef] flex items-center justify-between">
                       <span>Remittance Volume</span>
                       <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
                     </div>
                   </div>
 
                   {/* 5. Transferred INR */}
-                  <div className="bg-[#f0fbf6] border border-[#7ed8a7] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div className="bg-[#f0fbf6] border border-[#7ed8a7] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0d6e5a]">Transferred INR</span>
-                        <span className="text-[10px] font-bold text-[#0d6e5a] bg-[#d6f5e8] border border-[#a2e8c8] px-2 py-0.5 rounded-full">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#0d6e5a]">Transferred INR</span>
+                        <span className="text-[9px] font-bold text-[#0d6e5a] bg-[#d6f5e8] border border-[#a2e8c8] px-1.5 py-0.2 rounded-full">
                           {inrTransferPct.toFixed(1)}% Dispatched
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className="text-[11px] font-bold text-[#0d6e5a]">INR</span>
-                        <span className="text-[20px] font-extrabold text-[#0d6e5a] tracking-tight font-mono">
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-[10px] font-bold text-[#0d6e5a]">INR</span>
+                        <span className="text-[15px] font-extrabold text-[#0d6e5a] tracking-tight font-mono">
                           ₹ {transferredInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
-                    <div className="mt-2 pt-1.5 border-t border-[#bce8d2]">
-                      <div className="flex items-center justify-between text-[9.5px] text-[#0d6e5a] font-semibold mb-1">
+                    <div className="mt-1.5 pt-1 border-t border-[#bce8d2]">
+                      <div className="flex items-center justify-between text-[9px] text-[#0d6e5a] font-semibold mb-0.5">
                         <span>Payout Progress ({paidOrdersCount} Paid{partialOrdersCount > 0 ? `, ${partialOrdersCount} Partial` : ''})</span>
                         <span>{inrTransferPct.toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-[#d0f0e0] h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#d0f0e0] h-1 rounded-full overflow-hidden">
                         <div 
                           className="bg-[#0d6e5a] h-full rounded-full transition-all duration-300"
                           style={{ width: `${inrTransferPct}%` }}
@@ -1101,22 +1084,22 @@ export default function OrderEntryForm() {
                   </div>
 
                   {/* 6. Uncleared INR */}
-                  <div className="bg-[#fffbf2] border border-[#f5d58f] rounded-sm p-3 flex flex-col justify-between shadow-xs">
+                  <div className="bg-[#fffbf2] border border-[#f5d58f] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#854d0e]">Uncleared INR</span>
-                        <span className="text-[10px] font-bold text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#854d0e]">Uncleared INR</span>
+                        <span className="text-[9px] font-bold text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] px-1.5 py-0.2 rounded-full">
                           {unclearedInr === 0 ? "All Paid" : "Remaining to Pay"}
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className="text-[11px] font-bold text-[#854d0e]">INR</span>
-                        <span className="text-[20px] font-extrabold text-[#854d0e] tracking-tight font-mono">
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-[10px] font-bold text-[#854d0e]">INR</span>
+                        <span className="text-[15px] font-extrabold text-[#854d0e] tracking-tight font-mono">
                           ₹ {unclearedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
-                    <div className="text-[9.5px] text-[#854d0e] mt-2 pt-1.5 border-t border-[#fae2ab] flex items-center justify-between">
+                    <div className="text-[9px] text-[#854d0e] mt-1.5 pt-1 border-t border-[#fae2ab] flex items-center justify-between">
                       <span>Pending Payout</span>
                       <span className="font-semibold">{unclearedInr === 0 ? "Zero Balance" : "Pending Beneficiary Transfer"}</span>
                     </div>

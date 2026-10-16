@@ -17,9 +17,34 @@ import { dbService } from '../services/db';
 
 export default function FincorePage() {
   const navigate = useNavigate();
-  const [activeScreen, setActiveScreen] = useState<string>('DASHBOARD');
+
+  // Initialize activeScreen from sessionStorage to persist across page reloads (0-glitch)
+  const [activeScreen, setActiveScreen] = useState<string>(() => {
+    return sessionStorage.getItem('fincore_active_screen') || 'DASHBOARD';
+  });
+
+  const isAedScreen = (screen: string) => 
+    screen === 'ORDER ENTRY' || 
+    screen === 'RECEIVED AED' || 
+    screen === 'AED SUMMARY & REPORTS' || 
+    screen === 'AED REPORTS' || 
+    screen === 'AED COLLECTON';
+
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isAedExpanded, setIsAedExpanded] = useState<boolean>(true);
+
+  // Auto-expand AED folder in tree if active screen is within AED
+  useEffect(() => {
+    if (isAedScreen(activeScreen)) {
+      setIsAedExpanded(true);
+    }
+  }, [activeScreen]);
+
+  // Save activeScreen to sessionStorage on every screen switch
+  useEffect(() => {
+    sessionStorage.setItem('fincore_active_screen', activeScreen);
+  }, [activeScreen]);
+
   const userRole = dbService.getUserRole();
 
   // Enforce mandatory first-login password change

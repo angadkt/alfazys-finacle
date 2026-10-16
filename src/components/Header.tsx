@@ -126,7 +126,7 @@ export default function Header({
           
           {/* Scrolling Marquee Notice in Empty Space */}
           <div 
-            className="min-w-0 flex-1 mx-6 mr-[320px] overflow-hidden relative flex items-center h-10 select-none cursor-pointer"
+            className="min-w-0 flex-1 mx-6 mr-[440px] overflow-hidden relative flex items-center h-10 select-none cursor-pointer"
             title="Hover to pause scrolling"
           >
             <div className="animate-header-marquee flex items-center">
@@ -177,8 +177,8 @@ export default function Header({
           Universal Payment Solution from Infazys
         </span>
         
-        <div className="flex items-center text-black text-[12px] h-[22px]">
-          <span>{localStorage.getItem('infazys_user_name') || (localStorage.getItem('infazys_finacle_active_role') === 'super_admin' ? 'UBSADMIN' : 'STAFF')} | 25/02/2014 | Menu Shortcut:</span>
+        <div className="flex items-center text-black text-[12px] h-[22px] font-normal" style={{ fontWeight: 400 }}>
+          <span style={{ fontWeight: 400 }}>{localStorage.getItem('infazys_user_name') || (localStorage.getItem('infazys_finacle_active_role') === 'super_admin' ? 'UBSADMIN' : 'STAFF')} | 25/02/2014 | Menu Shortcut:</span>
           <input 
             type="text" 
             value={shortcutText}
