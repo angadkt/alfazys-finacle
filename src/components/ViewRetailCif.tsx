@@ -11,6 +11,28 @@ export default function ViewRetailCif() {
   const [isExporting, setIsExporting] = useState<'excel' | 'pdf' | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; label: string; isPdf?: boolean } | null>(null);
 
+  const activeRole = localStorage.getItem('infazys_finacle_active_role');
+  const isAdmin = activeRole === 'super_admin' || activeRole === 'admin';
+  const [deleteCifTarget, setDeleteCifTarget] = useState<any | null>(null);
+  const [isDeletingCif, setIsDeletingCif] = useState(false);
+
+  const handleConfirmDeleteCif = async () => {
+    if (!deleteCifTarget) return;
+    setIsDeletingCif(true);
+    try {
+      await api.delete(`/records/parties/${deleteCifTarget.id}`);
+      await loadVerifiedCifs();
+      if (selectedCif?.id === deleteCifTarget.id) {
+        setSelectedCif(null);
+      }
+      setDeleteCifTarget(null);
+    } catch (err: any) {
+      alert('Failed to delete CIF: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsDeletingCif(false);
+    }
+  };
+
   const handlePreviewDoc = async (cifId: any, doc: any) => {
     try {
       const res = await api.get(`/cif/${cifId}/documents/${doc.id}`, { responseType: 'blob' });
@@ -164,12 +186,15 @@ export default function ViewRetailCif() {
               <th className="p-2 border-r border-[#a0a0a0]">Issued By</th>
               <th className="p-2 border-r border-[#a0a0a0]">Verified By</th>
               <th className="p-2 border-r border-[#a0a0a0]">Status</th>
+              {isAdmin && (
+                <th className="p-2 border-r border-[#a0a0a0] text-center">Action</th>
+              )}
             </tr>
           </thead>
           <tbody>
             {filteredCifs.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-4 text-center text-[12px] text-gray-500">
+                <td colSpan={isAdmin ? 8 : 7} className="p-4 text-center text-[12px] text-gray-500">
                   {verifiedCifs.length === 0 ? 'No verified CIFs found.' : 'No CIFs match your search.'}
                 </td>
               </tr>
@@ -190,6 +215,18 @@ export default function ViewRetailCif() {
                   <td className="p-2 border-r border-[#e4e4e4]">
                     <span className="text-green-600 font-semibold uppercase">Verified</span>
                   </td>
+                  {isAdmin && (
+                    <td className="p-2 border-r border-[#e4e4e4] text-center">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteCifTarget(cif)}
+                        className="bg-white border border-red-300 text-red-600 hover:bg-red-50 hover:border-red-600 font-bold px-2.5 py-0.5 rounded text-[11px] cursor-pointer shadow-2xs"
+                        title="Delete CIF Record"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -335,6 +372,83 @@ export default function ViewRetailCif() {
         </div>
       </>
     )}
+
+      {/* Confirm Delete CIF Modal (Admin/Super Admin only) */}
+      {deleteCifTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
+            onClick={() => !isDeletingCif && setDeleteCifTarget(null)}
+          ></div>
+          <div className="bg-white border-2 border-[#1e4676] rounded-md shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150 font-sans">
+            {/* Modal Title Bar */}
+            <div className="bg-[#1e4676] text-white px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-sm tracking-wide">
+                <span>⚠️</span>
+                <span>Confirm CIF Deletion</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => !isDeletingCif && setDeleteCifTarget(null)}
+                className="text-white hover:text-red-300 text-lg font-bold leading-none cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 text-xs text-gray-700 space-y-4">
+              <p className="text-[13px] text-gray-800">
+                Are you sure you want to permanently delete CIF <strong className="text-[#1e4676] font-bold">{deleteCifTarget.cif_no || deleteCifTarget.id}</strong>?
+              </p>
+
+              {/* Summary Card */}
+              <div className="bg-[#f8fafc] border border-[#cbd5e1] rounded p-3 space-y-2">
+                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
+                  <span className="text-gray-500 font-medium">CIF ID:</span>
+                  <span className="font-bold text-[#1e4676]">{deleteCifTarget.cif_no || deleteCifTarget.id}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
+                  <span className="text-gray-500 font-medium">Customer / Agent Name:</span>
+                  <span className="font-bold text-gray-900">{deleteCifTarget.first_name} {deleteCifTarget.last_name}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
+                  <span className="text-gray-500 font-medium">Phone:</span>
+                  <span className="font-mono font-bold text-gray-900">{deleteCifTarget.contact_number || '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Email:</span>
+                  <span className="font-semibold text-gray-700">{deleteCifTarget.email || '-'}</span>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 rounded text-[11px] leading-relaxed">
+                <strong>Notice:</strong> This action permanently removes this customer/agent profile from the database.
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-[#f1f5f9] border-t border-[#cbd5e1] px-4 py-3 flex justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={isDeletingCif}
+                onClick={() => setDeleteCifTarget(null)}
+                className="px-4 py-1.5 bg-white border border-[#cbd5e1] text-gray-700 hover:bg-gray-100 rounded text-xs font-semibold cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingCif}
+                onClick={handleConfirmDeleteCif}
+                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+              >
+                {isDeletingCif ? 'Deleting...' : 'Yes, Delete CIF'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
