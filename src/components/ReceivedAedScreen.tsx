@@ -27,6 +27,14 @@ export default function ReceivedAedScreen() {
   const [cashStaff, setCashStaff] = useState('');
   const [remainingAed, setRemainingAed] = useState('');
   const [agentCustomer, setAgentCustomer] = useState('');
+  const [utrNo, setUtrNo] = useState('');
+  const [description, setDescription] = useState('');
+  const [agentBalanceInfo, setAgentBalanceInfo] = useState<{
+    booked_aed: number;
+    already_received_aed: number;
+    pending_aed: number;
+  } | null>(null);
+  const [, setFetchingBalance] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Load Customers for Agent dropdown
@@ -45,6 +53,59 @@ export default function ReceivedAedScreen() {
     };
     fetchCustomers();
   }, []);
+
+  // Option A: Auto-fetch agent balance on agentCustomer, entryDate, or modal open
+  useEffect(() => {
+    if (!isModalOpen || !agentCustomer.trim()) {
+      setAgentBalanceInfo(null);
+      return;
+    }
+
+    let active = true;
+    const fetchBalance = async () => {
+      setFetchingBalance(true);
+      try {
+        const res = await api.get('/records/received-aed/agent-balance', {
+          params: {
+            agent: agentCustomer.trim(),
+            date: entryDate,
+            exclude_id: editingId || undefined,
+          },
+        });
+        if (active && res.data) {
+          const info = {
+            booked_aed: parseFloat(res.data.booked_aed) || 0,
+            already_received_aed: parseFloat(res.data.already_received_aed) || 0,
+            pending_aed: parseFloat(res.data.pending_aed) || 0,
+          };
+          setAgentBalanceInfo(info);
+
+          // Option A: Remaining AED = max(0, pending_aed - current aedAmount)
+          const currentAed = parseFloat(aedAmount) || 0;
+          const rem = Math.max(0, Math.round((info.pending_aed - currentAed) * 100) / 100);
+          setRemainingAed(rem > 0 ? rem.toFixed(2) : '0.00');
+        }
+      } catch (err) {
+        console.error('Failed to fetch agent balance:', err);
+      } finally {
+        if (active) setFetchingBalance(false);
+      }
+    };
+
+    fetchBalance();
+    return () => {
+      active = false;
+    };
+  }, [isModalOpen, agentCustomer, entryDate, editingId]);
+
+  const handleAedAmountChange = (val: string) => {
+    setAedAmount(val);
+    if (agentBalanceInfo) {
+      const num = parseFloat(val) || 0;
+      const rem = Math.max(0, Math.round((agentBalanceInfo.pending_aed - num) * 100) / 100);
+      setRemainingAed(rem > 0 ? rem.toFixed(2) : '0.00');
+    }
+  };
 
   const fetchRecords = async (p = page, d = dateFilter, m = modeFilter) => {
     setLoading(true);
@@ -75,6 +136,9 @@ export default function ReceivedAedScreen() {
     setCashStaff('');
     setRemainingAed('');
     setAgentCustomer('');
+    setUtrNo('');
+    setDescription('');
+    setAgentBalanceInfo(null);
     setIsModalOpen(true);
   };
 
@@ -86,6 +150,8 @@ export default function ReceivedAedScreen() {
     setCashStaff(rec.cash_staff || '');
     setRemainingAed(rec.remaining_amount != null ? String(rec.remaining_amount) : '');
     setAgentCustomer(rec.agent_customer || '');
+    setUtrNo(rec.utr_no || '');
+    setDescription(rec.description || '');
     setIsModalOpen(true);
   };
 
@@ -122,6 +188,8 @@ export default function ReceivedAedScreen() {
         remaining_amount: remainingAed ? parseFloat(remainingAed) : undefined,
         entry_date: entryDate,
         agent_customer: agentCustomer.trim() || undefined,
+        utr_no: utrNo.trim() || undefined,
+        description: description.trim() || undefined,
       };
 
       if (editingId) {
@@ -285,8 +353,10 @@ export default function ReceivedAedScreen() {
                   <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Agent / Customer</th>
                   <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">AED Amount</th>
                   <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Mode</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">UTR / Ref</th>
                   <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Cash Staff</th>
                   <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Remaining AED</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Description</th>
                   <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Created By</th>
                   <th className="px-3 py-2 font-semibold whitespace-nowrap text-center">Actions</th>
                 </tr>
@@ -320,6 +390,9 @@ export default function ReceivedAedScreen() {
                         {rec.mode_of_txn}
                       </span>
                     </td>
+                    <td className="px-3 py-2 border-r border-[#e4e4e4] font-mono text-gray-700 text-xs">
+                      {rec.utr_no || <span className="text-gray-400 font-sans">—</span>}
+                    </td>
                     <td className="px-3 py-2 border-r border-[#e4e4e4] text-gray-700">
                       {rec.cash_staff || <span className="text-gray-400">—</span>}
                     </td>
@@ -327,6 +400,9 @@ export default function ReceivedAedScreen() {
                       {rec.remaining_amount != null
                         ? parseFloat(rec.remaining_amount).toLocaleString('en-AE', { minimumFractionDigits: 2 }) + ' AED'
                         : <span className="text-gray-400 font-normal">—</span>}
+                    </td>
+                    <td className="px-3 py-2 border-r border-[#e4e4e4] text-gray-600 text-xs max-w-[200px] truncate" title={rec.description || ''}>
+                      {rec.description || <span className="text-gray-400">—</span>}
                     </td>
                     <td className="px-3 py-2 border-r border-[#e4e4e4] text-gray-600">
                       {rec.created_by_name || 'Admin'}
@@ -358,11 +434,11 @@ export default function ReceivedAedScreen() {
                   <td className="px-3 py-2 border-r border-[#c4d4ec] whitespace-nowrap text-[#0f5132]">
                     {totalAedShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                   </td>
-                  <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={2}></td>
+                  <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}></td>
                   <td className="px-3 py-2 border-r border-[#c4d4ec] whitespace-nowrap text-[#b45309]">
                     {totalRemainingShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                   </td>
-                  <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={2}></td>
+                  <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}></td>
                 </tr>
               </tfoot>
             </table>
@@ -447,6 +523,22 @@ export default function ReceivedAedScreen() {
                     </datalist>
                   </div>
 
+                  {/* Option A Calculation Info Banner */}
+                  {agentBalanceInfo && (
+                    <div className="col-span-2 -my-1 p-2.5 bg-[#e2ebf6] rounded border border-[#b6cded] text-[11px] text-[#1e4676] flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span>Booked: <strong>{agentBalanceInfo.booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong></span>
+                        <span className="text-gray-400">•</span>
+                        <span>Already Received: <strong>{agentBalanceInfo.already_received_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong></span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-[#0d6e5a]">Pending: <strong>{agentBalanceInfo.pending_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong></span>
+                      </div>
+                      <span className="bg-[#1e4676] text-white px-2 py-0.5 rounded text-[10px] font-bold tracking-wide">
+                        OPTION A AUTO-CALCULATED
+                      </span>
+                    </div>
+                  )}
+
                   {/* AED Amount */}
                   <label className="font-medium text-black whitespace-nowrap">
                     AED Amount Received <span className="text-red-600">*</span>
@@ -456,7 +548,7 @@ export default function ReceivedAedScreen() {
                     min="0"
                     step="0.01"
                     value={aedAmount}
-                    onChange={(e) => setAedAmount(e.target.value)}
+                    onChange={(e) => handleAedAmountChange(e.target.value)}
                     placeholder="0.00"
                     autoFocus
                     className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full font-bold text-gray-800"
@@ -484,6 +576,18 @@ export default function ReceivedAedScreen() {
                     <option value="COR NET">COR NET</option>
                   </select>
 
+                  {/* UTR / Reference No */}
+                  <label className="font-medium text-black whitespace-nowrap">
+                    UTR / Reference No
+                  </label>
+                  <input
+                    type="text"
+                    value={utrNo}
+                    onChange={(e) => setUtrNo(e.target.value)}
+                    placeholder="e.g. UTR / Bank Reference No"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full text-xs"
+                  />
+
                   {/* Cash Staff */}
                   {modeOfTxn === 'BY CASH' && (
                     <>
@@ -501,15 +605,34 @@ export default function ReceivedAedScreen() {
                   )}
 
                   {/* Remaining Amount AED */}
-                  <label className="font-medium text-black whitespace-nowrap">Remaining Amount AED</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={remainingAed}
-                    onChange={(e) => setRemainingAed(e.target.value)}
-                    placeholder="0.00"
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                  <label className="font-medium text-black whitespace-nowrap">
+                    Remaining Amount AED
+                  </label>
+                  <div className="w-full">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={remainingAed}
+                      onChange={(e) => setRemainingAed(e.target.value)}
+                      placeholder="0.00"
+                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                    />
+                    <span className="text-[10px] text-gray-500 italic mt-0.5 block">
+                      Auto-calculated from Booked AED − Received AED − This Entry. Editable if manual override is needed.
+                    </span>
+                  </div>
+
+                  {/* Description */}
+                  <label className="font-medium text-black whitespace-nowrap">
+                    Description
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter remarks or description..."
+                    className="border border-[#c4d4ec] rounded-md p-2 bg-white focus:outline-none focus:border-[#1e4676] w-full text-xs"
                   />
                 </div>
 
