@@ -180,6 +180,7 @@ export const initialStaffMembers: StaffMember[] = [
       'AED COLLECTON': false,
       'RECEIVED AED': false,
       'AED SUMMARY & REPORTS': false,
+      'PENDING AED REPORT': false,
     },
     createdAt: '2026-10-14T09:00:00.000Z',
     emailSentAt: '2026-10-14T09:00:00.000Z',

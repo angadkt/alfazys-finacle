@@ -8,6 +8,7 @@ import CreditEntryForm from '../components/CreditEntryForm';
 import OrderEntryForm from '../components/OrderEntryForm';
 import ReceivedAedScreen from '../components/ReceivedAedScreen';
 import AedReportsScreen from '../components/AedReportsScreen';
+import PendingAedReportScreen from '../components/PendingAedReportScreen';
 import AddStaffForm from '../components/AddStaffForm';
 import StaffManagement from '../components/StaffManagement';
 import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
@@ -28,7 +29,8 @@ export default function FincorePage() {
     screen === 'RECEIVED AED' || 
     screen === 'AED SUMMARY & REPORTS' || 
     screen === 'AED REPORTS' || 
-    screen === 'AED COLLECTON';
+    screen === 'AED COLLECTON' ||
+    screen === 'PENDING AED REPORT';
 
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isAedExpanded, setIsAedExpanded] = useState<boolean>(true);
@@ -87,7 +89,8 @@ export default function FincorePage() {
   const aedSubItems = [
     { name: "ORDER ENTRY", label: "ORDER ENTRY" },
     { name: "RECEIVED AED", label: "RECEIVED AED" },
-    { name: "AED SUMMARY & REPORTS", label: "SUMMARY & REPORTS" }
+    { name: "AED SUMMARY & REPORTS", label: "SUMMARY & REPORTS" },
+    { name: "PENDING AED REPORT", label: "PENDING AED TO COLLECT" }
   ];
 
   const handleShortcutSelect = (screen: string) => {
@@ -98,6 +101,8 @@ export default function FincorePage() {
       setActiveScreen('STAFF MANAGEMENT');
     } else if (upper.includes('RCV') || upper.includes('RECEIVED')) {
       setActiveScreen('RECEIVED AED');
+    } else if (upper.includes('PEND') || upper === 'PAR' || upper === 'PAED') {
+      setActiveScreen('PENDING AED REPORT');
     } else if (upper.includes('REPORT') || upper.includes('SUMMARY')) {
       setActiveScreen('AED SUMMARY & REPORTS');
     } else if (upper.includes('ORDER')) {
@@ -118,7 +123,8 @@ export default function FincorePage() {
       activeScreen === 'RECEIVED AED' || 
       activeScreen === 'AED SUMMARY & REPORTS' || 
       activeScreen === 'AED COLLECTON' || 
-      activeScreen === 'AED REPORTS'
+      activeScreen === 'AED REPORTS' ||
+      activeScreen === 'PENDING AED REPORT'
     ) {
       return !!hasAedAccess;
     }
@@ -267,6 +273,8 @@ export default function FincorePage() {
             <ReceivedAedScreen />
           ) : activeScreen === 'AED SUMMARY & REPORTS' || activeScreen === 'AED REPORTS' ? (
             <AedReportsScreen />
+          ) : activeScreen === 'PENDING AED REPORT' ? (
+            <PendingAedReportScreen />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <h1 className="text-[44px] font-bold text-black tracking-wide" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>

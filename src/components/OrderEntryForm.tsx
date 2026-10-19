@@ -210,10 +210,23 @@ export default function OrderEntryForm() {
   const [fetchedOrders, setFetchedOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+  const [filterFromDate, setFilterFromDate] = useState('');
+  const [filterToDate, setFilterToDate] = useState('');
   const [filterAgent, setFilterAgent] = useState('');
   const [orderExecutionDate, setOrderExecutionDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [existingDailyOrder, setExistingDailyOrder] = useState<any | null>(null);
+
+  const dateDisplayLabel = useMemo(() => {
+    if (filterFromDate && filterToDate) {
+      if (filterFromDate === filterToDate) {
+        return filterFromDate;
+      }
+      return `${filterFromDate} to ${filterToDate}`;
+    }
+    if (filterFromDate) return `From ${filterFromDate}`;
+    if (filterToDate) return `Up to ${filterToDate}`;
+    return 'All dates';
+  }, [filterFromDate, filterToDate]);
 
   useEffect(() => {
     if (!selectedPartyId || !orderExecutionDate) {
@@ -324,9 +337,9 @@ export default function OrderEntryForm() {
   };
 
   useEffect(() => {
-    const d = filterDate || new Date().toISOString().slice(0, 10);
+    const d = filterToDate || filterFromDate || new Date().toISOString().slice(0, 10);
     fetchCostRate(d);
-  }, [filterDate]);
+  }, [filterFromDate, filterToDate]);
 
   const handleCostRateSaved = (_date: string, rate: number) => {
     setCurrentCostRate(rate);
@@ -334,7 +347,7 @@ export default function OrderEntryForm() {
 
   const [receivedAedTotalSum, setReceivedAedTotalSum] = useState<number>(0);
 
-  const fetchReceivedAedSummary = async (date = filterDate, agentId = filterAgent) => {
+  const fetchReceivedAedSummary = async (date = (filterToDate || filterFromDate), agentId = filterAgent) => {
     try {
       let url = `/records/received-aed?limit=1`;
       if (date) url += `&date=${encodeURIComponent(date)}`;
@@ -352,8 +365,8 @@ export default function OrderEntryForm() {
   };
 
   useEffect(() => {
-    fetchReceivedAedSummary(filterDate, filterAgent);
-  }, [filterDate, filterAgent, customers]);
+    fetchReceivedAedSummary(filterToDate || filterFromDate, filterAgent);
+  }, [filterFromDate, filterToDate, filterAgent, customers]);
 
   // View Received AED
   const [isViewReceivedAedOpen, setIsViewReceivedAedOpen] = useState(false);
@@ -382,7 +395,7 @@ export default function OrderEntryForm() {
     try {
       await api.delete(`/records/received-aed/${id}`);
       fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
-      fetchReceivedAedSummary(filterDate, filterAgent);
+      fetchReceivedAedSummary(filterToDate || filterFromDate, filterAgent);
     } catch (err: any) {
       alert(err?.response?.data?.error || 'Failed to delete record.');
     }
@@ -531,21 +544,28 @@ export default function OrderEntryForm() {
   const fetchOrders = async (
     page = currentPage, 
     search = searchQuery,
-    date = filterDate,
+    fromDate = filterFromDate,
+    toDate = filterToDate,
     agent = filterAgent
   ) => {
     setLoadingOrders(true);
     try {
       let url = `/records/orders?page=${page}&limit=20&search=${encodeURIComponent(search)}`;
-      if (date) url += `&date=${encodeURIComponent(date)}`;
+      if (fromDate) url += `&from_date=${encodeURIComponent(fromDate)}`;
+      if (toDate) url += `&to_date=${encodeURIComponent(toDate)}`;
       if (agent) url += `&party_id=${encodeURIComponent(agent)}`;
 
       const res = await api.get(url);
       let records = res.data.records || [];
 
       // Fallback client-side filter
-      if (date) {
-        records = records.filter((o: any) => (o.order_date || '').startsWith(date));
+      if (fromDate || toDate) {
+        records = records.filter((o: any) => {
+          const od = (o.order_date || '').slice(0, 10);
+          if (fromDate && od < fromDate) return false;
+          if (toDate && od > toDate) return false;
+          return true;
+        });
       }
       if (agent) {
         records = records.filter((o: any) => String(o.party_id) === String(agent));
@@ -556,6 +576,9 @@ export default function OrderEntryForm() {
       setTotalPages(Math.ceil((res.data.total || 0) / (res.data.limit || 20)) || 1);
     } catch (err) {
       console.error('Failed to fetch orders:', err);
+      setFetchedOrders([]);
+      setCurrentPage(1);
+      setTotalPages(1);
     } finally {
       setLoadingOrders(false);
     }
@@ -596,10 +619,10 @@ export default function OrderEntryForm() {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchOrders(currentPage, searchQuery, filterDate, filterAgent);
+      fetchOrders(currentPage, searchQuery, filterFromDate, filterToDate, filterAgent);
     }, 400);
     return () => clearTimeout(handler);
-  }, [searchQuery, filterDate, filterAgent, currentPage]);
+  }, [searchQuery, filterFromDate, filterToDate, filterAgent, currentPage]);
 
   const handleReceiverPaymentStatus = async (orderId: string, receiverIndex: number, newStatus: string, customPaidAmount?: number) => {
     let paidAmount = customPaidAmount;
@@ -692,7 +715,7 @@ export default function OrderEntryForm() {
           String(item.id) === String(orderId) ? { ...item, ...updatedRecord } : item
         ));
       }
-      fetchOrders(currentPage, searchQuery, filterDate, filterAgent);
+      fetchOrders(currentPage, searchQuery, filterFromDate, filterToDate, filterAgent);
       setDeleteReceiverTarget(null);
     } catch (err: any) {
       alert('Failed to delete receiver: ' + (err.response?.data?.message || err.message));
@@ -757,11 +780,14 @@ export default function OrderEntryForm() {
         setIsFormModalOpen(false);
         setIsSubmitted(true);
         fetchBeneficiaries();
-        if (filterDate && filterDate !== (orderExecutionDate || new Date().toLocaleDateString('en-CA'))) {
-          setFilterDate('');
-          fetchOrders(1, searchQuery, '', filterAgent);
+        const execDate = orderExecutionDate || new Date().toLocaleDateString('en-CA');
+        const isOutOfRange = (filterFromDate && execDate < filterFromDate) || (filterToDate && execDate > filterToDate);
+        if (isOutOfRange) {
+          setFilterFromDate('');
+          setFilterToDate('');
+          fetchOrders(1, searchQuery, '', '', filterAgent);
         } else {
-          fetchOrders(1, searchQuery, filterDate, filterAgent);
+          fetchOrders(1, searchQuery, filterFromDate, filterToDate, filterAgent);
         }
       }
     } catch (err: any) {
@@ -798,7 +824,8 @@ export default function OrderEntryForm() {
 
       do {
         let url = `/records/orders?page=${page}&limit=100&export=true&search=${encodeURIComponent(searchQuery)}`;
-        if (filterDate) url += `&date=${encodeURIComponent(filterDate)}`;
+        if (filterFromDate) url += `&from_date=${encodeURIComponent(filterFromDate)}`;
+        if (filterToDate) url += `&to_date=${encodeURIComponent(filterToDate)}`;
         if (filterAgent) url += `&party_id=${encodeURIComponent(filterAgent)}`;
 
         const res = await api.get(url);
@@ -815,8 +842,13 @@ export default function OrderEntryForm() {
       }
 
       // Ensure active date and agent filters are matched
-      if (filterDate) {
-        allRecords = allRecords.filter((o: any) => (o.order_date || '').startsWith(filterDate));
+      if (filterFromDate || filterToDate) {
+        allRecords = allRecords.filter((o: any) => {
+          const od = (o.order_date || '').slice(0, 10);
+          if (filterFromDate && od < filterFromDate) return false;
+          if (filterToDate && od > filterToDate) return false;
+          return true;
+        });
       }
       if (filterAgent) {
         allRecords = allRecords.filter((o: any) => String(o.party_id) === String(filterAgent));
@@ -839,7 +871,7 @@ export default function OrderEntryForm() {
       const orders = await getOrdersForExport();
       const selectedCustomer = customers.find(c => String(c.internal_id) === String(filterAgent));
       exportOrdersToExcel(orders, {
-        filterDate,
+        filterDate: dateDisplayLabel,
         filterAgent: selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.id})` : filterAgent,
         searchQuery
       });
@@ -860,7 +892,7 @@ export default function OrderEntryForm() {
       const orders = await getOrdersForExport();
       const selectedCustomer = customers.find(c => String(c.internal_id) === String(filterAgent));
       exportOrdersToPdf(orders, {
-        filterDate,
+        filterDate: dateDisplayLabel,
         filterAgent: selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.id})` : filterAgent,
         searchQuery
       });
@@ -930,35 +962,61 @@ export default function OrderEntryForm() {
               <h3 className="font-bold text-[#1e4676] text-sm tracking-wide">Fetched Orders List</h3>
               
               <div className="flex flex-wrap items-center gap-2">
-                {/* Date Filter */}
-                <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-                  <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
+                {/* Date Filter (Option A: From & To Range with Single-Day / Today Shortcut) */}
+                <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
+                  <span className="text-[#1e4676] font-bold text-[11px]">From:</span>
                   <FinacleDatePicker
-                    value={filterDate}
+                    value={filterFromDate}
                     onChange={(e) => {
-                      setFilterDate(e.target.value);
+                      setFilterFromDate(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
+                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[115px] h-[26px]"
                   />
-                  {filterDate ? (
-                    <button 
-                      onClick={() => { setFilterDate(''); setCurrentPage(1); }}
-                      className="text-gray-400 hover:text-red-500 font-bold text-xs ml-0.5"
-                      title="Clear Date (Show All Dates)"
-                    >
-                      &times;
-                    </button>
-                  ) : (
+
+                  <span className="text-[#1e4676] font-bold text-[11px] ml-0.5">To:</span>
+                  <FinacleDatePicker
+                    value={filterToDate}
+                    onChange={(e) => {
+                      setFilterToDate(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[115px] h-[26px]"
+                  />
+
+                  {/* Quick Shortcut Buttons */}
+                  <div className="flex items-center gap-1 ml-0.5 border-l border-[#c4d4ec] pl-1.5">
                     <button
                       type="button"
-                      onClick={() => { setFilterDate(new Date().toLocaleDateString('en-CA')); setCurrentPage(1); }}
-                      className="text-[10px] text-[#1a4a8c] hover:underline font-semibold ml-0.5 cursor-pointer"
-                      title="Filter for today's orders"
+                      onClick={() => {
+                        const todayStr = new Date().toLocaleDateString('en-CA');
+                        setFilterFromDate(todayStr);
+                        setFilterToDate(todayStr);
+                        setCurrentPage(1);
+                        fetchOrders(1, searchQuery, todayStr, todayStr, filterAgent);
+                      }}
+                      className="bg-[#1e4676] hover:bg-[#15345b] text-white px-2 py-0.5 text-[10px] font-bold rounded shadow-2xs cursor-pointer transition-colors"
+                      title="Filter for Today's Orders (Single Day)"
                     >
                       Today
                     </button>
-                  )}
+
+                    {(filterFromDate || filterToDate) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterFromDate('');
+                          setFilterToDate('');
+                          setCurrentPage(1);
+                          fetchOrders(1, searchQuery, '', '', filterAgent);
+                        }}
+                        className="text-gray-400 hover:text-red-600 font-bold text-xs px-1 cursor-pointer"
+                        title="Clear Date Filter (Show All Dates)"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Agent / Customer Filter */}
@@ -1014,10 +1072,11 @@ export default function OrderEntryForm() {
                 </div>
 
                 {/* Reset Filters */}
-                {(filterDate !== '' || filterAgent || searchQuery) && (
+                {(filterFromDate !== '' || filterToDate !== '' || filterAgent || searchQuery) && (
                   <button
                     onClick={() => {
-                      setFilterDate('');
+                      setFilterFromDate('');
+                      setFilterToDate('');
                       setFilterAgent('');
                       setSearchQuery('');
                       setCurrentPage(1);
@@ -1082,7 +1141,7 @@ export default function OrderEntryForm() {
                     </div>
                     <div className="text-[9px] text-gray-500 mt-1.5 pt-1 border-t border-[#d0dbe8] flex items-center justify-between">
                       <span>Total Booked</span>
-                      <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
+                      <span className="font-semibold text-gray-600">{dateDisplayLabel}</span>
                     </div>
                   </div>
 
@@ -1165,7 +1224,7 @@ export default function OrderEntryForm() {
                     </div>
                     <div className="text-[9px] text-gray-500 mt-1.5 pt-1 border-t border-[#d8e2ef] flex items-center justify-between">
                       <span>Remittance Volume</span>
-                      <span className="font-semibold text-gray-600">{filterDate ? filterDate : 'All dates'}</span>
+                      <span className="font-semibold text-gray-600">{dateDisplayLabel}</span>
                     </div>
                   </div>
 
@@ -2111,13 +2170,13 @@ export default function OrderEntryForm() {
                         if (editingReceivedAedId) {
                           await api.put(`/records/received-aed/${editingReceivedAedId}`, payload);
                           fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
-                          fetchReceivedAedSummary(filterDate, filterAgent);
+                          fetchReceivedAedSummary(filterToDate || filterFromDate, filterAgent);
                         } else {
                           await api.post('/records/received-aed', payload);
                           if (isViewReceivedAedOpen) {
                             fetchReceivedAed(receivedAedPage, viewDateFilter, viewModeFilter);
                           }
-                          fetchReceivedAedSummary(filterDate, filterAgent);
+                          fetchReceivedAedSummary(filterToDate || filterFromDate, filterAgent);
                         }
                         setIsReceivedAedModalOpen(false);
                         setEditingReceivedAedId(null);
@@ -2329,7 +2388,7 @@ export default function OrderEntryForm() {
       <CostRateModal
         isOpen={isCostRateModalOpen}
         onClose={() => setIsCostRateModalOpen(false)}
-        initialDate={filterDate || new Date().toISOString().slice(0, 10)}
+        initialDate={(filterToDate || filterFromDate) || new Date().toISOString().slice(0, 10)}
         onRateSaved={handleCostRateSaved}
       />
 

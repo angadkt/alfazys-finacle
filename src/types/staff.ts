@@ -8,7 +8,8 @@ export type FinacleScreen =
   | 'CREDIT ENTRY'
   | 'AED COLLECTON'
   | 'RECEIVED AED'
-  | 'AED SUMMARY & REPORTS';
+  | 'AED SUMMARY & REPORTS'
+  | 'PENDING AED REPORT';
 
 export type StaffPermissions = Record<FinacleScreen, boolean>;
 
@@ -23,6 +24,7 @@ export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
   'AED COLLECTON': true,
   'RECEIVED AED': true,
   'AED SUMMARY & REPORTS': true,
+  'PENDING AED REPORT': true,
 };
 
 export interface StaffMember {
