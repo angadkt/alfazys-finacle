@@ -9,6 +9,8 @@ import OrderEntryForm from '../components/OrderEntryForm';
 import ReceivedAedScreen from '../components/ReceivedAedScreen';
 import AedReportsScreen from '../components/AedReportsScreen';
 import PendingAedReportScreen from '../components/PendingAedReportScreen';
+import InrDispatchDeskScreen from "../components/payouts/InrDispatchDeskScreen";
+import ServicerWalletsScreen from "../components/payouts/ServicerWalletsScreen";
 import AddStaffForm from '../components/AddStaffForm';
 import StaffManagement from '../components/StaffManagement';
 import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
@@ -93,6 +95,11 @@ export default function FincorePage() {
     { name: "PENDING AED REPORT", label: "PENDING AED TO COLLECT" }
   ];
 
+  const payoutSubItems = [
+    { name: "INR DISPATCH DESK", label: "INR DISPATCH DESK" },
+    { name: "SERVICER WALLETS", label: "SERVICER WALLETS" }
+  ];
+
   const handleShortcutSelect = (screen: string) => {
     const upper = screen.toUpperCase().trim();
     if (upper.includes('ADD') && upper.includes('STAF')) {
@@ -124,7 +131,10 @@ export default function FincorePage() {
       activeScreen === 'AED SUMMARY & REPORTS' || 
       activeScreen === 'AED COLLECTON' || 
       activeScreen === 'AED REPORTS' ||
-      activeScreen === 'PENDING AED REPORT'
+      activeScreen === 'PENDING AED REPORT' ||
+      activeScreen === 'INR DISPATCH DESK' ||
+      activeScreen === 'SERVICER WALLETS' ||
+      activeScreen === 'INR PAYOUT'
     ) {
       return !!hasAedAccess;
     }
@@ -181,7 +191,50 @@ export default function FincorePage() {
                 </div>
               ))}
 
-              {/* AED COLLECTION Tree Group */}
+                            {/* INR PAYOUT & SERVICER Tree Group */}
+              {hasAedAccess && (
+                <div className="mt-1 pt-1 border-t border-gray-200">
+                  <div 
+                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#e6edf8] text-[#104080] font-bold select-none group rounded-xs"
+                    onClick={() => setIsPayoutExpanded(!isPayoutExpanded)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[10px] leading-none font-mono text-[#104080] font-bold">
+                        {isPayoutExpanded ? "−" : "+"}
+                      </span>
+                      <span className="text-[#104080] font-extrabold text-[13px] tracking-wide flex items-center gap-1.5">
+                        <span className="text-[14px]">📂</span> INR PAYOUT
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 font-normal">
+                      ({payoutSubItems.length})
+                    </span>
+                  </div>
+
+                  {isPayoutExpanded && (
+                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-[#9eb3cd] space-y-0.5 mt-0.5">
+                      {payoutSubItems.map((sub, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[13px] text-[#000080] rounded-xs ${
+                            activeScreen === sub.name ? "bg-[#316ac5] text-white font-bold" : ""
+                          }`}
+                          onClick={() => {
+                            setActiveScreen(sub.name);
+                          }}
+                        >
+                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === sub.name ? "border-white" : "group-hover:border-white"}`}>
+                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? "bg-white" : "bg-[#3b73b9] group-hover:bg-white"}`} />
+                          </div>
+                          <span className="truncate">{sub.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+{/* AED COLLECTION Tree Group */}
               {hasAedAccess && (
                 <div className="mt-1 pt-1 border-t border-gray-200">
                   {/* Folder Header */}
@@ -275,6 +328,10 @@ export default function FincorePage() {
             <AedReportsScreen />
           ) : activeScreen === 'PENDING AED REPORT' ? (
             <PendingAedReportScreen />
+          ) : activeScreen === 'INR DISPATCH DESK' || activeScreen === 'INR PAYOUT' ? (
+            <InrDispatchDeskScreen />
+          ) : activeScreen === 'SERVICER WALLETS' ? (
+            <ServicerWalletsScreen />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <h1 className="text-[44px] font-bold text-black tracking-wide" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
