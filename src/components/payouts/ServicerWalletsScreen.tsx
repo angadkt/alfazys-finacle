@@ -10,7 +10,8 @@ import {
   Award, 
   RefreshCw, 
   FileSpreadsheet, 
-  RotateCcw
+  RotateCcw,
+  Search
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -42,6 +43,8 @@ interface StatementTxn {
   id: number;
   txn_no: string;
   servicer_id: number;
+  servicer_name?: string;
+  servicer_code?: string;
   channel: string;
   txn_type: string;
   direction: string;
@@ -73,6 +76,13 @@ export default function ServicerWalletsScreen() {
   const [statement, setStatement] = useState<StatementTxn[]>([]);
   const [loading, setLoading] = useState(false);
   const [, setLoadingStatement] = useState(false);
+
+  // Filter States for Passbook & Statement
+  const [statementServicerId, setStatementServicerId] = useState<string>("all");
+  const [statementFromDate, setStatementFromDate] = useState<string>("");
+  const [statementToDate, setStatementToDate] = useState<string>("");
+  const [statementTxnType, setStatementTxnType] = useState<string>("all");
+  const [statementSearchQuery, setStatementSearchQuery] = useState<string>("");
 
   // Modals
   const [isAddServicerOpen, setIsAddServicerOpen] = useState(false);
@@ -132,12 +142,25 @@ export default function ServicerWalletsScreen() {
     }
   };
 
-  // Load Statement for Selected Servicer
-  const fetchStatement = async (id: string) => {
-    if (!id) return;
+  // Load Statement with Filters (Unified / Filtered)
+  const fetchStatement = async (
+    servicerId = statementServicerId,
+    fromDate = statementFromDate,
+    toDate = statementToDate,
+    txnType = statementTxnType,
+    search = statementSearchQuery
+  ) => {
     setLoadingStatement(true);
     try {
-      const res = await api.get(`/payouts/servicers/${id}/statement`);
+      const res = await api.get("/payouts/statement", {
+        params: {
+          servicer_id: servicerId,
+          from_date: fromDate || undefined,
+          to_date: toDate || undefined,
+          txn_type: txnType !== "all" ? txnType : undefined,
+          search: search.trim() || undefined,
+        },
+      });
       setStatement(res.data?.transactions || []);
     } catch (err) {
       console.error("Failed to load statement:", err);
@@ -151,10 +174,16 @@ export default function ServicerWalletsScreen() {
   }, []);
 
   useEffect(() => {
-    if (selectedId) {
-      fetchStatement(selectedId);
-    }
-  }, [selectedId]);
+    fetchStatement(statementServicerId, statementFromDate, statementToDate, statementTxnType, statementSearchQuery);
+  }, [statementServicerId, statementFromDate, statementToDate, statementTxnType]);
+
+  // Debounced search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      fetchStatement(statementServicerId, statementFromDate, statementToDate, statementTxnType, statementSearchQuery);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [statementSearchQuery]);
 
   const activeServicer = servicers.find(s => String(s.id) === String(selectedId));
 
@@ -203,7 +232,7 @@ export default function ServicerWalletsScreen() {
       setIsAddCreditOpen(false);
       setCreditAmount(""); setCreditUtr(""); setCreditNote("");
       await fetchServicers(selectedId);
-      await fetchStatement(selectedId);
+      await fetchStatement();
     } catch (err: any) {
       setModalError(err.response?.data?.error || err.message || "Failed to add float credit");
     } finally {
@@ -230,7 +259,7 @@ export default function ServicerWalletsScreen() {
       setIsConvertOpen(false);
       setConvertAmount(""); setConvertNote("");
       await fetchServicers(selectedId);
-      await fetchStatement(selectedId);
+      await fetchStatement();
     } catch (err: any) {
       setModalError(err.response?.data?.error || err.message || "Failed to convert float");
     } finally {
@@ -246,7 +275,7 @@ export default function ServicerWalletsScreen() {
       await api.post(`/payouts/servicers/${selectedId}/settle-commission`);
       setIsSettleOpen(false);
       await fetchServicers(selectedId);
-      await fetchStatement(selectedId);
+      await fetchStatement();
     } catch (err: any) {
       alert(err.response?.data?.error || "Failed to settle commission");
     } finally {
@@ -265,7 +294,7 @@ export default function ServicerWalletsScreen() {
       setIsBounceOpen(false);
       setBounceTxn(null);
       await fetchServicers(selectedId);
-      await fetchStatement(selectedId);
+      await fetchStatement();
     } catch (err: any) {
       alert(err.response?.data?.error || "Failed to bounce transaction");
     } finally {
@@ -314,7 +343,7 @@ export default function ServicerWalletsScreen() {
             <Plus className="w-3.5 h-3.5" /> New Servicer Account
           </button>
           <button
-            onClick={() => { fetchServicers(selectedId); if (selectedId) fetchStatement(selectedId); }}
+            onClick={() => { fetchServicers(selectedId); fetchStatement(); }}
             className="flex items-center gap-1 bg-[#23528f] hover:bg-[#1a4073] text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
@@ -330,7 +359,11 @@ export default function ServicerWalletsScreen() {
           </span>
           <select
             value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSelectedId(val);
+              setStatementServicerId(val);
+            }}
             className="bg-white border-2 border-[#104080] rounded px-2.5 py-1 text-xs font-bold text-gray-900 focus:outline-none min-w-[240px] cursor-pointer"
           >
             {servicers.map((s) => (
@@ -435,13 +468,159 @@ export default function ServicerWalletsScreen() {
 
       {/* Statement / Passbook Ledger Header */}
       <div className="bg-[#e4e4e4] px-3 py-1.5 border-b border-[#a0a0a0] flex items-center justify-between text-[11px] font-bold text-[#104080]">
-        <span>WALLET PASSBOOK & TRANSACTION STATEMENT</span>
+        <div className="flex items-center gap-2">
+          <span>WALLET PASSBOOK & TRANSACTION STATEMENT</span>
+          <span className="text-[10px] bg-white border border-[#a0a0a0] px-1.5 py-0.2 rounded text-gray-700 font-normal">
+            {statement.length} Records
+          </span>
+        </div>
         <button
           onClick={exportStatementExcel}
           className="flex items-center gap-1 text-[#104080] hover:text-[#0c3162] cursor-pointer"
         >
           <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" /> Export Statement
         </button>
+      </div>
+
+      {/* Finacle Filter Ribbon: Date, Servicer, Txn Type, and Search */}
+      <div className="bg-[#f0f4f8] border-b border-[#c4d4ec] px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Servicer Filter */}
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
+            <span className="text-[#104080] font-bold text-[11px] flex items-center gap-1">
+              <Building2 className="w-3.5 h-3.5" /> Servicer:
+            </span>
+            <select
+              value={statementServicerId}
+              onChange={(e) => {
+                const val = e.target.value;
+                setStatementServicerId(val);
+                if (val !== "all") {
+                  setSelectedId(val);
+                }
+              }}
+              className="bg-transparent text-xs font-semibold text-gray-800 focus:outline-none cursor-pointer"
+            >
+              <option value="all">📁 All Servicers (Consolidated)</option>
+              {servicers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.servicer_code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Quick Date Pills */}
+          <div className="flex items-center gap-1 bg-white border border-[#c4d4ec] rounded p-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                const today = new Date().toISOString().slice(0, 10);
+                setStatementFromDate(today);
+                setStatementToDate(today);
+              }}
+              className={`px-2 py-0.5 text-[11px] font-bold rounded cursor-pointer transition-colors ${
+                statementFromDate === new Date().toISOString().slice(0, 10) &&
+                statementToDate === new Date().toISOString().slice(0, 10)
+                  ? "bg-[#104080] text-white"
+                  : "hover:bg-[#e6edf8] text-[#1e4676]"
+              }`}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const d = new Date();
+                d.setDate(d.getDate() - 1);
+                const yest = d.toISOString().slice(0, 10);
+                setStatementFromDate(yest);
+                setStatementToDate(yest);
+              }}
+              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#1e4676] rounded cursor-pointer"
+            >
+              Yesterday
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStatementFromDate("");
+                setStatementToDate("");
+              }}
+              className={`px-2 py-0.5 text-[11px] font-bold rounded cursor-pointer transition-colors ${
+                !statementFromDate && !statementToDate
+                  ? "bg-[#104080] text-white"
+                  : "hover:bg-[#e6edf8] text-[#1e4676]"
+              }`}
+            >
+              All Time
+            </button>
+          </div>
+
+          {/* Date Pickers */}
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
+            <span className="text-gray-500 text-[10px] font-semibold">From:</span>
+            <FinacleDatePicker
+              value={statementFromDate}
+              onChange={(e) => setStatementFromDate(e.target.value)}
+            />
+            <span className="text-gray-500 text-[10px] font-semibold">To:</span>
+            <FinacleDatePicker
+              value={statementToDate}
+              onChange={(e) => setStatementToDate(e.target.value)}
+            />
+            {(statementFromDate || statementToDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStatementFromDate("");
+                  setStatementToDate("");
+                }}
+                className="text-gray-400 hover:text-red-500 font-bold ml-1 text-xs"
+                title="Clear Dates"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Txn Type Filter */}
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
+            <span className="text-[#104080] font-bold text-[11px]">Type:</span>
+            <select
+              value={statementTxnType}
+              onChange={(e) => setStatementTxnType(e.target.value)}
+              className="bg-transparent text-xs text-gray-800 focus:outline-none cursor-pointer"
+            >
+              <option value="all">All Types</option>
+              <option value="float_credit">Float Top-up (Credit)</option>
+              <option value="payout_debit">Payout Debit</option>
+              <option value="conversion">ATM Cash Convert</option>
+              <option value="reimbursement">Pocket Reimbursement</option>
+              <option value="commission_settle">Commission Paid</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Search Input */}
+        <div className="relative">
+          <input
+            type="text"
+            value={statementSearchQuery}
+            onChange={(e) => setStatementSearchQuery(e.target.value)}
+            placeholder="Search UTR, Txn#, Beneficiary..."
+            className="bg-white border border-[#c4d4ec] rounded px-2.5 py-1 text-xs text-gray-700 w-[230px] pl-7 focus:outline-none focus:border-[#104080]"
+          />
+          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 top-2" />
+          {statementSearchQuery && (
+            <button
+              onClick={() => setStatementSearchQuery("")}
+              className="absolute right-2 top-1.5 text-gray-400 hover:text-red-500 text-xs font-bold"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Statement Table */}
@@ -451,6 +630,9 @@ export default function ServicerWalletsScreen() {
             <thead>
               <tr className="bg-[#f0f4f8] border-b border-[#c4d4ec] text-[10px] font-extrabold text-[#104080] uppercase tracking-wider select-none">
                 <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Txn# & Date</th>
+                {statementServicerId === "all" && (
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Servicer</th>
+                )}
                 <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Type</th>
                 <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Wallet</th>
                 <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Details / Beneficiary</th>
@@ -464,8 +646,8 @@ export default function ServicerWalletsScreen() {
             <tbody className="divide-y divide-[#e2e8f0] text-[12px]">
               {statement.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-gray-500">
-                    No transactions recorded for this servicer yet. Use <strong>[ Add Float (Credit) ]</strong> above to allocate initial float.
+                  <td colSpan={statementServicerId === "all" ? 10 : 9} className="py-10 text-center text-gray-500">
+                    No transactions found matching the selected filter criteria.
                   </td>
                 </tr>
               ) : (
@@ -483,6 +665,14 @@ export default function ServicerWalletsScreen() {
                         <div className="font-mono font-bold text-[#104080]">{t.txn_no}</div>
                         <div className="text-[10px] text-gray-500">{t.entry_date}</div>
                       </td>
+
+                      {/* Servicer Column (if All Servicers view) */}
+                      {statementServicerId === "all" && (
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
+                          <div className="font-bold text-[#104080]">{t.servicer_name || "Direct Company"}</div>
+                          {t.servicer_code && <div className="text-[10px] text-gray-500 font-mono">{t.servicer_code}</div>}
+                        </td>
+                      )}
 
                       {/* Type */}
                       <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
