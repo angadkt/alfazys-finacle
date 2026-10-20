@@ -10,10 +10,10 @@ import {
   AlertTriangle, 
   ArrowUpRight, 
   Search, 
-  Building2, 
-  Wallet, 
-  CreditCard, 
-  Banknote, 
+   
+   
+   
+   
   Send 
 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -345,9 +345,9 @@ export default function InrDispatchDeskScreen() {
           {/* Date Pickers */}
           <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
             <span className="text-gray-500 text-[10px] font-semibold">From:</span>
-            <FinacleDatePicker value={fromDate} onChange={setFromDate} />
+            <FinacleDatePicker value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
             <span className="text-gray-500 text-[10px] font-semibold">To:</span>
-            <FinacleDatePicker value={toDate} onChange={setToDate} />
+            <FinacleDatePicker value={toDate} onChange={(e) => setToDate(e.target.value)} />
             {(fromDate || toDate) && (
               <button
                 onClick={() => { setFromDate(""); setToDate(""); }}
@@ -748,7 +748,7 @@ export default function InrDispatchDeskScreen() {
                     <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
                       Entry Date:
                     </label>
-                    <FinacleDatePicker value={entryDate} onChange={setEntryDate} />
+                    <FinacleDatePicker value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
                   </div>
                 </div>
 

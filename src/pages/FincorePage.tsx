@@ -36,6 +36,18 @@ export default function FincorePage() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isAedExpanded, setIsAedExpanded] = useState<boolean>(true);
+  const [isPayoutExpanded, setIsPayoutExpanded] = useState<boolean>(true);
+
+  const isPayoutScreen = (screen: string) =>
+    screen === 'INR DISPATCH DESK' || 
+    screen === 'SERVICER WALLETS' || 
+    screen === 'INR PAYOUT';
+
+  useEffect(() => {
+    if (isPayoutScreen(activeScreen)) {
+      setIsPayoutExpanded(true);
+    }
+  }, [activeScreen]);
 
   // Auto-expand AED folder in tree if active screen is within AED
   useEffect(() => {

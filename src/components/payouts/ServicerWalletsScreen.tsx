@@ -3,7 +3,6 @@ import FinacleDatePicker from "../FinacleDatePicker";
 import api from "../../services/api";
 import { 
   Building2, 
-  Wallet, 
   CreditCard, 
   Banknote, 
   Plus, 
@@ -11,17 +10,9 @@ import {
   Award, 
   RefreshCw, 
   FileSpreadsheet, 
-  FileText, 
-  AlertCircle, 
-  CheckCircle2, 
-  Clock, 
-  ArrowDownLeft, 
-  ArrowUpRight,
   RotateCcw
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 interface Servicer {
   id: string | number;
@@ -81,7 +72,7 @@ export default function ServicerWalletsScreen() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [statement, setStatement] = useState<StatementTxn[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingStatement, setLoadingStatement] = useState(false);
+  const [, setLoadingStatement] = useState(false);
 
   // Modals
   const [isAddServicerOpen, setIsAddServicerOpen] = useState(false);
@@ -117,7 +108,7 @@ export default function ServicerWalletsScreen() {
   const [convertFrom, setConvertFrom] = useState<"bank" | "cash">("bank");
   const [convertTo, setConvertTo] = useState<"bank" | "cash">("cash");
   const [convertNote, setConvertNote] = useState("");
-  const [convertDate, setConvertDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [convertDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   // Bounce Form
   const [bounceReason, setBounceReason] = useState("Bank rejection / invalid account");
@@ -757,7 +748,7 @@ export default function ServicerWalletsScreen() {
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Entry Date:</label>
-                  <FinacleDatePicker value={creditDate} onChange={setCreditDate} />
+                  <FinacleDatePicker value={creditDate} onChange={(e) => setCreditDate(e.target.value)} />
                 </div>
               </div>
               <div>
