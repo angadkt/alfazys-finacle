@@ -15,8 +15,25 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
+interface EligibleCif {
+  id: number | string;
+  cif_no: string;
+  first_name: string;
+  last_name: string;
+  short_name?: string;
+  contact_number?: string;
+  indian_number?: string;
+  city?: string;
+  country?: string;
+  status: string;
+  existing_servicer_id?: string | number | null;
+  existing_servicer_code?: string | null;
+}
+
 interface Servicer {
   id: string | number;
+  party_id?: number | string | null;
+  cif_no?: string;
   servicer_code: string;
   name: string;
   phone: string;
@@ -95,15 +112,15 @@ export default function ServicerWalletsScreen() {
   // Form States
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState("");
+  const [eligibleCifs, setEligibleCifs] = useState<EligibleCif[]>([]);
+  const [selectedPartyId, setSelectedPartyId] = useState<string>("");
+  const [, setLoadingCifs] = useState(false);
 
   // New Servicer Form
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newCity, setNewCity] = useState("");
-  const [newBankName, setNewBankName] = useState("");
-  const [newAccountNo, setNewAccountNo] = useState("");
-  const [newIfsc, setNewIfsc] = useState("");
-  const [newCommissionRate, setNewCommissionRate] = useState("0.25");
+
 
   // Add Float Credit Form
   const [creditAmount, setCreditAmount] = useState("");
@@ -187,27 +204,65 @@ export default function ServicerWalletsScreen() {
 
   const activeServicer = servicers.find(s => String(s.id) === String(selectedId));
 
-  // Handle Create Servicer
+  // Fetch eligible verified servicer CIFs from Retail CIF master
+  const fetchEligibleCifs = async () => {
+    setLoadingCifs(true);
+    try {
+      const res = await api.get("/payouts/eligible-cifs");
+      setEligibleCifs(res.data?.cifs || []);
+    } catch (err) {
+      console.error("Failed to load eligible CIFs:", err);
+    } finally {
+      setLoadingCifs(false);
+    }
+  };
+
+  const handleOpenAddServicer = () => {
+    setModalError("");
+    fetchEligibleCifs();
+    setSelectedPartyId("");
+    setNewName("");
+    setNewPhone("");
+    setNewCity("");
+
+    setIsAddServicerOpen(true);
+  };
+
+  const handleSelectCif = (partyId: string) => {
+    setSelectedPartyId(partyId);
+    if (!partyId) {
+      setNewName("");
+      setNewPhone("");
+      setNewCity("");
+      return;
+    }
+    const cif = eligibleCifs.find((c) => String(c.id) === String(partyId));
+    if (cif) {
+      const fullName = [cif.first_name, cif.last_name].filter(Boolean).join(" ");
+      setNewName(fullName);
+      setNewPhone(cif.contact_number || cif.indian_number || "");
+      setNewCity(cif.city && cif.city !== "Unknown" ? cif.city : "");
+    }
+  };
+
+  // Handle Create / Open Servicer Account (Linked to CIF with auto-generated account)
   const handleCreateServicer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) { setModalError("Name is required"); return; }
+    if (!newName.trim()) { setModalError("Servicer / CIF name is required"); return; }
     setSubmitting(true);
     setModalError("");
     try {
       const res = await api.post("/payouts/servicers", {
+        party_id: selectedPartyId ? selectedPartyId : undefined,
         name: newName.trim(),
         phone: newPhone.trim() || undefined,
         city: newCity.trim() || undefined,
-        bank_name: newBankName.trim() || undefined,
-        account_no: newAccountNo.trim() || undefined,
-        ifsc_code: newIfsc.trim().toUpperCase() || undefined,
-        commission_rate: parseFloat(newCommissionRate) || 0.25,
       });
       setIsAddServicerOpen(false);
-      setNewName(""); setNewPhone(""); setNewCity(""); setNewBankName(""); setNewAccountNo(""); setNewIfsc("");
+      setNewName(""); setNewPhone(""); setNewCity("");
       await fetchServicers(String(res.data?.servicer?.id));
     } catch (err: any) {
-      setModalError(err.response?.data?.error || err.message || "Failed to create servicer");
+      setModalError(err.response?.data?.error || err.message || "Failed to create servicer account");
     } finally {
       setSubmitting(false);
     }
@@ -337,10 +392,11 @@ export default function ServicerWalletsScreen() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { setModalError(""); setIsAddServicerOpen(true); }}
+            onClick={handleOpenAddServicer}
             className="flex items-center gap-1 bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-0.5 rounded text-[11px] font-bold cursor-pointer"
+            title="Open an Account and create digital wallet for a verified Servicer CIF"
           >
-            <Plus className="w-3.5 h-3.5" /> New Servicer Account
+            <Plus className="w-3.5 h-3.5" /> Open Servicer Account (Link CIF)
           </button>
           <button
             onClick={() => { fetchServicers(selectedId); fetchStatement(); }}
@@ -364,17 +420,24 @@ export default function ServicerWalletsScreen() {
               setSelectedId(val);
               setStatementServicerId(val);
             }}
-            className="bg-white border-2 border-[#104080] rounded px-2.5 py-1 text-xs font-bold text-gray-900 focus:outline-none min-w-[240px] cursor-pointer"
+            className="bg-white border-2 border-[#104080] rounded px-2.5 py-1 text-xs font-bold text-gray-900 focus:outline-none min-w-[280px] cursor-pointer"
           >
-            {servicers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} ({s.servicer_code}) — {s.commission_rate}% Comm
-              </option>
-            ))}
+            {servicers.length === 0 ? (
+              <option value="">No Servicer Accounts Yet — Click [Open Servicer Account] to activate</option>
+            ) : (
+              servicers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} {s.cif_no ? `(${s.cif_no})` : `(${s.servicer_code})`} {s.account_no ? `• A/C: ${s.account_no}` : ""}
+                </option>
+              ))
+            )}
           </select>
           {activeServicer && (
-            <span className="text-[11px] text-gray-600 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded">
-              📍 {activeServicer.city || "Headquarters"} • 📞 {activeServicer.phone || "No phone"} • 🏦 {activeServicer.bank_name || "Bank not set"}
+            <span className="text-[11px] text-gray-600 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded flex items-center gap-2">
+              <span>👤 <strong>{activeServicer.cif_no || activeServicer.servicer_code}</strong></span>
+              <span>🏦 A/C: <strong className="font-mono text-[#104080]">{activeServicer.account_no || "Auto"}</strong></span>
+              <span>📍 {activeServicer.city || "India"}</span>
+              <span>📞 {activeServicer.phone || "No phone"}</span>
             </span>
           )}
         </div>
@@ -762,12 +825,12 @@ export default function ServicerWalletsScreen() {
         </div>
       </div>
 
-      {/* MODAL 1: Create Servicer Account */}
+      {/* MODAL 1: Open Servicer Account (Link Retail CIF) */}
       {isAddServicerOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
           <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-lg overflow-hidden">
             <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between">
-              <span className="font-bold text-xs uppercase tracking-wider">Create New Servicer Account</span>
+              <span className="font-bold text-xs uppercase tracking-wider">Open Servicer Wallet Account (Link Retail CIF)</span>
               <button onClick={() => setIsAddServicerOpen(false)} className="text-white hover:text-red-300 font-bold">✕</button>
             </div>
             <form onSubmit={handleCreateServicer} className="p-4 space-y-3">
@@ -776,6 +839,37 @@ export default function ServicerWalletsScreen() {
                   {modalError}
                 </div>
               )}
+
+              {/* 1. CIF Selection */}
+              <div className="bg-[#f0f4f8] border border-[#c4d4ec] p-2.5 rounded">
+                <label className="block text-[11px] font-extrabold text-[#104080] mb-1">
+                  Step 1: Select Verified Servicer CIF (from Retail CIF Creation):
+                </label>
+                <select
+                  value={selectedPartyId}
+                  onChange={(e) => handleSelectCif(e.target.value)}
+                  className="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#104080]"
+                >
+                  <option value="">-- Choose Verified Servicer CIF or Enter Manually --</option>
+                  {eligibleCifs.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.cif_no} — {c.first_name} {c.last_name} {c.contact_number ? `(${c.contact_number})` : ""} {c.existing_servicer_id ? `[Already Has Wallet]` : ""}
+                    </option>
+                  ))}
+                </select>
+                {selectedPartyId && (
+                  <div className="text-[10px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
+                    ✓ Linked to Master CIF Profile. Name & contact auto-inherited below.
+                  </div>
+                )}
+                {eligibleCifs.length === 0 && (
+                  <div className="text-[10px] text-amber-700 mt-1">
+                    ℹ️ No verified Servicer CIFs found. You can onboard one under <strong>[ CREATE RETAIL CIF ]</strong> (CIF Type: SERVICER) or enter details manually below.
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Servicer Entity Details */}
               <div>
                 <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Servicer Full Name <span className="text-red-500">*</span>:</label>
                 <input
@@ -783,10 +877,11 @@ export default function ServicerWalletsScreen() {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
+                  className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080] font-semibold"
                   required
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Phone / WhatsApp:</label>
@@ -809,63 +904,39 @@ export default function ServicerWalletsScreen() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Bank Name:</label>
-                  <input
-                    type="text"
-                    value={newBankName}
-                    onChange={(e) => setNewBankName(e.target.value)}
-                    placeholder="HDFC Bank"
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
-                  />
+
+              {/* 3. Auto-Generated Operating Account & Dynamic Terms */}
+              <div className="bg-[#eef3f9] border border-[#c4d4ec] p-2.5 rounded space-y-1.5">
+                <div className="text-[11px] font-bold text-[#104080]">
+                  Step 2: Finacle Operating Account & Terms:
                 </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Account Number:</label>
-                  <input
-                    type="text"
-                    value={newAccountNo}
-                    onChange={(e) => setNewAccountNo(e.target.value)}
-                    placeholder="50100..."
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none font-mono"
-                  />
+                <div className="flex items-center justify-between text-xs bg-white border border-[#c4d4ec] px-2.5 py-1.5 rounded">
+                  <span className="font-semibold text-gray-600">Finacle Operating A/C Number:</span>
+                  <span className="font-mono font-extrabold text-[#104080] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    [ Auto-Generated on Activation ]
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">IFSC Code:</label>
-                  <input
-                    type="text"
-                    value={newIfsc}
-                    onChange={(e) => setNewIfsc(e.target.value)}
-                    placeholder="HDFC0001"
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none uppercase font-mono"
-                  />
-                </div>
+                <p className="text-[10px] text-gray-500 leading-relaxed">
+                  ✓ Finacle operating account will be generated automatically upon activation.<br />
+                  ✓ External banks & payout accounts can be chosen dynamically per transaction.<br />
+                  ✓ Commission rates are determined dynamically per deal rather than fixed statically.
+                </p>
               </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Default Commission Rate (%):</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newCommissionRate}
-                  onChange={(e) => setNewCommissionRate(e.target.value)}
-                  placeholder="0.25"
-                  className="w-32 border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none font-bold"
-                />
-              </div>
+
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => setIsAddServicerOpen(false)}
-                  className="bg-[#d4d0c8] px-3 py-1 font-bold text-xs"
+                  className="bg-[#d4d0c8] px-3 py-1 font-bold text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-[#104080] text-white px-4 py-1 font-bold text-xs rounded"
+                  className="bg-[#104080] hover:bg-[#1a559e] text-white px-4 py-1.5 font-bold text-xs rounded cursor-pointer shadow-xs"
                 >
-                  {submitting ? "Creating..." : "Save Servicer Account"}
+                  {submitting ? "Activating..." : "Activate Finacle Wallet"}
                 </button>
               </div>
             </form>
