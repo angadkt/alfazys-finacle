@@ -227,14 +227,7 @@ export default function ReceivedAedScreen() {
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleOpenAdd}
-            className="bg-[#1e4676] text-white font-bold text-[12px] px-3 py-1.5 rounded shadow hover:bg-[#15345b] flex items-center gap-1.5 cursor-pointer"
-          >
-            <span>+</span> Add Received AED Entry
-          </button>
-        </div>
+
       </div>
 
       {/* Main Workspace */}
