@@ -17,21 +17,16 @@ export const exportCreditToExcel = (entries: CreditEntry[], meta?: CreditFilterM
   }
 
   let grandTotalInr = 0;
+  const dateRange = meta?.filterDate || 'All Dates';
+  const generatedTime = new Date().toLocaleString('en-US');
 
-  // 1. Filter Description
-  const filterDesc = [
-    meta?.filterDate ? `Date: ${meta.filterDate}` : 'Date: All',
-    meta?.filterMode && meta.filterMode !== 'ALL' ? `Mode: ${meta.filterMode}` : 'Mode: All',
-    meta?.filterStatus && meta.filterStatus !== 'ALL' ? `Status: ${meta.filterStatus}` : 'Status: All',
-    meta?.searchQuery ? `Search: "${meta.searchQuery}"` : 'Search: None'
-  ].join('  |  ');
-
-  // 2. Header Rows
+  // 1. Clean Header Rows
   const rows: any[][] = [
-    ['INFAZYS FINACLE - UNIVERSAL SETTLEMENT MODULE'],
-    ['CREDIT ENTRY AUDIT & SETTLEMENT REGISTER'],
-    [`Applied Filters: ${filterDesc}`],
-    [`Generated On: ${new Date().toLocaleString()}  |  Total Matching Records: ${entries.length}`],
+    ['INFAZYS FINACLE'],
+    ['Universal Banking Solutions from Infazys'],
+    [],
+    ['Credit Entry Audit & Settlement Register'],
+    [`${dateRange}  •  Generated ${generatedTime}  •  ${entries.length} record(s)`],
     [], // empty spacer row
     [
       'Entry No',
@@ -50,13 +45,13 @@ export const exportCreditToExcel = (entries: CreditEntry[], meta?: CreditFilterM
     ]
   ];
 
-  // 3. Data Rows
+  // 2. Data Rows
   entries.forEach((e) => {
     const amt = typeof e.totalAmount === 'number' ? e.totalAmount : parseFloat(String(e.totalAmount)) || 0;
     grandTotalInr += amt;
 
     const utrStr = Array.isArray(e.utrItems)
-      ? e.utrItems.map((u: any) => `${u.utrNumber} (₹${u.amount})`).join('; ')
+      ? e.utrItems.map((u: any) => `${u.utrNumber} (INR ${u.amount})`).join('; ')
       : '';
 
     rows.push([
@@ -76,7 +71,7 @@ export const exportCreditToExcel = (entries: CreditEntry[], meta?: CreditFilterM
     ]);
   });
 
-  // 4. Grand Total Row
+  // 3. Grand Total Row
   rows.push([]);
   rows.push([
     'GRAND TOTAL',
@@ -124,7 +119,7 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
     return;
   }
 
-  const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const today = new Date().toISOString().split('T')[0];
 
   let grandTotalInr = 0;
@@ -133,51 +128,42 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
     grandTotalInr += amt;
   });
 
-  // 1. Header & Platform Branding
-  doc.setFontSize(14);
-  doc.setTextColor(30, 70, 118); // #1e4676
+  // 1. Top Executive Black Banner with Gold Branding
+  doc.setFillColor(15, 15, 15); // #0f0f0f deep black
+  doc.rect(0, 0, 297, 16.5, 'F');
+
   doc.setFont('helvetica', 'bold');
-  doc.text('INFAZYS FINACLE CORE BANKING PLATFORM', 14, 12);
+  doc.setFontSize(13);
+  doc.setTextColor(218, 175, 55); // #daaf37 Gold
+  doc.text('INFAZYS FINACLE', 14, 8);
 
-  doc.setFontSize(9.5);
-  doc.setTextColor(60, 60, 60);
-  doc.setFont('helvetica', 'bold');
-  doc.text('UNIVERSAL SETTLEMENT • CREDIT ENTRY AUDIT & SETTLEMENT REGISTER', 14, 17.5);
-
-  // 2. Active Filter & KPI Summary Cards (Side by Side)
-  // Left: Filters
-  doc.setFillColor(245, 248, 253);
-  doc.setDrawColor(196, 212, 236);
-  doc.rect(14, 20.5, 165, 13, 'FD');
-
-  const filterItems = [
-    `Date: ${meta?.filterDate || 'All'}`,
-    `Mode: ${meta?.filterMode || 'All'}`,
-    `Status: ${meta?.filterStatus || 'All'}`,
-    meta?.searchQuery ? `Search: "${meta.searchQuery}"` : null
-  ].filter(Boolean).join('   |   ');
-
-  doc.setFontSize(7.5);
-  doc.setTextColor(50, 60, 80);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Active Filters:  ${filterItems}`, 17, 25);
-  doc.text(`Generated On: ${new Date().toLocaleString()}   •   Confidential Audit Export`, 17, 29.5);
-
-  // Right: KPI Card
-  doc.setFillColor(236, 243, 252);
-  doc.setDrawColor(180, 204, 235);
-  doc.rect(183, 20.5, 100, 13, 'FD');
-
   doc.setFontSize(7.5);
-  doc.setTextColor(30, 70, 118);
-  doc.setFont('helvetica', 'bold');
-  doc.text('SETTLEMENT AUDIT SUMMARY', 186, 24.5);
+  doc.setTextColor(215, 215, 215);
+  doc.text('Universal Banking Solutions from Infazys', 14, 13);
 
-  doc.setFontSize(7.2);
+  // 2. Title & Clean Subtitle (No clunky filter box)
+  let cursorY = 24;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(17, 17, 17);
+  doc.text('Credit Entry Audit & Settlement Register', 14, cursorY);
+
+  cursorY += 4.5;
+  const dateRange = meta?.filterDate || 'All Dates';
+  const generatedTime = new Date().toLocaleString('en-US');
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(40, 40, 40);
-  doc.text(`Total Entries: ${entries.length}`, 186, 28.5);
-  doc.text(`Total Value: INR ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 186, 31.5);
+  doc.setFontSize(8);
+  doc.setTextColor(110, 110, 110);
+  doc.text(`${dateRange}  •  Generated ${generatedTime}  •  ${entries.length} record(s)`, 14, cursorY);
+
+  // Gold accent divider line
+  cursorY += 2.5;
+  doc.setDrawColor(218, 175, 55);
+  doc.setLineWidth(0.45);
+  doc.line(14, cursorY, 283, cursorY);
+
+  cursorY += 4;
 
   const head = [[
     'Entry No',
@@ -210,7 +196,7 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
     }
 
     return [
-      { content: e.id, styles: { fontStyle: 'bold' as const, textColor: [30, 70, 118] } },
+      { content: e.id, styles: { fontStyle: 'bold' as const, textColor: [17, 17, 17] } },
       { content: e.paymentDate || '-', styles: { textColor: [50, 50, 50] } },
       { content: (e.beneficiaryName || '').toUpperCase(), styles: { fontStyle: 'bold' as const, textColor: [30, 30, 30] } },
       { content: e.accountNumber || '-', styles: { fontStyle: 'bold' as const, textColor: [40, 50, 70] } },
@@ -227,16 +213,16 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
     {
       content: `GRAND TOTAL (${entries.length} Entries)`,
       colSpan: 7,
-      styles: { fontStyle: 'bold' as const, halign: 'right' as const, fillColor: [30, 70, 118], textColor: 255, fontSize: 7.8 }
+      styles: { fontStyle: 'bold' as const, halign: 'right' as const, fillColor: [17, 17, 17], textColor: [255, 255, 255], fontSize: 7.6 }
     },
     {
       content: `INR ${grandTotalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      styles: { fontStyle: 'bold' as const, halign: 'right' as const, fillColor: [30, 70, 118], textColor: 255, fontSize: 7.8 }
+      styles: { fontStyle: 'bold' as const, halign: 'right' as const, fillColor: [17, 17, 17], textColor: [255, 255, 255], fontSize: 7.6 }
     },
     {
       content: '',
       colSpan: 2,
-      styles: { fillColor: [30, 70, 118] }
+      styles: { fillColor: [17, 17, 17] }
     }
   ]];
 
@@ -244,27 +230,27 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
     head,
     body,
     foot,
-    startY: 36,
+    startY: cursorY,
     theme: 'grid',
     styles: {
       fontSize: 7.2,
       cellPadding: 1.8,
-      lineColor: [200, 215, 235],
-      lineWidth: 0.15,
+      lineColor: [225, 225, 225],
+      lineWidth: 0.12,
       textColor: [30, 30, 30],
       overflow: 'linebreak'
     },
     headStyles: {
-      fillColor: [30, 70, 118],
-      textColor: 255,
+      fillColor: [17, 17, 17], // Black header
+      textColor: [255, 255, 255],
       fontStyle: 'bold',
       fontSize: 7.5,
       halign: 'center',
       cellPadding: 2.2
     },
     footStyles: {
-      fillColor: [30, 70, 118],
-      textColor: 255,
+      fillColor: [17, 17, 17],
+      textColor: [255, 255, 255],
       fontStyle: 'bold',
       fontSize: 7.8
     },
@@ -281,17 +267,19 @@ export const exportCreditToPdf = (entries: CreditEntry[], meta?: CreditFilterMet
       9: { cellWidth: 19, halign: 'center' }
     },
     alternateRowStyles: {
-      fillColor: [250, 252, 255]
+      fillColor: [255, 255, 255]
     },
     didDrawPage: (data: any) => {
       const pageCount = doc.getNumberOfPages();
-      doc.setFontSize(7.2);
-      doc.setTextColor(120, 120, 120);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(130, 130, 130);
       const pageHeight = doc.internal.pageSize.height;
       doc.text(
-        `Confidential - Finacle Core Banking Platform  •  Page ${data.pageNumber} of ${pageCount}  •  Exported on ${new Date().toLocaleString()}`,
-        14,
-        pageHeight - 6
+        `Confidential • INFAZYS Internal • Page ${data.pageNumber} of ${pageCount}`,
+        doc.internal.pageSize.width / 2,
+        pageHeight - 6,
+        { align: 'center' }
       );
     }
   });

@@ -861,6 +861,21 @@ export default function OrderEntryForm() {
     }
   };
 
+  const fetchReceivedEntriesForExport = async (agentName: string) => {
+    try {
+      const params: any = { limit: 200 };
+      if (filterFromDate) params.from_date = filterFromDate;
+      if (filterToDate) params.to_date = filterToDate;
+      if (agentName && agentName !== 'ALL AGENTS') {
+        params.agent_customer = agentName;
+      }
+      const res = await api.get('/records/received-aed', { params });
+      return res.data?.records || [];
+    } catch {
+      return [];
+    }
+  };
+
   const handleDownloadExcel = async () => {
     if (fetchedOrders.length === 0) {
       alert('No orders available to export.');
@@ -869,10 +884,26 @@ export default function OrderEntryForm() {
     setIsExporting('excel');
     try {
       const orders = await getOrdersForExport();
-      const selectedCustomer = customers.find(c => String(c.internal_id) === String(filterAgent));
+      const selectedCustomer = customers.find(c => String(c.internal_id) === String(filterAgent) || c.id === filterAgent);
+      const agentCleanName = selectedCustomer ? selectedCustomer.name : (filterAgent ? filterAgent : 'ALL AGENTS');
+      const receivedEntries = await fetchReceivedEntriesForExport(agentCleanName);
+
+      const effectiveRecAed = receivedAedTotalSum || receivedEntries.reduce((s: number, r: any) => s + parseFloat(r.aed_amount || 0), 0);
+
       exportOrdersToExcel(orders, {
         filterDate: dateDisplayLabel,
         filterAgent: selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.id})` : filterAgent,
+        agentName: agentCleanName,
+        dateRangeLabel: dateDisplayLabel,
+        receivedEntries,
+        summaryMetrics: {
+          totalAed,
+          receivedAed: effectiveRecAed,
+          balanceAed: totalAed - effectiveRecAed,
+          transferredInr,
+          commissionRate: 0,
+          commissionAmount: 0
+        },
         searchQuery
       });
     } catch (err: any) {
@@ -890,10 +921,26 @@ export default function OrderEntryForm() {
     setIsExporting('pdf');
     try {
       const orders = await getOrdersForExport();
-      const selectedCustomer = customers.find(c => String(c.internal_id) === String(filterAgent));
+      const selectedCustomer = customers.find(c => String(c.internal_id) === String(filterAgent) || c.id === filterAgent);
+      const agentCleanName = selectedCustomer ? selectedCustomer.name : (filterAgent ? filterAgent : 'ALL AGENTS');
+      const receivedEntries = await fetchReceivedEntriesForExport(agentCleanName);
+
+      const effectiveRecAed = receivedAedTotalSum || receivedEntries.reduce((s: number, r: any) => s + parseFloat(r.aed_amount || 0), 0);
+
       exportOrdersToPdf(orders, {
         filterDate: dateDisplayLabel,
         filterAgent: selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.id})` : filterAgent,
+        agentName: agentCleanName,
+        dateRangeLabel: dateDisplayLabel,
+        receivedEntries,
+        summaryMetrics: {
+          totalAed,
+          receivedAed: effectiveRecAed,
+          balanceAed: totalAed - effectiveRecAed,
+          transferredInr,
+          commissionRate: 0,
+          commissionAmount: 0
+        },
         searchQuery
       });
     } catch (err: any) {
