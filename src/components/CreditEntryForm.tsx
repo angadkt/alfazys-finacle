@@ -511,7 +511,7 @@ Generated on: ${new Date().toLocaleString()}`;
       {/* 1. Header Bar */}
       <div className="bg-white px-3 py-2 border-b border-[#a0a0a0] flex items-center justify-between">
         <div>
-          <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide">
+          <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide">
             Credit Entry Management
           </h4>
           <span className="text-[11px] text-gray-600">

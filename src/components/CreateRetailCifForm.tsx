@@ -197,7 +197,7 @@ export default function CreateRetailCifForm() {
     return (
       <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
         <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
-          <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide">create retail cif</h4>
+          <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide">create retail cif</h4>
         </div>
         <div className="flex-1 bg-white p-4 font-sans">
           <h2 className="text-[16px] font-bold text-black mb-2">Custom Create Retail CIF</h2>
@@ -259,7 +259,7 @@ export default function CreateRetailCifForm() {
     <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
       
       <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
-        <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide mb-3">create retail cif</h4>
+        <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide mb-3">create retail cif</h4>
         
         {/* Selected Function and CIF ID */}
         <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-2 text-[12px] text-black items-center w-fit">

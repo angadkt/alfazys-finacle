@@ -281,7 +281,7 @@ export default function AedReportsScreen() {
       {/* Title Bar */}
       <div className="bg-[#e4e4e4] border-b border-[#a0a0a0] px-3 py-2 flex items-center justify-between shadow-xs">
         <div>
-          <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide">
+          <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide">
             AED Collection & Financial Summary Report
           </h4>
           <span className="text-[11px] text-gray-600">

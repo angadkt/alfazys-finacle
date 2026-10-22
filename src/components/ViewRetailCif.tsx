@@ -133,7 +133,7 @@ export default function ViewRetailCif() {
   return (
     <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
       <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
-        <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide">view retail cif</h4>
+        <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide">view retail cif</h4>
       </div>
       <div className="flex-1 flex flex-col p-4 relative overflow-hidden">
       

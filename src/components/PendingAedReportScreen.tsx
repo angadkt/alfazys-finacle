@@ -344,7 +344,7 @@ export default function PendingAedReportScreen() {
       {/* Title Bar */}
       <div className="bg-[#e4e4e4] border-b border-[#a0a0a0] px-3 py-2 flex items-center justify-between shadow-xs">
         <div>
-          <h4 className="text-[15px] font-extrabold text-[#1e4676] m-0 capitalize tracking-wide flex items-center gap-2">
+          <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide flex items-center gap-2">
             <span>Pending AED Collection Register & Aging Report</span>
             <span className="bg-[#b91c1c] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
               Receivables

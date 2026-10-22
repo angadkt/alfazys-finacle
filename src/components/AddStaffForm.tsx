@@ -212,7 +212,7 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
       {/* Page Title & Breadcrumb */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#a0b0c0]">
         <div>
-          <h1 className="text-[17px] font-bold text-[#104080] tracking-tight">
+          <h1 className="text-[17px] font-bold text-black tracking-tight">
             USER PROFILE & STAFF CREDENTIAL PROVISIONING
           </h1>
           <p className="text-[11px] text-gray-600">
