@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import FinacleDatePicker from "../FinacleDatePicker";
 import api from "../../services/api";
 import { 
+  User,
   Building2, 
   CreditCard, 
   Banknote, 
@@ -15,7 +16,10 @@ import {
   Trash2,
   CheckCircle2,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Pencil,
+  Phone,
+  MapPin
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -43,6 +47,7 @@ interface EligibleCif {
   status: string;
   existing_servicer_id?: string | number | null;
   existing_servicer_code?: string | null;
+  photo_url?: string | null;
 }
 
 interface Servicer {
@@ -61,6 +66,7 @@ interface Servicer {
   commission_rate: number;
   status: string;
   created_at: string;
+  photo_url?: string | null;
   wallet: {
     bank_balance: number;
     cash_balance: number;
@@ -140,7 +146,17 @@ export default function ServicerWalletsScreen() {
   const [newBranch, setNewBranch] = useState<"INDIA" | "UAE">("INDIA");
   const [modalStep, setModalStep] = useState<1 | 2 | 3>(1);
   const [bankAccounts, setBankAccounts] = useState<ServicerBankAccount[]>([]);
-  const [fetchingIfscIndex, setFetchingIfscIndex] = useState<number | null>(null);
+
+  // Option A Entry Form State for Step 2
+  const [entryAccountHolder, setEntryAccountHolder] = useState("");
+  const [entryAccountNumber, setEntryAccountNumber] = useState("");
+  const [entryIfsc, setEntryIfsc] = useState("");
+  const [entryBankName, setEntryBankName] = useState("");
+  const [entryBranchName, setEntryBranchName] = useState("");
+  const [entryAccountType, setEntryAccountType] = useState<"Current" | "Savings">("Current");
+  const [editingBankIndex, setEditingBankIndex] = useState<number | null>(null);
+  const [isFetchingEntryIfsc, setIsFetchingEntryIfsc] = useState(false);
+  const [entryError, setEntryError] = useState("");
 
 
   // Add Float Credit Form
@@ -248,6 +264,14 @@ export default function ServicerWalletsScreen() {
     setNewBranch("INDIA");
     setModalStep(1);
     setBankAccounts([]);
+    setEditingBankIndex(null);
+    setEntryAccountHolder("");
+    setEntryAccountNumber("");
+    setEntryIfsc("");
+    setEntryBankName("");
+    setEntryBranchName("");
+    setEntryAccountType("Current");
+    setEntryError("");
     setIsAddServicerOpen(true);
   };
 
@@ -258,12 +282,14 @@ export default function ServicerWalletsScreen() {
       setNewPhone("");
       setNewCity("");
       setNewBranch("INDIA");
+      setEntryAccountHolder("");
       return;
     }
     const cif = eligibleCifs.find((c) => String(c.id) === String(partyId));
     if (cif) {
       const fullName = [cif.first_name, cif.last_name].filter(Boolean).join(" ");
       setNewName(fullName);
+      setEntryAccountHolder(fullName);
       setNewPhone(cif.contact_number || cif.indian_number || "");
       setNewCity(cif.city && cif.city !== "Unknown" ? cif.city : "");
       if (
@@ -279,31 +305,19 @@ export default function ServicerWalletsScreen() {
   };
 
   // Bank accounts management within modal
-  const handleAddBankAccount = () => {
-    setBankAccounts(prev => [
-      ...prev,
-      {
-        id: `ba_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        bank_name: "",
-        account_number: "",
-        account_holder: newName.trim() || "",
-        ifsc_code: "",
-        branch_name: "",
-        account_type: "Current",
-        is_primary: prev.length === 0,
-      }
-    ]);
-  };
-
-  const handleUpdateBankAccount = (index: number, field: keyof ServicerBankAccount, value: any) => {
-    setBankAccounts(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
-  };
-
   const handleRemoveBankAccount = (index: number) => {
+    if (editingBankIndex === index) {
+      setEditingBankIndex(null);
+      setEntryAccountHolder(newName.trim());
+      setEntryAccountNumber("");
+      setEntryIfsc("");
+      setEntryBankName("");
+      setEntryBranchName("");
+      setEntryAccountType("Current");
+      setEntryError("");
+    } else if (editingBankIndex !== null && editingBankIndex > index) {
+      setEditingBankIndex(editingBankIndex - 1);
+    }
     setBankAccounts(prev => {
       const updated = prev.filter((_, i) => i !== index);
       if (updated.length > 0 && !updated.some(a => a.is_primary)) {
@@ -317,38 +331,102 @@ export default function ServicerWalletsScreen() {
     setBankAccounts(prev => prev.map((a, i) => ({ ...a, is_primary: i === index })));
   };
 
-  const handleIfscLookup = async (index: number, ifsc: string) => {
-    const cleanIfsc = ifsc.trim().toUpperCase();
-    setBankAccounts(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], ifsc_code: cleanIfsc };
-      return updated;
-    });
+  const handleEditBankAccount = (index: number) => {
+    const acc = bankAccounts[index];
+    if (!acc) return;
+    setEditingBankIndex(index);
+    setEntryAccountHolder(acc.account_holder || newName);
+    setEntryAccountNumber(acc.account_number);
+    setEntryIfsc(acc.ifsc_code);
+    setEntryBankName(acc.bank_name);
+    setEntryBranchName(acc.branch_name);
+    setEntryAccountType(acc.account_type);
+    setEntryError("");
+  };
 
-    if (cleanIfsc.length === 11) {
-      setFetchingIfscIndex(index);
+  const handleCancelEdit = () => {
+    setEditingBankIndex(null);
+    setEntryAccountHolder(newName.trim());
+    setEntryAccountNumber("");
+    setEntryIfsc("");
+    setEntryBankName("");
+    setEntryBranchName("");
+    setEntryAccountType("Current");
+    setEntryError("");
+  };
+
+  const handleEntryIfscChange = async (val: string) => {
+    const clean = val.trim().toUpperCase();
+    setEntryIfsc(clean);
+    if (clean.length === 11) {
+      setIsFetchingEntryIfsc(true);
       try {
-        const res = await fetch(`https://ifsc.razorpay.com/${cleanIfsc}`);
+        const res = await fetch(`https://ifsc.razorpay.com/${clean}`);
         if (res.ok) {
           const data = await res.json();
-          setBankAccounts(prev => {
-            const updated = [...prev];
-            updated[index] = {
-              ...updated[index],
-              ifsc_code: cleanIfsc,
-              bank_name: data.BANK || updated[index].bank_name,
-              branch_name: data.BRANCH || updated[index].branch_name,
-            };
-            return updated;
-          });
+          if (data.BANK) setEntryBankName(data.BANK);
+          if (data.BRANCH) setEntryBranchName(data.BRANCH);
         }
       } catch (err) {
         console.warn("IFSC lookup failed:", err);
       } finally {
-        setFetchingIfscIndex(null);
+        setIsFetchingEntryIfsc(false);
       }
     }
   };
+
+  const handleSaveEntryToTable = () => {
+    if (!entryAccountNumber.trim()) {
+      setEntryError("Account number is required");
+      return;
+    }
+    if (!entryIfsc.trim()) {
+      setEntryError("IFSC Code is required");
+      return;
+    }
+    setEntryError("");
+
+    if (editingBankIndex !== null) {
+      setBankAccounts(prev => {
+        const updated = [...prev];
+        if (updated[editingBankIndex]) {
+          updated[editingBankIndex] = {
+            ...updated[editingBankIndex],
+            account_holder: entryAccountHolder.trim() || newName.trim() || "",
+            account_number: entryAccountNumber.trim(),
+            ifsc_code: entryIfsc.trim().toUpperCase(),
+            bank_name: entryBankName.trim() || "Indian Bank",
+            branch_name: entryBranchName.trim(),
+            account_type: entryAccountType,
+          };
+        }
+        return updated;
+      });
+      setEditingBankIndex(null);
+    } else {
+      const isFirst = bankAccounts.length === 0;
+      const newAcc: ServicerBankAccount = {
+        id: `ba_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        account_holder: entryAccountHolder.trim() || newName.trim() || "",
+        account_number: entryAccountNumber.trim(),
+        ifsc_code: entryIfsc.trim().toUpperCase(),
+        bank_name: entryBankName.trim() || "Indian Bank",
+        branch_name: entryBranchName.trim(),
+        account_type: entryAccountType,
+        is_primary: isFirst,
+      };
+      setBankAccounts(prev => [...prev, newAcc]);
+    }
+
+    setEntryAccountNumber("");
+    setEntryIfsc("");
+    setEntryBankName("");
+    setEntryBranchName("");
+    setEntryAccountType("Current");
+    setEntryAccountHolder(newName.trim());
+  };
+
+
 
   // Handle Create / Open Servicer Account (Linked to CIF with auto-generated account)
   const handleCreateServicer = async (e?: React.FormEvent) => {
@@ -550,52 +628,125 @@ export default function ServicerWalletsScreen() {
               ))
             )}
           </select>
-          {activeServicer && (
-            <span className="text-[11px] text-gray-600 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded flex items-center gap-2 flex-wrap">
-              <span>👤 <strong>{activeServicer.cif_no || activeServicer.servicer_code}</strong></span>
-              <span>🏦 A/C: <strong className="font-mono text-[#104080]">{activeServicer.account_no || "Auto"}</strong></span>
-              <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-mono font-bold text-[10px]">
-                🏛️ IFSC: {activeServicer.ifsc_code || (activeServicer.branch === 'UAE' ? 'INFA0000002' : 'INFA0000001')}
-              </span>
-              <span className="bg-blue-50 text-[#104080] border border-blue-200 px-1.5 py-0.2 rounded font-bold text-[10px]">
-                {activeServicer.branch === 'UAE' ? '🇦🇪 UAE' : '🇮🇳 INDIA'}
-              </span>
-              {activeServicer.bank_accounts && activeServicer.bank_accounts.length > 0 && (
-                <span 
-                  className="bg-indigo-50 text-indigo-800 border border-indigo-200 px-1.5 py-0.2 rounded font-bold text-[10px]" 
-                  title={activeServicer.bank_accounts.map(b => `${b.bank_name} (${b.account_number})`).join(", ")}
-                >
-                  💳 {activeServicer.bank_accounts.length} Bank A/C{activeServicer.bank_accounts.length > 1 ? "s" : ""}
-                </span>
-              )}
-              <span>📍 {activeServicer.city || (activeServicer.branch === 'UAE' ? 'Dubai' : 'India')}</span>
-              <span>📞 {activeServicer.phone || "No phone"}</span>
-            </span>
-          )}
         </div>
 
         {/* Action Buttons for Selected Servicer */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setModalError(""); setIsAddCreditOpen(true); }}
-            className="flex items-center gap-1 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1 rounded text-xs font-bold shadow-xs cursor-pointer"
+            className="flex items-center gap-1 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded text-xs font-bold shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" /> Add Float (Credit)
           </button>
           <button
             onClick={() => { setModalError(""); setIsConvertOpen(true); }}
-            className="flex items-center gap-1 bg-white hover:bg-gray-100 border border-[#c4d4ec] text-[#104080] px-3 py-1 rounded text-xs font-bold shadow-2xs cursor-pointer"
+            className="flex items-center gap-1 bg-white hover:bg-gray-100 border border-[#c4d4ec] text-[#104080] px-3 py-1.5 rounded text-xs font-bold shadow-2xs cursor-pointer"
           >
             <ArrowLeftRight className="w-3.5 h-3.5" /> ATM Cash Conversion
           </button>
           <button
             onClick={() => setIsSettleOpen(true)}
-            className="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-white px-3 py-1 rounded text-xs font-bold shadow-xs cursor-pointer"
+            className="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded text-xs font-bold shadow-xs cursor-pointer"
           >
             <Award className="w-3.5 h-3.5" /> Settle Commission
           </button>
         </div>
       </div>
+
+      {/* Servicer Profile Mini-Card (Option 2) */}
+      {activeServicer && (
+        <div className="bg-white border-b border-[#c4d4ec] px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+          {/* Section 1: Profile Identity & Contact */}
+          <div className="flex items-center gap-3">
+            {activeServicer.photo_url ? (
+              <img
+                src={activeServicer.photo_url}
+                alt={activeServicer.name}
+                className="w-10 h-10 rounded-full object-cover border-2 border-[#104080] shadow-xs shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[#104080]/10 border-2 border-[#104080] flex items-center justify-center text-[#104080] font-extrabold text-sm shrink-0">
+                {activeServicer.name ? activeServicer.name.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
+              </div>
+            )}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-gray-900 text-sm tracking-tight">{activeServicer.name}</span>
+                <span className="bg-blue-50 text-[#104080] border border-blue-200 px-1.5 py-0.2 rounded font-mono font-bold text-[10px]">
+                  {activeServicer.cif_no || activeServicer.servicer_code}
+                </span>
+                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-bold text-[9px] uppercase tracking-wide">
+                  ● Active
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-[11px] text-gray-500 mt-0.5 flex-wrap">
+                {activeServicer.phone && (
+                  <span className="flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-gray-400" /> {activeServicer.phone}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-gray-400" /> {activeServicer.city || (activeServicer.branch === 'UAE' ? 'Dubai' : 'India')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Finacle Operating Account & Branch Clearing */}
+          <div className="flex items-center gap-3.5 bg-[#f8fbff] border border-[#c4d4ec] px-3 py-1.5 rounded">
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Operating A/C</span>
+              <span className="font-mono font-extrabold text-[#104080] text-xs">
+                {activeServicer.account_no || "Auto-Generated"}
+              </span>
+            </div>
+            <div className="h-6 w-px bg-[#c4d4ec]"></div>
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Branch Clearing IFSC</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 text-xs">
+                  {activeServicer.ifsc_code || (activeServicer.branch === 'UAE' ? 'INFA0000002' : 'INFA0000001')}
+                </span>
+                <span className="text-[10px] font-bold text-gray-600 uppercase">
+                  {activeServicer.branch === 'UAE' ? '🇦🇪 UAE' : '🇮🇳 INDIA'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Registered Indian Bank Accounts */}
+          <div className="flex items-center gap-2 bg-[#f8fafc] border border-gray-200 px-3 py-1.5 rounded">
+            <CreditCard className="w-4 h-4 text-[#104080] shrink-0" />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Linked Settlement Banks</span>
+                <span className="bg-indigo-50 text-indigo-800 border border-indigo-200 font-extrabold text-[9px] px-1.5 py-0.2 rounded">
+                  {activeServicer.bank_accounts?.length || 0} A/C{activeServicer.bank_accounts?.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <div className="text-[11px] text-gray-700 font-medium flex items-center gap-1.5 flex-wrap mt-0.5">
+                {activeServicer.bank_accounts && activeServicer.bank_accounts.length > 0 ? (
+                  activeServicer.bank_accounts.map((b, i) => (
+                    <span 
+                      key={i} 
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                        b.is_primary ? "bg-emerald-50 text-emerald-900 border-emerald-200 shadow-2xs" : "bg-white text-gray-700 border-gray-200"
+                      }`}
+                      title={`${b.account_holder ? b.account_holder + ' • ' : ''}${b.bank_name} - ${b.account_number} (${b.ifsc_code})`}
+                    >
+                      {b.is_primary && <span className="text-emerald-700 font-extrabold">★</span>}
+                      <span>{b.bank_name}</span>
+                      <span className="font-mono text-gray-500">({b.account_number.slice(-4)})</span>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-400 italic text-[10px]">No linked bank accounts registered</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Multi-Bucket Wallet Cards */}
       {activeServicer && (
@@ -992,7 +1143,7 @@ export default function ServicerWalletsScreen() {
                   onClick={() => {
                     if (!newName.trim()) { setModalError("Servicer name is required before proceeding to Step 2"); return; }
                     setModalError("");
-                    if (bankAccounts.length === 0) handleAddBankAccount();
+                    if (!entryAccountHolder.trim()) setEntryAccountHolder(newName.trim());
                     setModalStep(2);
                   }}
                   className={`flex items-center gap-1 font-bold px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
@@ -1030,61 +1181,103 @@ export default function ServicerWalletsScreen() {
               )}
 
               {/* ================= STEP 1: CURRENT COMPLETE STEP ================= */}
-              {modalStep === 1 && (
+              {modalStep === 1 && (() => {
+                const selectedCifObj = eligibleCifs.find((c) => String(c.id) === String(selectedPartyId));
+                const photoSrc = selectedCifObj?.photo_url || null;
+
+                return (
                 <div className="space-y-3">
-                  {/* 1. CIF Selection (Filtered to hide already-linked CIFs) */}
-                  <div className="bg-[#f0f4f8] border border-[#c4d4ec] p-2.5 rounded">
-                    <label className="block text-[11px] font-extrabold text-[#104080] mb-1">
+                  {/* 1. CIF Selection with Servicer Photo Verification Box */}
+                  <div className="bg-[#f0f4f8] border border-[#c4d4ec] p-3 rounded">
+                    <label className="block text-[11px] font-extrabold text-[#104080] mb-2">
                       Step 1: Select Verified Servicer CIF (from Retail CIF Creation):
                     </label>
-                    <select
-                      value={selectedPartyId}
-                      onChange={(e) => handleSelectCif(e.target.value)}
-                      className="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#104080]"
-                    >
-                      <option value="">-- Choose Verified Servicer CIF or Enter Manually --</option>
-                      {eligibleCifs
-                        .filter((c) => !c.existing_servicer_id)
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.cif_no} — {c.first_name} {c.last_name} {c.contact_number ? `(${c.contact_number})` : ""}
-                          </option>
-                      ))}
-                    </select>
-                    {selectedPartyId && (
-                      <div className="text-[10px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
-                        ✓ Linked to Master CIF Profile. Name & contact auto-inherited below.
-                      </div>
-                    )}
-                    {eligibleCifs.filter((c) => !c.existing_servicer_id).length === 0 && (
-                      <div className="text-[10px] text-amber-700 mt-1">
-                        ℹ️ All verified servicer CIFs already have wallets, or none exist. You can onboard a new CIF under <strong>[ CREATE RETAIL CIF ]</strong> (CIF Type: SERVICER) or enter details manually below.
-                      </div>
-                    )}
-                  </div>
 
-                  {/* 2. Servicer Entity Details */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Servicer Full Name <span className="text-red-500">*</span>:</label>
-                    <input
-                      type="text"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      placeholder="e.g. Rahul Sharma"
-                      className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080] font-semibold"
-                      required
-                    />
-                  </div>
+                    <div className="flex flex-col sm:flex-row items-start gap-3">
+                      {/* Servicer KYC Photo Box */}
+                      <div className="flex flex-col items-center justify-center shrink-0 w-24">
+                        <div className="w-20 h-24 rounded border-2 border-[#104080] bg-white overflow-hidden shadow-xs flex items-center justify-center relative">
+                          {photoSrc ? (
+                            <img
+                              src={photoSrc}
+                              alt="Servicer"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-slate-400 p-1 text-center">
+                              <User className="w-8 h-8 text-slate-300 mb-0.5" />
+                              <span className="text-[8px] font-bold uppercase leading-tight text-slate-400">No Photo Available</span>
+                            </div>
+                          )}
+                        </div>
+                        {selectedPartyId ? (
+                          photoSrc ? (
+                            <span className="mt-1 text-[9px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-1.5 py-0.5 rounded text-center leading-tight">
+                              ✓ Verified Photo
+                            </span>
+                          ) : (
+                            <span className="mt-1 text-[9px] bg-gray-100 text-gray-600 border border-gray-300 font-semibold px-1.5 py-0.5 rounded text-center leading-tight">
+                              No Photo on CIF
+                            </span>
+                          )
+                        ) : (
+                          <span className="mt-1 text-[9px] text-gray-400 font-medium text-center leading-tight">
+                            CIF Photo
+                          </span>
+                        )}
+                      </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Phone / WhatsApp:</label>
-                    <input
-                      type="text"
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      placeholder="+91 ..."
-                      className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
-                    />
+                      {/* Dropdown and Contact Details */}
+                      <div className="flex-1 w-full space-y-2">
+                        <div>
+                          <select
+                            value={selectedPartyId}
+                            onChange={(e) => handleSelectCif(e.target.value)}
+                            className="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1.5 text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#104080]"
+                          >
+                            <option value="">-- Choose Verified Servicer CIF or Enter Manually --</option>
+                            {eligibleCifs
+                              .filter((c) => !c.existing_servicer_id)
+                              .map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.cif_no} — {c.first_name} {c.last_name} {c.contact_number ? `(${c.contact_number})` : ""}
+                                </option>
+                            ))}
+                          </select>
+                          {selectedPartyId && (
+                            <div className="text-[10px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
+                              ✓ Linked to Master CIF Profile. Name & contact auto-inherited below.
+                            </div>
+                          )}
+                          {eligibleCifs.filter((c) => !c.existing_servicer_id).length === 0 && (
+                            <div className="text-[10px] text-amber-700 mt-1">
+                              ℹ️ All verified servicer CIFs already have wallets, or none exist. You can onboard a new CIF under <strong>[ CREATE RETAIL CIF ]</strong> (CIF Type: SERVICER) or enter details manually below.
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Servicer Full Name <span className="text-red-500">*</span>:</label>
+                          <input
+                            type="text"
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080] font-semibold"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Phone / WhatsApp:</label>
+                          <input
+                            type="text"
+                            value={newPhone}
+                            onChange={(e) => setNewPhone(e.target.value)}
+                            className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* 3. Auto-Generated Operating Account, Branch & IFSC Terms */}
@@ -1168,7 +1361,7 @@ export default function ServicerWalletsScreen() {
                       onClick={() => {
                         if (!newName.trim()) { setModalError("Servicer / CIF name is required"); return; }
                         setModalError("");
-                        if (bankAccounts.length === 0) handleAddBankAccount();
+                        if (!entryAccountHolder.trim()) setEntryAccountHolder(newName.trim());
                         setModalStep(2);
                       }}
                       className="bg-[#104080] hover:bg-[#1a559e] text-white px-4 py-1.5 font-bold text-xs rounded cursor-pointer shadow-xs flex items-center gap-1.5"
@@ -1178,161 +1371,256 @@ export default function ServicerWalletsScreen() {
                     </button>
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
-              {/* ================= STEP 2: REGISTER VERIFIED BANK A/CS ================= */}
+              {/* ================= STEP 2: REGISTER VERIFIED BANK A/CS (OPTION A: FORM + TABLE) ================= */}
               {modalStep === 2 && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between bg-[#f0f4f8] border border-[#c4d4ec] p-2.5 rounded">
+                  {/* Step Header */}
+                  <div className="bg-[#f0f4f8] border border-[#c4d4ec] p-2.5 rounded flex items-center justify-between">
                     <div>
-                      <h5 className="font-extrabold text-[#104080] text-xs m-0">
+                      <h5 className="font-extrabold text-[#104080] text-xs m-0 flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-[#104080]" />
                         Step 2: Register Verified Indian Bank Accounts
                       </h5>
                       <span className="text-[10px] text-gray-600">
-                        Add real bank accounts operated by {newName || "this servicer"} for payouts, IMPS/RTGS, and settlements.
+                        Add bank accounts operated by <strong className="text-gray-900">{newName || "this servicer"}</strong> for payouts, IMPS/RTGS, and settlements.
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAddBankAccount}
-                      className="bg-[#104080] hover:bg-[#1a559e] text-white px-2.5 py-1 rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add Bank Account
-                    </button>
+                    <span className="bg-[#104080] text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-2xs">
+                      {bankAccounts.length} Account{bankAccounts.length === 1 ? "" : "s"} In Table
+                    </span>
                   </div>
 
-                  {bankAccounts.length === 0 ? (
-                    <div className="text-center py-6 border-2 border-dashed border-[#c4d4ec] rounded bg-[#fafbfc]">
-                      <Building2 className="w-8 h-8 text-gray-400 mx-auto mb-1.5" />
-                      <p className="text-xs font-bold text-gray-700">No bank accounts added yet</p>
-                      <p className="text-[11px] text-gray-500 mb-2">You can add multiple Indian bank accounts or skip to Step 3</p>
-                      <button
-                        type="button"
-                        onClick={handleAddBankAccount}
-                        className="bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1 rounded text-xs font-bold cursor-pointer"
-                      >
-                        + Add First Bank Account
-                      </button>
+                  {/* Option A: Quick Add Form Strip on Top */}
+                  <div className="bg-[#fafbfc] border border-[#c4d4ec] rounded p-2.5 space-y-2 shadow-2xs">
+                    <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-1">
+                      <span className="text-[11px] font-bold text-[#104080] flex items-center gap-1">
+                        <Plus className="w-3.5 h-3.5 text-[#104080]" /> Add Bank Account Details
+                      </span>
+                      {isFetchingEntryIfsc && (
+                        <span className="text-[10px] text-blue-600 flex items-center gap-1 font-semibold">
+                          <RefreshCw className="w-3 h-3 animate-spin" /> Auto-fetching Bank & Branch...
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {bankAccounts.map((acc, idx) => (
-                        <div 
-                          key={acc.id || idx} 
-                          className={`border rounded p-2.5 space-y-2 relative transition-all ${
-                            acc.is_primary ? 'bg-[#f8fbff] border-[#104080] shadow-xs' : 'bg-white border-[#c4d4ec]'
-                          }`}
-                        >
-                          {/* Card Header */}
-                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-200">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-[11px] text-[#104080] flex items-center gap-1">
-                                <Building2 className="w-3.5 h-3.5" /> Bank Account #{idx + 1}
-                              </span>
-                              <label className="flex items-center gap-1 text-[10px] font-bold text-emerald-800 cursor-pointer bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                <input
-                                  type="radio"
-                                  name="primaryBankAccount"
-                                  checked={acc.is_primary}
-                                  onChange={() => handleSetPrimaryBankAccount(idx)}
-                                  className="cursor-pointer"
-                                />
-                                {acc.is_primary ? "★ Primary Account" : "Set as Primary"}
-                              </label>
-                            </div>
 
+                    {entryError && (
+                      <div className="text-rose-700 bg-rose-50 border border-rose-300 px-2 py-1 rounded text-[11px] flex items-center gap-1 font-semibold">
+                        ⚠️ <span>{entryError}</span>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
+                          Account Holder Name <span className="text-red-500">*</span>:
+                        </label>
+                        <input
+                          type="text"
+                          value={entryAccountHolder || newName}
+                          onChange={(e) => setEntryAccountHolder(e.target.value)}
+                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
+                          Account Number <span className="text-red-500">*</span>:
+                        </label>
+                        <input
+                          type="text"
+                          value={entryAccountNumber}
+                          onChange={(e) => setEntryAccountNumber(e.target.value)}
+                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs font-mono font-bold focus:outline-none focus:border-[#104080]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
+                          IFSC Code <span className="text-red-500">*</span>:
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={11}
+                          value={entryIfsc}
+                          onChange={(e) => handleEntryIfscChange(e.target.value)}
+                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs font-mono font-bold uppercase focus:outline-none focus:border-[#104080]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
+                          Bank Name:
+                        </label>
+                        <input
+                          type="text"
+                          value={entryBankName}
+                          onChange={(e) => setEntryBankName(e.target.value)}
+                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end pt-1">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
+                          Branch / City:
+                        </label>
+                        <input
+                          type="text"
+                          value={entryBranchName}
+                          onChange={(e) => setEntryBranchName(e.target.value)}
+                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
+                          Account Type:
+                        </label>
+                        <select
+                          value={entryAccountType}
+                          onChange={(e) => setEntryAccountType(e.target.value as any)}
+                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none bg-white font-semibold"
+                        >
+                          <option value="Current">Current Account</option>
+                          <option value="Savings">Savings Account</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2 flex items-center justify-end gap-2 pb-0.5">
+                        {editingBankIndex !== null ? (
+                          <>
                             <button
                               type="button"
-                              onClick={() => handleRemoveBankAccount(idx)}
-                              className="text-gray-400 hover:text-red-600 p-0.5 rounded transition-colors cursor-pointer"
-                              title="Remove Bank Account"
+                              onClick={handleCancelEdit}
+                              className="bg-[#d4d0c8] hover:bg-[#e4e4e4] px-3 py-1.5 rounded text-xs font-bold border border-[#808080] cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              Cancel
                             </button>
-                          </div>
-
-                          {/* Inputs Grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-700 mb-0.5">Account Holder Name:</label>
-                              <input
-                                type="text"
-                                value={acc.account_holder}
-                                onChange={(e) => handleUpdateBankAccount(idx, "account_holder", e.target.value)}
-                                placeholder="Beneficiary / Account Holder Name"
-                                className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-700 mb-0.5">Account Number <span className="text-red-500">*</span>:</label>
-                              <input
-                                type="text"
-                                value={acc.account_number}
-                                onChange={(e) => handleUpdateBankAccount(idx, "account_number", e.target.value)}
-                                placeholder="e.g. 50100234567890"
-                                className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs font-mono font-bold focus:outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
-                                IFSC Code <span className="text-red-500">*</span> (11 digits):
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="text"
-                                  maxLength={11}
-                                  value={acc.ifsc_code}
-                                  onChange={(e) => handleIfscLookup(idx, e.target.value)}
-                                  placeholder="e.g. HDFC0001234"
-                                  className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs font-mono font-bold uppercase focus:outline-none pr-6"
-                                />
-                                {fetchingIfscIndex === idx && (
-                                  <RefreshCw className="w-3 h-3 text-[#104080] animate-spin absolute right-2 top-2" />
-                                )}
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-700 mb-0.5">Bank Name:</label>
-                              <input
-                                type="text"
-                                value={acc.bank_name}
-                                onChange={(e) => handleUpdateBankAccount(idx, "bank_name", e.target.value)}
-                                placeholder="e.g. HDFC Bank"
-                                className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-700 mb-0.5">Branch / City Name:</label>
-                              <input
-                                type="text"
-                                value={acc.branch_name}
-                                onChange={(e) => handleUpdateBankAccount(idx, "branch_name", e.target.value)}
-                                placeholder="e.g. Nariman Point, Mumbai"
-                                className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-700 mb-0.5">Account Type:</label>
-                              <select
-                                value={acc.account_type}
-                                onChange={(e) => handleUpdateBankAccount(idx, "account_type", e.target.value as any)}
-                                className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none bg-white font-semibold"
-                              >
-                                <option value="Current">Current Account</option>
-                                <option value="Savings">Savings Account</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                            <button
+                              type="button"
+                              onClick={handleSaveEntryToTable}
+                              className="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Update Account #{editingBankIndex + 1}</span>
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleSaveEntryToTable}
+                            className="bg-[#104080] hover:bg-[#1a559e] text-white px-5 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add to Table</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
 
+                  {/* Option A: Table of Added Accounts Below */}
+                  <div className="border border-[#c4d4ec] rounded overflow-hidden shadow-2xs bg-white">
+                    <div className="bg-[#e9f0f8] px-2.5 py-1.5 border-b border-[#c4d4ec] flex items-center justify-between">
+                      <span className="font-extrabold text-[#104080] text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-[#104080]" />
+                        Registered Bank Accounts Table ({bankAccounts.length})
+                      </span>
+                      <span className="text-[10px] text-gray-500 font-semibold">
+                        {bankAccounts.length > 0 ? "Select radio button to toggle default settlement account" : ""}
+                      </span>
+                    </div>
+
+                    {bankAccounts.length === 0 ? (
+                      <div className="py-8 text-center text-gray-400 text-xs bg-[#fafbfc]">
+                        <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-1.5" />
+                        <p className="font-bold text-gray-600">No bank accounts in table yet</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Fill in the fields above and click "+ Add to Table", or proceed to Step 3 if adding later.</p>
+                      </div>
+                    ) : (
+                      <div className="max-h-56 overflow-y-auto custom-scrollbar">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-[#f0f4f8] text-[#104080] font-bold text-[10px] uppercase border-b border-[#c4d4ec] sticky top-0 z-10 select-none">
+                              <th className="py-1.5 px-2 text-center w-8 border-r border-[#c4d4ec]">#</th>
+                              <th className="py-1.5 px-2 text-center w-20 border-r border-[#c4d4ec]">Primary</th>
+                              <th className="py-1.5 px-2 border-r border-[#c4d4ec]">Account Holder Name</th>
+                              <th className="py-1.5 px-2 border-r border-[#c4d4ec]">Account Number</th>
+                              <th className="py-1.5 px-2 border-r border-[#c4d4ec]">Bank Name</th>
+                              <th className="py-1.5 px-2 border-r border-[#c4d4ec]">Branch / City</th>
+                              <th className="py-1.5 px-2 border-r border-[#c4d4ec]">IFSC Code</th>
+                              <th className="py-1.5 px-2 border-r border-[#c4d4ec]">Type</th>
+                              <th className="py-1.5 px-2 text-center w-16">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 text-[11px]">
+                            {bankAccounts.map((acc, idx) => (
+                              <tr 
+                                key={acc.id || idx} 
+                                className={`hover:bg-[#f8fbff] transition-colors ${acc.is_primary ? "bg-[#f4f8fd]" : ""}`}
+                              >
+                                <td className="py-2 px-2 text-center text-gray-500 font-mono text-[10px] border-r border-gray-200">{idx + 1}</td>
+                                <td className="py-2 px-2 text-center border-r border-gray-200">
+                                  <label className="inline-flex items-center gap-1 cursor-pointer select-none">
+                                    <input
+                                      type="radio"
+                                      name="primaryAccountSelection"
+                                      checked={acc.is_primary}
+                                      onChange={() => handleSetPrimaryBankAccount(idx)}
+                                      className="accent-[#104080] cursor-pointer"
+                                    />
+                                    {acc.is_primary ? (
+                                      <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                        ★ Primary
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] text-gray-500 hover:text-gray-800">Set</span>
+                                    )}
+                                  </label>
+                                </td>
+                                <td className="py-2 px-2 font-bold text-gray-900 border-r border-gray-200">{acc.account_holder || newName || "-"}</td>
+                                <td className="py-2 px-2 font-mono font-bold text-gray-900 border-r border-gray-200">{acc.account_number}</td>
+                                <td className="py-2 px-2 font-semibold text-gray-800 border-r border-gray-200">{acc.bank_name || "-"}</td>
+                                <td className="py-2 px-2 text-gray-600 border-r border-gray-200">{acc.branch_name || "-"}</td>
+                                <td className="py-2 px-2 font-mono text-blue-800 font-bold border-r border-gray-200">{acc.ifsc_code}</td>
+                                <td className="py-2 px-2 text-gray-700 border-r border-gray-200">
+                                  <span className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                                    {acc.account_type}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEditBankAccount(idx)}
+                                      className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
+                                      title="Edit Account"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveBankAccount(idx)}
+                                      className="text-gray-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
+                                      title="Remove Account"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Navigation Actions */}
                   <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                     <button
                       type="button"
@@ -1420,7 +1708,7 @@ export default function ServicerWalletsScreen() {
                         {bankAccounts.filter(b => b.account_number).map((acc, i) => (
                           <div key={i} className="flex items-center justify-between p-1.5 bg-[#f8fafc] rounded border border-gray-200 text-[11px]">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-gray-900">{acc.bank_name || "Bank Account"}</span>
+                              <span className="font-bold text-gray-900">{acc.account_holder ? `${acc.account_holder} — ` : ""}{acc.bank_name || "Bank Account"}</span>
                               <span className="font-mono text-gray-700 font-semibold">{acc.account_number}</span>
                               <span className="font-mono text-xs text-gray-500">({acc.ifsc_code})</span>
                             </div>

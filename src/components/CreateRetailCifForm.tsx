@@ -326,7 +326,11 @@ export default function CreateRetailCifForm() {
               </div>
               <div className="flex items-center">
                 <span className="w-32 font-semibold">Nationality <span className="text-red-600">*</span></span>
-                <input type="text" value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} className="flex-1 border border-[#7f9db9] px-1 h-[30px] focus:outline-none" />
+                <select value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} className="flex-1 border border-[#7f9db9] bg-white h-[30px] focus:outline-none">
+                  <option value=""></option>
+                  <option value="India">India</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               <div className="flex items-center">
                 <span className="w-32 font-semibold">Contact No <span className="text-red-600">*</span></span>
