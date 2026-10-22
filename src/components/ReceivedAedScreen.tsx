@@ -14,7 +14,9 @@ export default function ReceivedAedScreen() {
   const [loading, setLoading] = useState(false);
 
   // Filters
-  const [dateFilter, setDateFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [agentFilter, setAgentFilter] = useState('');
   const [modeFilter, setModeFilter] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
 
@@ -107,12 +109,14 @@ export default function ReceivedAedScreen() {
     }
   };
 
-  const fetchRecords = async (p = page, d = dateFilter, m = modeFilter) => {
+  const fetchRecords = async (p = page, fDate = fromDate, tDate = toDate, m = modeFilter, a = agentFilter) => {
     setLoading(true);
     try {
       const params: any = { page: p, limit: 50 };
-      if (d) params.date = d;
+      if (fDate) params.from_date = fDate;
+      if (tDate) params.to_date = tDate;
       if (m) params.mode_of_txn = m;
+      if (a) params.agent_customer = a;
       const res = await api.get('/records/received-aed', { params });
       setRecords(res.data.records || []);
       setTotal(res.data.total || 0);
@@ -125,8 +129,8 @@ export default function ReceivedAedScreen() {
   };
 
   useEffect(() => {
-    fetchRecords(1, dateFilter, modeFilter);
-  }, [dateFilter, modeFilter]);
+    fetchRecords(1, fromDate, toDate, modeFilter, agentFilter);
+  }, [fromDate, toDate, modeFilter, agentFilter]);
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -159,7 +163,7 @@ export default function ReceivedAedScreen() {
     if (!window.confirm('Are you sure you want to delete this Received AED entry?')) return;
     try {
       await api.delete(`/records/received-aed/${id}`);
-      fetchRecords(page, dateFilter, modeFilter);
+      fetchRecords(page, fromDate, toDate, modeFilter, agentFilter);
     } catch {
       alert('Failed to delete. Please try again.');
     }
@@ -199,7 +203,7 @@ export default function ReceivedAedScreen() {
       }
 
       setIsModalOpen(false);
-      fetchRecords(page, dateFilter, modeFilter);
+      fetchRecords(page, fromDate, toDate, modeFilter, agentFilter);
     } catch (err: any) {
       alert(err?.response?.data?.error || 'Failed to save entry. Please try again.');
     } finally {
@@ -248,7 +252,7 @@ export default function ReceivedAedScreen() {
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span 
             className="cursor-pointer hover:underline tracking-wide"
-            onClick={() => fetchRecords(page, dateFilter, modeFilter)}
+            onClick={() => fetchRecords(page, fromDate, toDate, modeFilter, agentFilter)}
           >
             Refresh Register
           </span>
@@ -261,19 +265,51 @@ export default function ReceivedAedScreen() {
         {/* Filters Strip */}
         <div className="p-3 bg-white flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e4e4]">
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Date Filter */}
+            {/* Date Range: From & To */}
             <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
+              <span className="text-[#1e4676] font-bold text-[11px]">From:</span>
               <FinacleDatePicker
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
                 className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
               />
-              {dateFilter && (
+              <span className="text-[#1e4676] font-bold text-[11px] ml-1">To:</span>
+              <FinacleDatePicker
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
+              />
+              {(fromDate || toDate) && (
                 <button
-                  onClick={() => setDateFilter('')}
-                  className="text-gray-400 hover:text-red-500 font-bold text-xs"
-                  title="Clear Date"
+                  onClick={() => { setFromDate(''); setToDate(''); }}
+                  className="text-gray-400 hover:text-red-500 font-bold text-xs ml-1 cursor-pointer"
+                  title="Clear Dates"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Agent Filter */}
+            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
+              <span className="text-[#1e4676] font-bold text-[11px]">Agent:</span>
+              <select
+                value={agentFilter}
+                onChange={(e) => setAgentFilter(e.target.value)}
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676] max-w-[180px] truncate"
+              >
+                <option value="">All Agents</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {agentFilter && (
+                <button
+                  onClick={() => setAgentFilter('')}
+                  className="text-gray-400 hover:text-red-500 font-bold text-xs cursor-pointer"
+                  title="Clear Agent"
                 >
                   ✕
                 </button>
@@ -300,7 +336,7 @@ export default function ReceivedAedScreen() {
               {modeFilter && (
                 <button
                   onClick={() => setModeFilter('')}
-                  className="text-gray-400 hover:text-red-500 font-bold text-xs"
+                  className="text-gray-400 hover:text-red-500 font-bold text-xs cursor-pointer"
                   title="Clear Mode"
                 >
                   ✕
@@ -309,11 +345,26 @@ export default function ReceivedAedScreen() {
             </div>
 
             <button
-              onClick={() => fetchRecords(1, dateFilter, modeFilter)}
+              onClick={() => fetchRecords(1, fromDate, toDate, modeFilter, agentFilter)}
               className="bg-[#1e4676] text-white text-[11px] font-bold px-3 py-1 rounded hover:bg-[#15345b] cursor-pointer"
             >
               Apply Filter
             </button>
+
+            {(fromDate || toDate || agentFilter || modeFilter) && (
+              <button
+                onClick={() => {
+                  setFromDate('');
+                  setToDate('');
+                  setAgentFilter('');
+                  setModeFilter('');
+                }}
+                className="text-xs text-gray-500 hover:text-red-600 underline font-semibold ml-1 cursor-pointer"
+                title="Reset All Filters"
+              >
+                Reset All
+              </button>
+            )}
           </div>
 
           {/* Quick Metrics */}
