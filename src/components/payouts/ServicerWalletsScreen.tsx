@@ -126,7 +126,6 @@ export default function ServicerWalletsScreen() {
 
   // Modals
   const [isAddServicerOpen, setIsAddServicerOpen] = useState(false);
-  const [isAddCreditOpen, setIsAddCreditOpen] = useState(false);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
   const [isSettleOpen, setIsSettleOpen] = useState(false);
   const [isBounceOpen, setIsBounceOpen] = useState(false);
@@ -159,13 +158,7 @@ export default function ServicerWalletsScreen() {
   const [entryError, setEntryError] = useState("");
 
 
-  // Add Float Credit Form
-  const [creditAmount, setCreditAmount] = useState("");
-  const [creditWallet, setCreditWallet] = useState<"bank" | "cash">("bank");
-  const [creditMode, setCreditMode] = useState("bank_transfer");
-  const [creditUtr, setCreditUtr] = useState("");
-  const [creditNote, setCreditNote] = useState("");
-  const [creditDate, setCreditDate] = useState(() => new Date().toISOString().slice(0, 10));
+
 
   // Convert Float Form
   const [convertAmount, setConvertAmount] = useState("");
@@ -464,38 +457,13 @@ export default function ServicerWalletsScreen() {
     }
   };
 
-  // Handle Add Float Credit
-  const handleAddCredit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const amt = parseFloat(creditAmount);
-    if (!amt || amt <= 0) { setModalError("Please enter a valid credit amount"); return; }
-    setSubmitting(true);
-    setModalError("");
-    try {
-      await api.post(`/payouts/servicers/${selectedId}/credit`, {
-        amount: amt,
-        wallet_type: creditWallet,
-        payment_mode: creditMode,
-        utr_number: creditUtr.trim() || undefined,
-        note: creditNote.trim() || undefined,
-        entry_date: creditDate,
-      });
-      setIsAddCreditOpen(false);
-      setCreditAmount(""); setCreditUtr(""); setCreditNote("");
-      await fetchServicers(selectedId);
-      await fetchStatement();
-    } catch (err: any) {
-      setModalError(err.response?.data?.error || err.message || "Failed to add float credit");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+
 
   // Handle Float Conversion
   const handleConvert = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(convertAmount);
-    if (!amt || amt <= 0) { setModalError("Please enter a valid conversion amount"); return; }
+    if (!amt || amt <= 0) { setModalError("Please enter a valid transfer amount"); return; }
     if (convertFrom === convertTo) { setModalError("Source and target wallets must be different"); return; }
     setSubmitting(true);
     setModalError("");
@@ -512,7 +480,7 @@ export default function ServicerWalletsScreen() {
       await fetchServicers(selectedId);
       await fetchStatement();
     } catch (err: any) {
-      setModalError(err.response?.data?.error || err.message || "Failed to convert float");
+      setModalError(err.response?.data?.error || err.message || "Failed to execute transfer");
     } finally {
       setSubmitting(false);
     }
@@ -633,16 +601,10 @@ export default function ServicerWalletsScreen() {
         {/* Action Buttons for Selected Servicer */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { setModalError(""); setIsAddCreditOpen(true); }}
-            className="flex items-center gap-1 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded text-xs font-bold shadow-xs cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" /> Add Float (Credit)
-          </button>
-          <button
             onClick={() => { setModalError(""); setIsConvertOpen(true); }}
             className="flex items-center gap-1 bg-white hover:bg-gray-100 border border-[#c4d4ec] text-[#104080] px-3 py-1.5 rounded text-xs font-bold shadow-2xs cursor-pointer"
           >
-            <ArrowLeftRight className="w-3.5 h-3.5" /> ATM Cash Conversion
+            <ArrowLeftRight className="w-3.5 h-3.5" /> Bank ⇄ Cash Transfer
           </button>
           <button
             onClick={() => setIsSettleOpen(true)}
@@ -941,7 +903,7 @@ export default function ServicerWalletsScreen() {
               <option value="all">All Types</option>
               <option value="float_credit">Float Top-up (Credit)</option>
               <option value="payout_debit">Payout Debit</option>
-              <option value="conversion">ATM Cash Convert</option>
+              <option value="conversion">Bank ⇄ Cash Transfer</option>
               <option value="reimbursement">Pocket Reimbursement</option>
               <option value="commission_settle">Commission Paid</option>
             </select>
@@ -1029,7 +991,7 @@ export default function ServicerWalletsScreen() {
                           <span className="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded text-[10px]">PAYOUT DEBIT</span>
                         )}
                         {t.txn_type === "conversion" && (
-                          <span className="bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded text-[10px]">ATM CONVERT</span>
+                          <span className="bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded text-[10px]">WALLET TRANSFER</span>
                         )}
                         {t.txn_type === "reimbursement" && (
                           <span className="bg-sky-100 text-sky-800 font-bold px-1.5 py-0.5 rounded text-[10px]">POCKET REIMB</span>
@@ -1752,101 +1714,14 @@ export default function ServicerWalletsScreen() {
         </div>
       )}
 
-      {/* MODAL 2: Add Float Credit */}
-      {isAddCreditOpen && activeServicer && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-md overflow-hidden">
-            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between">
-              <span className="font-bold text-xs uppercase tracking-wider">Top-up Float — {activeServicer.name}</span>
-              <button onClick={() => setIsAddCreditOpen(false)} className="text-white hover:text-red-300 font-bold">✕</button>
-            </div>
-            <form onSubmit={handleAddCredit} className="p-4 space-y-3">
-              {modalError && (
-                <div className="bg-rose-50 border border-rose-300 text-rose-700 px-3 py-1.5 rounded text-xs">
-                  {modalError}
-                </div>
-              )}
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Amount (INR) <span className="text-red-500">*</span>:</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={creditAmount}
-                  onChange={(e) => setCreditAmount(e.target.value)}
-                  placeholder="e.g. 500000"
-                  className="w-full border-2 border-[#104080] rounded px-2.5 py-1 text-sm font-extrabold focus:outline-none"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Target Wallet:</label>
-                  <select
-                    value={creditWallet}
-                    onChange={(e: any) => setCreditWallet(e.target.value)}
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
-                  >
-                    <option value="bank">Bank Wallet</option>
-                    <option value="cash">Cash / Hand Wallet</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Transfer Mode:</label>
-                  <select
-                    value={creditMode}
-                    onChange={(e) => setCreditMode(e.target.value)}
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
-                  >
-                    <option value="bank_transfer">Bank Transfer (NEFT/RTGS)</option>
-                    <option value="cash">Cash Handover</option>
-                    <option value="cdm">CDM Deposit</option>
-                    <option value="cheque">Cheque</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Bank UTR / Reference:</label>
-                  <input
-                    type="text"
-                    value={creditUtr}
-                    onChange={(e) => setCreditUtr(e.target.value)}
-                    placeholder="UTR reference"
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none uppercase font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Entry Date:</label>
-                  <FinacleDatePicker value={creditDate} onChange={(e) => setCreditDate(e.target.value)} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Staff Note:</label>
-                <input
-                  type="text"
-                  value={creditNote}
-                  onChange={(e) => setCreditNote(e.target.value)}
-                  placeholder="e.g. Morning float top-up"
-                  className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
-                />
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
-                <button type="button" onClick={() => setIsAddCreditOpen(false)} className="bg-[#d4d0c8] px-3 py-1 font-bold text-xs">Cancel</button>
-                <button type="submit" disabled={submitting} className="bg-[#104080] text-white px-4 py-1 font-bold text-xs rounded">
-                  {submitting ? "Saving..." : "Confirm Float Credit"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* MODAL 3: ATM Cash Conversion */}
+
+      {/* MODAL 3: Bank ⇄ Cash Transfer (Internal Wallet Transfer) */}
       {isConvertOpen && activeServicer && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
           <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-md overflow-hidden">
             <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between">
-              <span className="font-bold text-xs uppercase tracking-wider">ATM Conversion / Internal Transfer</span>
+              <span className="font-bold text-xs uppercase tracking-wider">Internal Wallet Transfer (Bank ⇄ Cash)</span>
               <button onClick={() => setIsConvertOpen(false)} className="text-white hover:text-red-300 font-bold">✕</button>
             </div>
             <form onSubmit={handleConvert} className="p-4 space-y-3">
@@ -1856,7 +1731,7 @@ export default function ServicerWalletsScreen() {
                 </div>
               )}
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Amount to Convert (INR):</label>
+                <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Transfer Amount (INR):</label>
                 <input
                   type="number"
                   step="0.01"
@@ -1894,7 +1769,7 @@ export default function ServicerWalletsScreen() {
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
                 <button type="button" onClick={() => setIsConvertOpen(false)} className="bg-[#d4d0c8] px-3 py-1 font-bold text-xs">Cancel</button>
                 <button type="submit" disabled={submitting} className="bg-[#104080] text-white px-4 py-1 font-bold text-xs rounded">
-                  {submitting ? "Converting..." : "Execute Conversion"}
+                  {submitting ? "Transferring..." : "Execute Transfer"}
                 </button>
               </div>
             </form>

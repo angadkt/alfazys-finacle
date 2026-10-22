@@ -15,7 +15,8 @@ import {
   Banknote, 
   RotateCcw, 
   Check,
-  Copy
+  Copy,
+  Trash2
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -89,6 +90,23 @@ interface DebitEntryItem {
   created_by_name: string;
 }
 
+export interface ServicerBankAccount {
+  id?: string;
+  bank_name: string;
+  account_number: string;
+  account_holder?: string;
+  ifsc_code?: string;
+  branch_name?: string;
+  account_type?: "Current" | "Savings";
+  is_primary?: boolean;
+}
+
+interface CreditTranche {
+  id: string;
+  utr: string;
+  amount: string;
+}
+
 interface Servicer {
   id: string | number;
   servicer_code: string;
@@ -97,6 +115,7 @@ interface Servicer {
   bank_name: string;
   account_no: string;
   ifsc_code: string;
+  bank_accounts?: ServicerBankAccount[];
   commission_rate: number;
   wallet: {
     bank_balance: number;
@@ -131,6 +150,21 @@ export default function InrDispatchDeskScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [successToast, setSuccessToast] = useState("");
+
+  // Modal: Add Float Credit Modal
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
+  const [creditServicerId, setCreditServicerId] = useState("");
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState("");
+  const [totalCreditAmount, setTotalCreditAmount] = useState("");
+  const [creditWallet, setCreditWallet] = useState<"bank" | "cash">("bank");
+  const [creditMode, setCreditMode] = useState("bank_transfer");
+  const [creditTranches, setCreditTranches] = useState<CreditTranche[]>([
+    { id: "1", utr: "", amount: "" }
+  ]);
+  const [creditNote, setCreditNote] = useState("");
+  const [creditDate, setCreditDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [creditSubmitting, setCreditSubmitting] = useState(false);
+  const [creditError, setCreditError] = useState("");
 
   // Form Fields
   const [channel, setChannel] = useState<"servicer" | "direct">("servicer");
@@ -254,6 +288,180 @@ export default function InrDispatchDeskScreen() {
   const amountNum = parseFloat(payoutAmount) || 0;
   const commissionRate = channel === "servicer" && activeServicer ? activeServicer.commission_rate : 0;
   const commissionEarned = Math.round(amountNum * (commissionRate / 100) * 100) / 100;
+
+  // Active Credit Servicer & Available Bank Accounts
+  const activeCreditServicer = servicers.find(s => String(s.id) === String(creditServicerId));
+
+  const availableBankAccounts = React.useMemo(() => {
+    if (!activeCreditServicer) return [];
+    const accounts: { value: string; label: string }[] = [];
+    if (activeCreditServicer.bank_accounts && activeCreditServicer.bank_accounts.length > 0) {
+      activeCreditServicer.bank_accounts.forEach((b) => {
+        accounts.push({
+          value: b.account_number,
+          label: `${b.bank_name || "Bank"} — A/C: ${b.account_number} (${b.ifsc_code || "No IFSC"})${b.account_holder ? ` • ${b.account_holder}` : ""}${b.is_primary ? " [PRIMARY]" : ""}`
+        });
+      });
+    } else if (activeCreditServicer.account_no) {
+      accounts.push({
+        value: activeCreditServicer.account_no,
+        label: `${activeCreditServicer.bank_name || "Bank"} — A/C: ${activeCreditServicer.account_no} (${activeCreditServicer.ifsc_code || ""}) [OPERATING]`
+      });
+    }
+    accounts.push({
+      value: "other",
+      label: "Other Account / Physical Cash Deposit"
+    });
+    return accounts;
+  }, [activeCreditServicer]);
+
+  // Auto-select primary or first account when servicer changes
+  useEffect(() => {
+    if (!activeCreditServicer) {
+      setSelectedBankAccountId("");
+      return;
+    }
+    if (activeCreditServicer.bank_accounts && activeCreditServicer.bank_accounts.length > 0) {
+      const primary = activeCreditServicer.bank_accounts.find(b => b.is_primary) || activeCreditServicer.bank_accounts[0];
+      setSelectedBankAccountId(primary.account_number);
+    } else if (activeCreditServicer.account_no) {
+      setSelectedBankAccountId(activeCreditServicer.account_no);
+    } else {
+      setSelectedBankAccountId("other");
+    }
+  }, [activeCreditServicer]);
+
+  // Tranche helper functions & validation
+  const masterTotal = parseFloat(totalCreditAmount) || 0;
+  const tranchesSum = creditTranches.reduce((sum, t) => {
+    const val = parseFloat(t.amount);
+    return sum + (isNaN(val) ? 0 : val);
+  }, 0);
+  const difference = Math.round((masterTotal - tranchesSum) * 100) / 100;
+  const isBalanced = masterTotal > 0 && Math.abs(difference) < 0.01;
+
+  // Handle master total amount change (auto-sync first row if single entry)
+  const handleTotalAmountChange = (val: string) => {
+    setTotalCreditAmount(val);
+    if (creditTranches.length === 1) {
+      setCreditTranches([{ ...creditTranches[0], amount: val }]);
+    }
+  };
+
+  const addTrancheRow = () => {
+    setCreditTranches(prev => [
+      ...prev,
+      { id: Date.now().toString() + Math.random().toString(36).substring(2, 5), utr: "", amount: "" }
+    ]);
+  };
+
+  const removeTrancheRow = (id: string) => {
+    if (creditTranches.length <= 1) return;
+    setCreditTranches(prev => prev.filter(t => t.id !== id));
+  };
+
+  const updateTranche = (id: string, field: "utr" | "amount", val: string) => {
+    setCreditTranches(prev =>
+      prev.map(t => (t.id === id ? { ...t, [field]: val } : t))
+    );
+  };
+
+  // Open Float Credit Modal
+  const handleOpenCreditModal = () => {
+    setCreditError("");
+    setTotalCreditAmount("");
+    setCreditTranches([{ id: "1", utr: "", amount: "" }]);
+    setCreditNote("");
+    setCreditWallet("bank");
+    setCreditMode("bank_transfer");
+    setCreditDate(new Date().toISOString().slice(0, 10));
+    if (servicers.length > 0) {
+      setCreditServicerId(String(servicers[0].id));
+    }
+    setIsCreditModalOpen(true);
+  };
+
+  // Submit Float Credit (Option A: Individual transaction per UTR)
+  const handleAddCredit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!creditServicerId) {
+      setCreditError("Please select a servicer");
+      return;
+    }
+    if (!masterTotal || masterTotal <= 0) {
+      setCreditError("Please enter a valid total credit amount");
+      return;
+    }
+    if (creditTranches.length === 0) {
+      setCreditError("Please add at least one transfer entry with an amount");
+      return;
+    }
+    const invalidTranche = creditTranches.find(t => !parseFloat(t.amount) || parseFloat(t.amount) <= 0);
+    if (invalidTranche) {
+      setCreditError("Every entry row must contain a valid positive amount");
+      return;
+    }
+    if (!isBalanced) {
+      setCreditError(`Tranche sum (₹${tranchesSum.toLocaleString("en-IN", { minimumFractionDigits: 2 })}) must exactly match total credit amount (₹${masterTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`);
+      return;
+    }
+
+    setCreditSubmitting(true);
+    setCreditError("");
+
+    // Identify bank account label for ledger note
+    let bankAccountLabel = "";
+    if (selectedBankAccountId && selectedBankAccountId !== "other") {
+      const match = activeCreditServicer?.bank_accounts?.find(b => b.account_number === selectedBankAccountId);
+      if (match) {
+        bankAccountLabel = `${match.bank_name} (${match.account_number.slice(-4)})`;
+      } else if (activeCreditServicer?.account_no === selectedBankAccountId) {
+        bankAccountLabel = `${activeCreditServicer.bank_name} (${activeCreditServicer.account_no.slice(-4)})`;
+      }
+    }
+
+    try {
+      // Option A: Submit each tranche as an individual ledger transaction
+      for (let i = 0; i < creditTranches.length; i++) {
+        const tranche = creditTranches[i];
+        const amt = parseFloat(tranche.amount);
+        const splitPrefix = creditTranches.length > 1 ? `Split ${i + 1}/${creditTranches.length}` : "";
+        const noteParts = [
+          bankAccountLabel ? `A/C: ${bankAccountLabel}` : "",
+          splitPrefix,
+          creditNote.trim()
+        ].filter(Boolean);
+
+        await api.post(`/payouts/servicers/${creditServicerId}/credit`, {
+          amount: amt,
+          wallet_type: creditWallet,
+          payment_mode: creditMode,
+          utr_number: tranche.utr.trim() || undefined,
+          note: noteParts.length > 0 ? noteParts.join(" • ") : undefined,
+          entry_date: creditDate,
+        });
+      }
+
+      setIsCreditModalOpen(false);
+      setTotalCreditAmount("");
+      setCreditTranches([{ id: "1", utr: "", amount: "" }]);
+      setCreditNote("");
+
+      const totalFmt = masterTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+      setSuccessToast(
+        creditTranches.length > 1
+          ? `₹${totalFmt} float credited across ${creditTranches.length} transactions to ${activeCreditServicer?.name || "servicer"} (${creditWallet === "bank" ? "Bank Wallet" : "Cash Wallet"}).`
+          : `₹${totalFmt} float credited to ${activeCreditServicer?.name || "servicer"} (${creditWallet === "bank" ? "Bank Wallet" : "Cash Wallet"}).`
+      );
+      setTimeout(() => setSuccessToast(""), 5000);
+      await fetchQueue();
+      await fetchServicers();
+    } catch (err: any) {
+      setCreditError(err.response?.data?.error || err.message || "Failed to add float credit");
+    } finally {
+      setCreditSubmitting(false);
+    }
+  };
 
   // Open New Debit Entry Modal
   const handleOpenNewEntry = () => {
@@ -435,6 +643,13 @@ export default function InrDispatchDeskScreen() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleOpenCreditModal}
+            className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1 rounded text-xs font-extrabold shadow-sm transition-all cursor-pointer"
+            title="Inject float credit into a servicer's operating wallet"
+          >
+            <Plus className="w-3.5 h-3.5" /> + Add Float (Credit)
+          </button>
           <button
             onClick={handleOpenNewEntry}
             className="flex items-center gap-1.5 bg-[#d4af37] hover:bg-[#c49f27] text-[#0a2850] px-3 py-1 rounded text-xs font-extrabold shadow-sm transition-all cursor-pointer"
@@ -830,6 +1045,263 @@ export default function InrDispatchDeskScreen() {
           </table>
         </div>
       </div>
+
+      {/* MODAL 0: ADD FLOAT CREDIT (LIQUIDITY INFLOW) */}
+      {isCreditModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">💳</span>
+                <span className="font-bold text-xs uppercase tracking-wider">Inject Float Credit (Liquidity Inflow)</span>
+              </div>
+              <button onClick={() => setIsCreditModalOpen(false)} className="text-white hover:text-red-300 font-bold cursor-pointer">✕</button>
+            </div>
+            <form onSubmit={handleAddCredit} className="p-4 space-y-3">
+              {creditError && (
+                <div className="bg-rose-50 border border-rose-300 text-rose-700 px-3 py-1.5 rounded text-xs flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{creditError}</span>
+                </div>
+              )}
+
+              {/* Servicer Selector & Balance preview */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Select Servicer <span className="text-red-500">*</span>:</label>
+                <select
+                  value={creditServicerId}
+                  onChange={(e) => setCreditServicerId(e.target.value)}
+                  className="w-full border-2 border-[#104080] rounded px-2.5 py-1.5 text-xs font-bold text-gray-900 bg-white focus:outline-none cursor-pointer"
+                  required
+                >
+                  <option value="">-- Choose Servicer --</option>
+                  {servicers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.cif_no || s.servicer_code}) {s.account_no ? `• A/C: ${s.account_no}` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {activeCreditServicer && (
+                  <div className="mt-1 flex items-center justify-between text-[11px] bg-[#f0f4f8] px-2.5 py-1 rounded border border-[#c4d4ec] text-gray-700">
+                    <span>💳 Bank Float: <strong className="text-[#104080]">₹{Number(activeCreditServicer.wallet?.bank_balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+                    <span>💵 Cash Float: <strong className="text-emerald-700">₹{Number(activeCreditServicer.wallet?.cash_balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+                    <span>Total Float: <strong className="text-gray-900">₹{Number(activeCreditServicer.wallet?.total_float || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+                  </div>
+                )}
+              </div>
+
+              {/* Master Total Credit Amount */}
+              <div>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] font-bold text-gray-700">
+                    Total Credit Amount (INR) <span className="text-red-500">*</span>:
+                  </label>
+                  {masterTotal > 0 && (
+                    <span className="text-[10px] text-gray-500 font-mono italic">
+                      {numberToIndianWords(masterTotal)}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={totalCreditAmount}
+                  onChange={(e) => handleTotalAmountChange(e.target.value)}
+                  className="w-full border-2 border-[#104080] rounded px-2.5 py-1 text-sm font-extrabold focus:outline-none"
+                  required
+                />
+              </div>
+
+              {/* Target Saved Bank Account */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-0.5">
+                  Target Saved Bank Account of Servicer:
+                </label>
+                <select
+                  value={selectedBankAccountId}
+                  onChange={(e) => setSelectedBankAccountId(e.target.value)}
+                  className="w-full border border-[#c4d4ec] rounded px-2.5 py-1.5 text-xs bg-white text-gray-800 font-semibold focus:outline-none focus:border-[#104080] cursor-pointer"
+                >
+                  {availableBankAccounts.length > 0 ? (
+                    availableBankAccounts.map((acc, idx) => (
+                      <option key={idx} value={acc.value}>
+                        {acc.label}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="other">Other Account / Physical Cash Deposit</option>
+                  )}
+                </select>
+              </div>
+
+              {/* Target Wallet & Transfer Mode */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Target Wallet:</label>
+                  <select
+                    value={creditWallet}
+                    onChange={(e: any) => setCreditWallet(e.target.value)}
+                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none bg-white font-medium cursor-pointer"
+                  >
+                    <option value="bank">Bank Wallet (IMPS/RTGS)</option>
+                    <option value="cash">Cash / Hand Wallet (CDM)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Transfer Mode:</label>
+                  <select
+                    value={creditMode}
+                    onChange={(e) => setCreditMode(e.target.value)}
+                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none bg-white font-medium cursor-pointer"
+                  >
+                    <option value="bank_transfer">Bank Transfer (NEFT/RTGS/IMPS)</option>
+                    <option value="cdm">CDM Deposit</option>
+                    <option value="cash">Cash Handover</option>
+                    <option value="cheque">Cheque</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Multi-UTR and Amount Breakdown (Interactive Table) */}
+              <div className="border border-[#c4d4ec] rounded p-2.5 bg-[#f8fafc] space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-[#104080] flex items-center gap-1">
+                    <span>UTR & Amount Breakdown (Multiple Tranches Supported)</span>
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addTrancheRow}
+                    className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <Plus className="w-3 h-3" /> + Add UTR / Split
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                  {creditTranches.map((tranche, idx) => (
+                    <div key={tranche.id} className="flex items-center gap-2 bg-white p-1.5 border border-[#e2e8f0] rounded">
+                      <span className="text-[10px] font-mono font-bold text-gray-400 w-4 text-center">
+                        #{idx + 1}
+                      </span>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={tranche.utr}
+                          onChange={(e) => updateTranche(tranche.id, "utr", e.target.value)}
+                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs font-mono uppercase focus:outline-none focus:border-[#104080]"
+                        />
+                      </div>
+                      <div className="w-[140px]">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={tranche.amount}
+                          onChange={(e) => updateTranche(tranche.id, "amount", e.target.value)}
+                          className="w-full border-2 border-[#104080] rounded px-2 py-1 text-xs font-bold text-right focus:outline-none"
+                          required
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeTrancheRow(tranche.id)}
+                        disabled={creditTranches.length <= 1}
+                        title="Remove row"
+                        className="p-1 text-gray-400 hover:text-rose-600 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Live Reconciliation & Match Bar */}
+                <div className="pt-2 border-t border-[#e2e8f0] space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600 font-semibold">
+                      Total Tranches Sum ({creditTranches.length} {creditTranches.length === 1 ? "entry" : "entries"}):
+                    </span>
+                    <span className="font-extrabold font-mono text-gray-900">
+                      ₹{tranchesSum.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+
+                  {masterTotal > 0 ? (
+                    isBalanced ? (
+                      <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800 bg-emerald-100/80 border border-emerald-300 px-2 py-1 rounded">
+                        <span className="flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                          Balanced: Tranche sum exactly matches total amount
+                        </span>
+                        <span className="font-mono">₹{masterTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ✓</span>
+                      </div>
+                    ) : difference > 0 ? (
+                      <div className="flex items-center justify-between text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-2 py-1 rounded">
+                        <span className="flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          Remaining to allocate:
+                        </span>
+                        <span className="font-mono text-xs">₹{difference.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-[11px] font-bold text-rose-800 bg-rose-50 border border-rose-300 px-2 py-1 rounded">
+                        <span className="flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                          Tranches exceed total by:
+                        </span>
+                        <span className="font-mono text-xs">₹{Math.abs(difference).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    )
+                  ) : (
+                    <div className="text-[11px] text-gray-500 italic bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
+                      Enter Total Credit Amount above to begin allocation.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Entry Date & Staff Note */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Entry Date:</label>
+                  <FinacleDatePicker value={creditDate} onChange={(e) => setCreditDate(e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Note:</label>
+                  <input
+                    type="text"
+                    value={creditNote}
+                    onChange={(e) => setCreditNote(e.target.value)}
+                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setIsCreditModalOpen(false)}
+                  className="bg-[#d4d0c8] hover:bg-[#e4e4e4] px-3 py-1 font-bold text-xs cursor-pointer border border-[#808080]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creditSubmitting || !isBalanced}
+                  className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-1.5 font-bold text-xs rounded cursor-pointer shadow-xs transition-colors"
+                >
+                  {creditSubmitting
+                    ? "Injecting Float..."
+                    : isBalanced
+                    ? `Confirm Float Credit (₹${masterTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`
+                    : `Sum Must Match Total (Diff: ₹${Math.abs(difference).toLocaleString("en-IN", { minimumFractionDigits: 2 })})`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* MODAL 1: NEW DEBIT ENTRY (BENEFICIARY PAYOUT) */}
       {isEntryModalOpen && (
