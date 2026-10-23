@@ -106,6 +106,7 @@ export interface PendingPayoutItem {
   bank_name: string;
   branch_name: string;
   inr_amount: number;
+  total_booked_amount?: number;
   paid_amount?: number;
   confirm_order_amount?: string | number;
   assigned_servicer?: string;
@@ -341,15 +342,21 @@ export default function InrDispatchDeskScreen() {
         if (!Array.isArray(recs)) recs = [];
 
         recs.forEach((rec: any, idx: number) => {
-          const rawStatus = (rec.payment_status || order.payment_status || "Pending").toLowerCase();
-          // Filter only unpaid beneficiaries waiting for dispatch in India
+          const rawStatus = String(rec.payment_status || order.payment_status || "Pending").toLowerCase();
+          // Filter only unpaid or partial beneficiaries waiting for dispatch in India
           if (rawStatus === "paid" || rawStatus === "completed" || rawStatus === "dispatched" || rawStatus === "cancelled") {
             return;
           }
 
-          const inrAmt = parseFloat(rec.orderAmount || rec.inr_amount || rec.amount || 0);
-          const paidAmt = parseFloat(rec.paid_amount || 0);
-          const dispatchAmt = inrAmt > paidAmt ? inrAmt - paidAmt : inrAmt;
+          const inrAmt = parseFloat(String(rec.orderAmount || rec.inr_amount || rec.amount || 0).replace(/,/g, "")) || 0;
+          const paidAmt = parseFloat(String(rec.paid_amount || 0).replace(/,/g, "")) || 0;
+
+          // If already fully paid, skip
+          if (inrAmt > 0 && paidAmt >= inrAmt - 0.01) {
+            return;
+          }
+
+          const dispatchAmt = inrAmt > paidAmt ? Math.round((inrAmt - paidAmt) * 100) / 100 : inrAmt;
 
           extracted.push({
             id: `${order.id}-${idx}`,
@@ -364,11 +371,12 @@ export default function InrDispatchDeskScreen() {
             ifsc_code: (rec.ifscCode || rec.ifsc_code || "").toUpperCase(),
             bank_name: rec.bankName || rec.bank_name || "",
             branch_name: rec.branchName || rec.branch_name || "",
+            total_booked_amount: inrAmt,
             inr_amount: dispatchAmt,
             paid_amount: paidAmt,
             confirm_order_amount: rec.confirmOrderAmount,
             assigned_servicer: rec.servicer || order.servicer || "",
-            payment_status: rec.payment_status || order.payment_status || "Pending",
+            payment_status: rawStatus === "partial" || paidAmt > 0 ? "partial" : (rec.payment_status || order.payment_status || "Pending"),
           });
         });
       }
@@ -946,7 +954,14 @@ export default function InrDispatchDeskScreen() {
     const fromAccNote = channel === "servicer" && debitFromAccountId && debitFromAccountId !== "cash"
       ? `From A/C: ${debitFromAccountId}`
       : "";
-    const combinedNote = [fromAccNote, note.trim()].filter(Boolean).join(" • ");
+    const trancheInfo = actioningPendingItem
+      ? (amountNum < (actioningPendingItem.inr_amount - 0.01)
+          ? `[Partial Tranche: ₹${amountNum.toLocaleString("en-IN")} • Due: ₹${Math.max(0, Math.round((actioningPendingItem.inr_amount - amountNum) * 100) / 100).toLocaleString("en-IN")}]`
+          : actioningPendingItem.paid_amount && actioningPendingItem.paid_amount > 0
+          ? `[Final Tranche: ₹${amountNum.toLocaleString("en-IN")}]`
+          : "")
+      : "";
+    const combinedNote = [fromAccNote, trancheInfo, note.trim()].filter(Boolean).join(" • ");
 
     try {
       const res = await api.post("/payouts/dispatch", {
@@ -967,13 +982,23 @@ export default function InrDispatchDeskScreen() {
       });
 
       // If actioned from pending queue, update receiver status in booked order
+      let isPartial = false;
+      let remainingShortfall = 0;
       if (actioningPendingItem) {
         try {
+          const totalBooked = actioningPendingItem.total_booked_amount || actioningPendingItem.inr_amount;
+          const previousPaid = actioningPendingItem.paid_amount || 0;
+          const newTotalPaid = Math.round((previousPaid + amountNum) * 100) / 100;
+          remainingShortfall = Math.max(0, Math.round((totalBooked - newTotalPaid) * 100) / 100);
+
+          isPartial = remainingShortfall > 0.01;
+          const nextStatus = isPartial ? "partial" : "paid";
+
           await api.patch(
             `/records/orders/${actioningPendingItem.order_id}/receiver/${actioningPendingItem.receiver_index}`,
             {
-              payment_status: "paid",
-              paid_amount: amountNum,
+              payment_status: nextStatus,
+              paid_amount: newTotalPaid,
             }
           );
         } catch (patchErr) {
@@ -983,8 +1008,12 @@ export default function InrDispatchDeskScreen() {
       }
 
       setIsEntryModalOpen(false);
-      setSuccessToast(res.data?.message || `Debit entry of ₹ ${amountNum.toLocaleString("en-IN")} recorded successfully!`);
-      setTimeout(() => setSuccessToast(""), 4500);
+      setSuccessToast(
+        isPartial
+          ? `Partial Payout Recorded: ₹${amountNum.toLocaleString("en-IN")} dispatched. Shortfall of ₹${remainingShortfall.toLocaleString("en-IN")} remains active in Live Pending Queue.`
+          : res.data?.message || `Debit entry of ₹ ${amountNum.toLocaleString("en-IN")} recorded successfully!`
+      );
+      setTimeout(() => setSuccessToast(""), 5000);
 
       fetchQueue();
       fetchServicers();
@@ -1485,14 +1514,21 @@ export default function InrDispatchDeskScreen() {
                         </div>
                       </td>
 
-                      {/* Booked INR Amount */}
-                      <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-right font-extrabold text-emerald-700 text-sm">
-                        ₹ {item.inr_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      {/* Booked INR Amount & Remaining Due */}
+                      <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-right">
+                        <div className="font-mono font-extrabold text-[#104080] text-sm">
+                          ₹ {item.inr_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </div>
                         {item.paid_amount && item.paid_amount > 0 ? (
-                          <div className="text-[9.5px] font-bold text-blue-700">
-                            (Paid: ₹ {item.paid_amount.toLocaleString("en-IN")})
+                          <div className="text-[10px] text-gray-500 font-medium mt-0.5">
+                            <span className="text-purple-700 font-bold">Remaining Due</span>
+                            <span className="block text-[9.5px] text-gray-600">
+                              (Paid: ₹{item.paid_amount.toLocaleString("en-IN")} of ₹{(item.total_booked_amount || (item.inr_amount + item.paid_amount)).toLocaleString("en-IN")})
+                            </span>
                           </div>
-                        ) : null}
+                        ) : (
+                          <div className="text-[9.5px] text-gray-400 font-semibold uppercase">Total Booked</div>
+                        )}
                       </td>
 
                       {/* Assigned Servicer */}
@@ -1508,10 +1544,17 @@ export default function InrDispatchDeskScreen() {
 
                       {/* Status */}
                       <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-center">
-                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-extrabold">
-                          <Clock className="w-3 h-3 text-amber-600" />
-                          {item.payment_status === "partial" ? "PARTIAL" : "WAITING DISPATCH"}
-                        </span>
+                        {String(item.payment_status).toLowerCase() === "partial" ? (
+                          <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-900 border border-purple-300 px-2 py-0.5 rounded text-[10px] font-extrabold shadow-2xs" title={`Partial Payout: ₹${item.inr_amount.toLocaleString("en-IN")} remaining due`}>
+                            <Clock className="w-3 h-3 text-purple-600" />
+                            PARTIAL (₹ {item.inr_amount.toLocaleString("en-IN")} DUE)
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-extrabold">
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            WAITING DISPATCH
+                          </span>
+                        )}
                       </td>
 
                       {/* Inline [ Action Payout ] Button */}
@@ -2004,25 +2047,52 @@ export default function InrDispatchDeskScreen() {
 
               {/* Actioned from Live Pending Queue Banner */}
               {actioningPendingItem && (
-                <div className="bg-amber-50 border border-amber-300 text-amber-900 px-3 py-2 rounded text-xs flex items-center justify-between shadow-2xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">⚡</span>
-                    <div>
-                      <div className="font-bold flex items-center gap-2">
+                <div className="bg-amber-50 border border-amber-300 text-amber-900 p-2.5 rounded-xs text-xs space-y-1.5 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">⚡</span>
+                      <div className="font-bold flex items-center gap-1.5">
                         <span>Pre-filled from Booked UAE Order:</span>
                         <span className="font-mono text-[#104080] font-extrabold bg-blue-100/70 border border-blue-200 px-1.5 py-0.2 rounded">
                           {actioningPendingItem.order_no}
                         </span>
                         <span className="text-[11px] text-gray-600 font-semibold">({actioningPendingItem.order_date})</span>
                       </div>
-                      <div className="text-[10px] text-gray-700 mt-0.5">
-                        Client / Party: <strong>{actioningPendingItem.party_name}</strong> • Receiver #{actioningPendingItem.receiver_index + 1} • Booked INR: ₹ {actioningPendingItem.inr_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </div>
+                    </div>
+                    <span className="bg-amber-200 text-amber-900 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider">
+                      {actioningPendingItem.paid_amount && actioningPendingItem.paid_amount > 0 ? "Partial Payout Action" : "Live Dispatch Pre-fill"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white border border-amber-200 p-2 rounded text-[11px]">
+                    <div>
+                      <span className="text-gray-500 block text-[10px] uppercase font-bold">Total Booked Amount</span>
+                      <span className="font-bold font-mono text-gray-800">
+                        ₹ {(actioningPendingItem.total_booked_amount || actioningPendingItem.inr_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[10px] uppercase font-bold">Previously Dispatched</span>
+                      <span className="font-bold font-mono text-emerald-700">
+                        ₹ {(actioningPendingItem.paid_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[10px] uppercase font-bold">Remaining Due in Queue</span>
+                      <span className="font-extrabold font-mono text-[#104080]">
+                        ₹ {actioningPendingItem.inr_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </span>
                     </div>
                   </div>
-                  <span className="bg-amber-200 text-amber-900 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider">
-                    Live Dispatch Pre-fill
-                  </span>
+
+                  {amountNum > 0 && amountNum < actioningPendingItem.inr_amount - 0.01 && (
+                    <div className="bg-purple-50 border border-purple-200 text-purple-900 p-1.5 rounded text-[10.5px] font-bold flex items-center gap-1.5">
+                      <span>⚠️</span>
+                      <span>
+                        Daily Limit / Partial Shortfall: Entering ₹{amountNum.toLocaleString("en-IN")} will leave <strong>₹{(actioningPendingItem.inr_amount - amountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} Due</strong>. The order will be saved as <em>Partial</em> and stay in the Pending Queue for subsequent dispatch.
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
