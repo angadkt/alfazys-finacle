@@ -16,7 +16,8 @@ import {
   RotateCcw, 
   Check,
   Copy,
-  Trash2
+  Trash2,
+  Zap
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -88,6 +89,26 @@ interface DebitEntryItem {
   bounced_reason: string;
   created_at: string;
   created_by_name: string;
+}
+
+export interface PendingPayoutItem {
+  id: string;
+  order_id: number | string;
+  order_no: string;
+  order_date: string;
+  party_name: string;
+  party_id?: string | number;
+  receiver_index: number;
+  beneficiary_name: string;
+  account_number: string;
+  ifsc_code: string;
+  bank_name: string;
+  branch_name: string;
+  inr_amount: number;
+  paid_amount?: number;
+  confirm_order_amount?: string | number;
+  assigned_servicer?: string;
+  payment_status: string;
 }
 
 export interface ServicerBankAccount {
@@ -194,6 +215,12 @@ export default function InrDispatchDeskScreen() {
   const [bounceSubmitting, setBounceSubmitting] = useState(false);
   const [bounceError, setBounceError] = useState("");
 
+  // Live Pending Payouts Queue (Booked Orders from UAE awaiting India dispatch)
+  const [pendingPayouts, setPendingPayouts] = useState<PendingPayoutItem[]>([]);
+  const [loadingPending, setLoadingPending] = useState(false);
+  const [activeDeskTab, setActiveDeskTab] = useState<"dispatched_ledger" | "pending_queue">("dispatched_ledger");
+  const [actioningPendingItem, setActioningPendingItem] = useState<PendingPayoutItem | null>(null);
+
   // Copy UTR feedback state
   const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
 
@@ -277,16 +304,81 @@ export default function InrDispatchDeskScreen() {
     }
   };
 
+  // Fetch Live Pending Payouts from Booked Orders (Order Entry)
+  const fetchPendingOrders = async () => {
+    setLoadingPending(true);
+    try {
+      const res = await api.get("/records/orders?page=1&limit=250");
+      const orderList = res.data?.records || [];
+      const extracted: PendingPayoutItem[] = [];
+
+      for (const order of orderList) {
+        if (order.status && String(order.status).toLowerCase() === "cancelled") continue;
+        if (order.payment_status && String(order.payment_status).toLowerCase() === "cancelled") continue;
+
+        let recs: any[] = order.receivers_data;
+        if (typeof recs === "string") {
+          try {
+            recs = JSON.parse(recs);
+          } catch {
+            recs = [];
+          }
+        }
+        if (!Array.isArray(recs)) recs = [];
+
+        recs.forEach((rec: any, idx: number) => {
+          const rawStatus = (rec.payment_status || order.payment_status || "Pending").toLowerCase();
+          // Filter only unpaid beneficiaries waiting for dispatch in India
+          if (rawStatus === "paid" || rawStatus === "completed" || rawStatus === "dispatched" || rawStatus === "cancelled") {
+            return;
+          }
+
+          const inrAmt = parseFloat(rec.orderAmount || rec.inr_amount || rec.amount || 0);
+          const paidAmt = parseFloat(rec.paid_amount || 0);
+          const dispatchAmt = inrAmt > paidAmt ? inrAmt - paidAmt : inrAmt;
+
+          extracted.push({
+            id: `${order.id}-${idx}`,
+            order_id: order.id,
+            order_no: order.order_no || `ORD-${order.id}`,
+            order_date: (order.order_date || "").split("T")[0],
+            party_name: order.party_name || order.party_id || "N/A",
+            party_id: order.party_id,
+            receiver_index: idx,
+            beneficiary_name: rec.clientName || rec.client_name || rec.beneficiary_name || "",
+            account_number: rec.accountNumber || rec.account_number || rec.account_no || "",
+            ifsc_code: (rec.ifscCode || rec.ifsc_code || "").toUpperCase(),
+            bank_name: rec.bankName || rec.bank_name || "",
+            branch_name: rec.branchName || rec.branch_name || "",
+            inr_amount: dispatchAmt,
+            paid_amount: paidAmt,
+            confirm_order_amount: rec.confirmOrderAmount,
+            assigned_servicer: rec.servicer || order.servicer || "",
+            payment_status: rec.payment_status || order.payment_status || "Pending",
+          });
+        });
+      }
+
+      setPendingPayouts(extracted);
+    } catch (err) {
+      console.error("Failed to load live pending payouts queue:", err);
+    } finally {
+      setLoadingPending(false);
+    }
+  };
+
   useEffect(() => {
     fetchQueue();
     fetchServicers();
     fetchBeneficiaries();
+    fetchPendingOrders();
   }, [fromDate, toDate, selectedServicerFilter, paymentModeFilter]);
 
   // Debounced live search
   useEffect(() => {
     const t = setTimeout(() => {
       fetchQueue();
+      fetchPendingOrders();
     }, 350);
     return () => clearTimeout(t);
   }, [searchQuery]);
@@ -297,6 +389,66 @@ export default function InrDispatchDeskScreen() {
     if (statusFilter === "bounced") return r.bounced;
     return true;
   });
+
+  // Filter pending payouts queue
+  const filteredPendingPayouts = pendingPayouts.filter((item) => {
+    if (fromDate && item.order_date < fromDate) return false;
+    if (toDate && item.order_date > toDate) return false;
+    if (selectedServicerFilter !== "all") {
+      const matchServicer = servicers.find((s) => String(s.id) === String(selectedServicerFilter));
+      if (matchServicer) {
+        const itemServicer = (item.assigned_servicer || "").toLowerCase();
+        const sName = matchServicer.name.toLowerCase();
+        const sCode = matchServicer.servicer_code.toLowerCase();
+        if (
+          !itemServicer.includes(sName) &&
+          !itemServicer.includes(sCode) &&
+          String(matchServicer.id) !== item.assigned_servicer
+        ) {
+          return false;
+        }
+      }
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const match =
+        item.order_no.toLowerCase().includes(q) ||
+        item.beneficiary_name.toLowerCase().includes(q) ||
+        item.account_number.toLowerCase().includes(q) ||
+        item.ifsc_code.toLowerCase().includes(q) ||
+        item.bank_name.toLowerCase().includes(q) ||
+        item.party_name.toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  // Dynamically computed metrics reflecting all active filters
+  const filteredSelectedServicer = servicers.find((s) => String(s.id) === String(selectedServicerFilter));
+
+  // 1. Debited Outflow & Count based on filtered records
+  const dynamicTotalDebited = filteredRecords.reduce((acc, r) => {
+    if (statusFilter === "bounced") return acc + (Number(r.amount) || 0);
+    return r.bounced ? acc : acc + (Number(r.amount) || 0);
+  }, 0);
+  const dynamicDebitCount = filteredRecords.filter((r) => statusFilter === "bounced" ? r.bounced : !r.bounced).length;
+
+  // 2. Pending Orders Queue based on filtered pending items
+  const filteredPendingInr = filteredPendingPayouts.reduce((acc, p) => acc + (p.inr_amount || 0), 0);
+  const filteredPendingCount = filteredPendingPayouts.length;
+
+  // 3. Credited Float & Available Float
+  const dynamicTotalCredited = summary.total_credited > 0 
+    ? summary.total_credited 
+    : (filteredSelectedServicer ? (filteredSelectedServicer.wallet?.total_float || 0) + dynamicTotalDebited : dynamicTotalDebited);
+
+  const dynamicNetAvailable = filteredSelectedServicer && !fromDate && !toDate
+    ? (filteredSelectedServicer.wallet?.total_float || 0)
+    : Math.max(0, dynamicTotalCredited - dynamicTotalDebited);
+
+  const dynamicDisbursementRatio = dynamicTotalCredited > 0
+    ? Math.min(100, Math.round((dynamicTotalDebited / dynamicTotalCredited) * 100))
+    : 0;
 
   // Active Servicer helper for modal
   const activeServicer = servicers.find((s) => String(s.id) === String(selectedServicerId));
@@ -576,6 +728,7 @@ export default function InrDispatchDeskScreen() {
       setTimeout(() => setSuccessToast(""), 5000);
       await fetchQueue();
       await fetchServicers();
+      await fetchPendingOrders();
     } catch (err: any) {
       setCreditError(err.response?.data?.error || err.message || "Failed to add float credit");
     } finally {
@@ -585,6 +738,7 @@ export default function InrDispatchDeskScreen() {
 
   // Open New Debit Entry Modal
   const handleOpenNewEntry = () => {
+    setActioningPendingItem(null);
     setBeneficiaryName("");
     setBeneficiaryAccount("");
     setBeneficiaryIfsc("");
@@ -603,6 +757,62 @@ export default function InrDispatchDeskScreen() {
     if (servicers.length > 0) {
       setSelectedServicerId(String(servicers[0].id));
     }
+    fetchBeneficiaries();
+    setIsEntryModalOpen(true);
+  };
+
+  // Action Payout from Live Pending Queue (Pre-fills Order #, Beneficiary, A/C, IFSC, Exact Converted INR Amount)
+  const handleActionPayout = (item: PendingPayoutItem) => {
+    setActioningPendingItem(item);
+    setBeneficiaryName(item.beneficiary_name);
+    setBeneficiaryAccount(item.account_number);
+    setBeneficiaryIfsc(item.ifsc_code);
+    setBeneficiaryBank(item.bank_name);
+    setBeneficiaryBranch(item.branch_name);
+    setPayoutAmount(item.inr_amount > 0 ? String(item.inr_amount) : "");
+    setPaymentMode("bank_transfer");
+    setUtrNumber("");
+    setNote(`Order #${item.order_no}${item.party_name ? ` • Client: ${item.party_name}` : ""}`);
+    setFormError("");
+    setEntryDate(new Date().toISOString().slice(0, 10));
+    setChannel("servicer");
+    setWalletType("bank");
+
+    // Match assigned servicer if available
+    if (item.assigned_servicer && servicers.length > 0) {
+      const match = servicers.find(
+        (s) =>
+          String(s.id) === String(item.assigned_servicer) ||
+          s.name.toLowerCase() === item.assigned_servicer?.toLowerCase() ||
+          s.servicer_code.toLowerCase() === item.assigned_servicer?.toLowerCase()
+      );
+      if (match) {
+        setSelectedServicerId(String(match.id));
+      } else {
+        setSelectedServicerId(String(servicers[0].id));
+      }
+    } else if (servicers.length > 0) {
+      setSelectedServicerId(String(servicers[0].id));
+    }
+
+    if (item.ifsc_code && item.ifsc_code.length === 11) {
+      setIfscStatus("loading");
+      fetch(`https://ifsc.razorpay.com/${item.ifsc_code}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.BANK) {
+            setBeneficiaryBank(data.BANK || item.bank_name);
+            setBeneficiaryBranch(data.BRANCH || item.branch_name);
+            setIfscStatus("success");
+          } else {
+            setIfscStatus("idle");
+          }
+        })
+        .catch(() => setIfscStatus("idle"));
+    } else {
+      setIfscStatus("idle");
+    }
+
     fetchBeneficiaries();
     setIsEntryModalOpen(true);
   };
@@ -653,12 +863,29 @@ export default function InrDispatchDeskScreen() {
         entry_date: entryDate,
       });
 
+      // If actioned from pending queue, update receiver status in booked order
+      if (actioningPendingItem) {
+        try {
+          await api.patch(
+            `/records/orders/${actioningPendingItem.order_id}/receiver/${actioningPendingItem.receiver_index}`,
+            {
+              payment_status: "paid",
+              paid_amount: amountNum,
+            }
+          );
+        } catch (patchErr) {
+          console.warn("Could not auto-update order receiver payment status:", patchErr);
+        }
+        setActioningPendingItem(null);
+      }
+
       setIsEntryModalOpen(false);
       setSuccessToast(res.data?.message || `Debit entry of ₹ ${amountNum.toLocaleString("en-IN")} recorded successfully!`);
       setTimeout(() => setSuccessToast(""), 4500);
 
       fetchQueue();
       fetchServicers();
+      fetchPendingOrders();
     } catch (err: any) {
       setFormError(err.response?.data?.error || err.message || "Failed to record beneficiary payout debit.");
     } finally {
@@ -680,6 +907,7 @@ export default function InrDispatchDeskScreen() {
       setTimeout(() => setSuccessToast(""), 4500);
       fetchQueue();
       fetchServicers();
+      fetchPendingOrders();
     } catch (err: any) {
       setBounceError(err.response?.data?.error || err.message || "Failed to bounce transaction.");
     } finally {
@@ -799,11 +1027,11 @@ export default function InrDispatchDeskScreen() {
             <FileText className="w-3.5 h-3.5 text-rose-400" /> PDF
           </button>
           <button
-            onClick={() => { fetchQueue(); fetchServicers(); }}
+            onClick={() => { fetchQueue(); fetchServicers(); fetchPendingOrders(); }}
             className="flex items-center gap-1 bg-[#23528f] hover:bg-[#1a4073] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer"
-            title="Refresh Ledger"
+            title="Refresh Desks"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+            <RefreshCw className={`w-3.5 h-3.5 ${(loading || loadingPending) ? "animate-spin" : ""}`} /> Refresh
           </button>
         </div>
       </div>
@@ -941,126 +1169,194 @@ export default function InrDispatchDeskScreen() {
         </div>
       </div>
 
-      {/* KPI Summary Cards: Phase 2 Servicer Float vs Beneficiary Outflow */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5 p-3 bg-[#eef3f9] border-b border-[#c4d4ec]">
+      {/* KPI Summary Cards: Dynamic metrics synchronized with active filters */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-2.5 p-3 bg-[#eef3f9] border-b border-[#c4d4ec]">
         <div className="bg-white border border-[#c4d4ec] rounded-xs p-2.5 shadow-2xs">
           <div className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Total Float Credited</div>
           <div className="text-base font-extrabold text-[#104080] mt-0.5">
-            ₹ {summary.total_credited.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            ₹ {dynamicTotalCredited.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-[10px] text-gray-500 mt-0.5">Total Capital Injected into Servicer Accounts</div>
+          <div className="text-[10px] text-gray-500 mt-0.5 truncate" title={filteredSelectedServicer ? `Servicer: [${filteredSelectedServicer.servicer_code}] ${filteredSelectedServicer.name}` : "Total Capital Injected into Servicer Accounts"}>
+            {filteredSelectedServicer ? `[${filteredSelectedServicer.servicer_code}] ${filteredSelectedServicer.name}` : "Total Capital Injected into Servicer Accounts"}
+          </div>
         </div>
 
         <div className="bg-white border border-[#c4d4ec] rounded-xs p-2.5 shadow-2xs">
           <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Total Beneficiary Debited</div>
           <div className="text-base font-extrabold text-rose-600 mt-0.5">
-            ₹ {summary.total_debited.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            ₹ {dynamicTotalDebited.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-[10px] text-gray-500 mt-0.5">{summary.total_debits} Direct Beneficiary Payouts Logged</div>
+          <div className="text-[10px] text-gray-500 mt-0.5">
+            {dynamicDebitCount} {statusFilter === "bounced" ? "Bounced / Reversed Debits" : "Direct Beneficiary Payouts"} Matching Filter
+          </div>
         </div>
 
         <div className="bg-white border border-[#c4d4ec] rounded-xs p-2.5 shadow-2xs">
           <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Net Available Float</div>
           <div className="text-base font-extrabold text-emerald-600 mt-0.5">
-            ₹ {summary.net_available.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            ₹ {dynamicNetAvailable.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-[10px] text-gray-500 mt-0.5">Active Remaining Liquid Float in India</div>
+          <div className="text-[10px] text-gray-500 mt-0.5">
+            {filteredSelectedServicer ? `Active Float for [${filteredSelectedServicer.servicer_code}]` : "Active Remaining Liquid Float in India"}
+          </div>
+        </div>
+
+        <div className="bg-white border-2 border-amber-400 rounded-xs p-2.5 shadow-2xs bg-amber-50/40">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800 flex items-center justify-between">
+            <span>Pending Payouts Queue</span>
+            <span className="bg-amber-200 text-amber-900 px-1.5 py-0.2 rounded-full font-mono text-[9px] font-bold">
+              {filteredPendingCount} QUEUED
+            </span>
+          </div>
+          <div className="text-base font-extrabold text-amber-900 mt-0.5">
+            ₹ {filteredPendingInr.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          </div>
+          <div className="text-[10px] text-amber-800 font-semibold mt-0.5">
+            {filteredPendingCount} Booked Beneficiaries Matching Filter
+          </div>
         </div>
 
         <div className="bg-white border border-[#c4d4ec] rounded-xs p-2.5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Disbursement Ratio</span>
             <span className="text-xs font-bold text-[#104080]">
-              {summary.total_credited > 0 ? Math.round((summary.total_debited / summary.total_credited) * 100) : 0}%
+              {dynamicDisbursementRatio}%
             </span>
           </div>
           <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden mt-1.5">
             <div
               className="bg-[#104080] h-full transition-all duration-300"
               style={{
-                width: `${summary.total_credited > 0 ? Math.min(100, (summary.total_debited / summary.total_credited) * 100) : 0}%`,
+                width: `${dynamicDisbursementRatio}%`,
               }}
             />
           </div>
           <div className="text-[10px] text-gray-500 mt-1 flex justify-between">
-            <span>₹ {summary.net_available.toLocaleString("en-IN")} Free</span>
-            <span>{summary.total_debits} Payouts Done</span>
+            <span>₹ {dynamicNetAvailable.toLocaleString("en-IN")} Free</span>
+            <span>{dynamicDebitCount} Debits Logged</span>
           </div>
         </div>
       </div>
 
-      {/* Debit Entries Table */}
+      {/* Desk View Switcher Tabs */}
+      <div className="bg-[#e4ebf5] border-b border-[#c4d4ec] px-3 pt-2 flex items-center justify-between select-none">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setActiveDeskTab("dispatched_ledger")}
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-t border-t border-x transition-colors cursor-pointer ${
+              activeDeskTab === "dispatched_ledger"
+                ? "bg-white text-[#104080] border-[#c4d4ec] border-b-white -mb-[1px] shadow-xs"
+                : "bg-transparent text-gray-600 border-transparent hover:bg-[#d5dfea] hover:text-[#104080]"
+            }`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Dispatched Debits Ledger</span>
+            <span className="bg-blue-100 text-[#104080] border border-blue-200 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold">
+              {records.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveDeskTab("pending_queue")}
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-t border-t border-x transition-colors cursor-pointer ${
+              activeDeskTab === "pending_queue"
+                ? "bg-white text-[#104080] border-[#c4d4ec] border-b-white -mb-[1px] shadow-xs"
+                : "bg-transparent text-gray-600 border-transparent hover:bg-[#d5dfea] hover:text-[#104080]"
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5 text-amber-600" />
+            <span>Pending Payouts Queue (Booked Orders)</span>
+            <span className="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold">
+              {pendingPayouts.length}
+            </span>
+          </button>
+        </div>
+
+        <div className="text-[11px] text-gray-600 pb-1 font-semibold flex items-center gap-2">
+          {activeDeskTab === "pending_queue" ? (
+            <span>
+              ⚡ Showing <strong>{filteredPendingPayouts.length}</strong> unpaid beneficiaries booked in UAE waiting for dispatch in India
+            </span>
+          ) : (
+            <span>
+              📜 Showing <strong>{filteredRecords.length}</strong> logged debit payout vouchers
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Main Table Container */}
       <div className="flex-1 overflow-auto custom-scrollbar p-3">
-        <div className="border border-[#c4d4ec] rounded-xs overflow-hidden shadow-2xs bg-white">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#e4e4e4] border-b border-[#a0a0a0] text-[11px] font-bold text-[#104080] uppercase tracking-wider select-none">
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Txn# & Date</th>
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Servicer / Funding Float</th>
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Beneficiary & Account</th>
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Bank & Branch (IFSC)</th>
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-right">Amount Paid (INR)</th>
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-center">Mode & Bucket</th>
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec]">UTR / Reference</th>
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-center">Status</th>
-                <th className="py-2 px-2.5 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#e2e8f0] text-[12px]">
-              {filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-gray-500">
-                    <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    No beneficiary payout debit entries found. Click{" "}
-                    <button onClick={handleOpenNewEntry} className="text-[#104080] font-bold underline cursor-pointer">
-                      + New Debit Entry
-                    </button>{" "}
-                    to log a payout against servicer float.
-                  </td>
+        {activeDeskTab === "pending_queue" ? (
+          /* ── VIEW 1: LIVE PENDING PAYOUTS QUEUE DIRECTLY POPULATED BY BOOKED ORDERS ── */
+          <div className="border border-[#c4d4ec] rounded-xs overflow-hidden shadow-2xs bg-white">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#e4e4e4] border-b border-[#a0a0a0] text-[11px] font-bold text-[#104080] uppercase tracking-wider select-none">
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Order # & Date</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Remitting Party / Client</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Beneficiary Name</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Account Number</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Bank & Branch (IFSC)</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-right">Booked INR Amount</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-center">Assigned Servicer</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-center">Status</th>
+                  <th className="py-2 px-2.5 text-center bg-[#f0f4f8]">Action</th>
                 </tr>
-              ) : (
-                filteredRecords.map((item) => {
-                  return (
-                    <tr
-                      key={item.id}
-                      className={`hover:bg-[#f6f9fc] transition-colors ${item.bounced ? "bg-rose-50/40" : ""}`}
-                    >
-                      {/* Txn Details */}
+              </thead>
+              <tbody className="divide-y divide-[#e2e8f0] text-[12px]">
+                {loadingPending ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-gray-500">
+                      <RefreshCw className="w-6 h-6 animate-spin text-[#104080] mx-auto mb-2" />
+                      Loading live pending payouts queue from Order Entry...
+                    </td>
+                  </tr>
+                ) : filteredPendingPayouts.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-gray-500">
+                      <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                      <div className="font-bold text-gray-700">No pending payouts waiting in queue!</div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        All unpaid beneficiaries booked in UAE have been dispatched in India.
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPendingPayouts.map((item) => (
+                    <tr key={item.id} className="hover:bg-[#f6f9fc] transition-colors">
+                      {/* Order # & Date */}
                       <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
-                        <div className="font-mono font-bold text-[#104080] text-xs flex items-center gap-1">
-                          {item.txn_no}
+                        <div className="font-mono font-bold text-[#104080] text-xs">
+                          {item.order_no}
                         </div>
                         <div className="text-[10px] text-gray-500">
-                          {item.entry_date}
+                          {item.order_date}
                         </div>
                       </td>
 
-                      {/* Servicer */}
+                      {/* Remitting Party */}
                       <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
                         <div className="font-bold text-gray-800">
-                          {item.servicer_name}
-                        </div>
-                        <div className="text-[10px] text-gray-500 flex items-center gap-1">
-                          {item.servicer_code && (
-                            <span className="font-semibold text-blue-800">[{item.servicer_code}]</span>
-                          )}
-                          {item.servicer_account_no && (
-                            <span className="font-mono text-gray-600">A/C: {item.servicer_account_no}</span>
-                          )}
+                          {item.party_name}
                         </div>
                       </td>
 
-                      {/* Beneficiary & Account */}
+                      {/* Beneficiary Name */}
                       <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
                         <div className="font-bold text-gray-900">
-                          {item.beneficiary_name}
+                          {item.beneficiary_name || <span className="text-gray-400 italic">Not Specified</span>}
                         </div>
+                      </td>
+
+                      {/* Account Number */}
+                      <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
                         {item.account_number ? (
-                          <div className="font-mono text-[11px] text-gray-700">
-                            A/C: {item.account_number}
+                          <div className="font-mono font-bold text-gray-800 text-[11px]">
+                            {item.account_number}
                           </div>
                         ) : (
-                          <div className="text-[10px] text-gray-400">Cash Handover</div>
+                          <span className="text-gray-400 italic text-[11px]">Cash Payout</span>
                         )}
                       </td>
 
@@ -1069,108 +1365,245 @@ export default function InrDispatchDeskScreen() {
                         <div className="font-semibold text-gray-800">
                           {item.bank_name || "-"}
                         </div>
-                        <div className="text-[10px] text-gray-600">
-                          {item.branch_name && <span>{item.branch_name} </span>}
+                        <div className="text-[10px] text-gray-600 flex items-center gap-1">
+                          {item.branch_name && <span>{item.branch_name} • </span>}
                           {item.ifsc_code && (
-                            <span className="inline-block bg-gray-100 text-gray-700 px-1 py-0.2 rounded font-mono text-[10px]">
+                            <span className="inline-block bg-gray-100 text-gray-700 px-1 py-0.2 rounded font-mono text-[10px] font-bold">
                               {item.ifsc_code}
                             </span>
                           )}
                         </div>
                       </td>
 
-                      {/* Amount Paid */}
+                      {/* Booked INR Amount */}
                       <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-right font-extrabold text-emerald-700 text-sm">
-                        ₹ {item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </td>
-
-                      {/* Mode & Bucket */}
-                      <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-center">
-                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#eef3f9] text-[#104080] border border-[#c4d4ec] uppercase">
-                          {item.payment_mode === "bank_transfer" ? "Bank Transfer" : item.payment_mode.toUpperCase()}
-                        </span>
-                        <div className="text-[9px] text-gray-500 mt-0.5 capitalize">
-                          {item.wallet_type === "bank" ? "💳 Bank Float" : item.wallet_type === "cash" ? "💵 Cash Float" : "Direct"}
-                        </div>
-                      </td>
-
-                      {/* UTR / Reference */}
-                      <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
-                        <div className="flex items-center gap-1">
-                          <span className="font-mono text-[11px] font-bold text-gray-800 truncate max-w-[150px]" title={item.utr_number}>
-                            {item.utr_number}
-                          </span>
-                          <button
-                            onClick={() => handleCopyUtr(item.utr_number)}
-                            className="text-gray-400 hover:text-blue-600 p-0.5 cursor-pointer"
-                            title="Copy UTR"
-                          >
-                            {copiedUtr === item.utr_number ? (
-                              <Check className="w-3 h-3 text-emerald-600" />
-                            ) : (
-                              <Copy className="w-3 h-3" />
-                            )}
-                          </button>
-                        </div>
-                        {item.note && (
-                          <div className="text-[10px] text-gray-500 italic truncate max-w-[160px]" title={item.note}>
-                            {item.note}
+                        ₹ {item.inr_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        {item.paid_amount && item.paid_amount > 0 ? (
+                          <div className="text-[9.5px] font-bold text-blue-700">
+                            (Paid: ₹ {item.paid_amount.toLocaleString("en-IN")})
                           </div>
+                        ) : null}
+                      </td>
+
+                      {/* Assigned Servicer */}
+                      <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-center">
+                        {item.assigned_servicer ? (
+                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#eef3f9] text-[#104080] border border-[#c4d4ec]">
+                            {item.assigned_servicer}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-[10px] italic">Unassigned</span>
                         )}
                       </td>
 
                       {/* Status */}
                       <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-center">
-                        {item.bounced ? (
-                          <div>
-                            <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-extrabold">
-                              <AlertTriangle className="w-3 h-3 text-rose-600" /> REVERSED
-                            </span>
-                            {item.bounced_reason && (
-                              <div className="text-[9px] text-rose-600 mt-0.5 truncate max-w-[100px]" title={item.bounced_reason}>
-                                {item.bounced_reason}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-extrabold">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> SUCCESS
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-extrabold">
+                          <Clock className="w-3 h-3 text-amber-600" />
+                          {item.payment_status === "partial" ? "PARTIAL" : "WAITING DISPATCH"}
+                        </span>
                       </td>
 
-                      {/* Actions */}
-                      <td className="py-2 px-2.5 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => setViewDetailsItem(item)}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-2 py-0.5 rounded text-[11px] border border-gray-300 cursor-pointer"
-                            title="View Voucher Details"
-                          >
-                            Voucher
-                          </button>
-                          {!item.bounced && (
-                            <button
-                              onClick={() => {
-                                setBounceItem(item);
-                                setBounceReason("Account Closed / Invalid IFSC");
-                                setBounceError("");
-                              }}
-                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold px-2 py-0.5 rounded text-[11px] cursor-pointer flex items-center gap-1"
-                              title="Mark payout as bounced/reversed"
-                            >
-                              <RotateCcw className="w-3 h-3" /> Bounce
-                            </button>
-                          )}
-                        </div>
+                      {/* Inline [ Action Payout ] Button */}
+                      <td className="py-2 px-2.5 text-center bg-[#f8fafc]">
+                        <button
+                          onClick={() => handleActionPayout(item)}
+                          className="inline-flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded font-extrabold text-[11px] shadow-sm transition-all cursor-pointer active:scale-95"
+                          title={`Action payout for ${item.beneficiary_name} - pre-fills debit entry modal`}
+                        >
+                          <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                          <span>Action Payout</span>
+                        </button>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* ── VIEW 2: DISPATCHED DEBITS LEDGER ── */
+          <div className="border border-[#c4d4ec] rounded-xs overflow-hidden shadow-2xs bg-white">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#e4e4e4] border-b border-[#a0a0a0] text-[11px] font-bold text-[#104080] uppercase tracking-wider select-none">
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Txn# & Date</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Servicer / Funding Float</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Beneficiary & Account</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Bank & Branch (IFSC)</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-right">Amount Paid (INR)</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-center">Mode & Bucket</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec]">UTR / Reference</th>
+                  <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-center">Status</th>
+                  <th className="py-2 px-2.5 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e2e8f0] text-[12px]">
+                {filteredRecords.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-gray-500">
+                      <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      No beneficiary payout debit entries found. Click{" "}
+                      <button onClick={handleOpenNewEntry} className="text-[#104080] font-bold underline cursor-pointer">
+                        + New Debit Entry
+                      </button>{" "}
+                      to log a payout against servicer float.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredRecords.map((item) => {
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`hover:bg-[#f6f9fc] transition-colors ${item.bounced ? "bg-rose-50/40" : ""}`}
+                      >
+                        {/* Txn Details */}
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
+                          <div className="font-mono font-bold text-[#104080] text-xs flex items-center gap-1">
+                            {item.txn_no}
+                          </div>
+                          <div className="text-[10px] text-gray-500">
+                            {item.entry_date}
+                          </div>
+                        </td>
+
+                        {/* Servicer */}
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
+                          <div className="font-bold text-gray-800">
+                            {item.servicer_name}
+                          </div>
+                          <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                            {item.servicer_code && (
+                              <span className="font-semibold text-blue-800">[{item.servicer_code}]</span>
+                            )}
+                            {item.servicer_account_no && (
+                              <span className="font-mono text-gray-600">A/C: {item.servicer_account_no}</span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Beneficiary & Account */}
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
+                          <div className="font-bold text-gray-900">
+                            {item.beneficiary_name}
+                          </div>
+                          {item.account_number ? (
+                            <div className="font-mono text-[11px] text-gray-700">
+                              A/C: {item.account_number}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-gray-400">Cash Handover</div>
+                          )}
+                        </td>
+
+                        {/* Bank, Branch & IFSC */}
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
+                          <div className="font-semibold text-gray-800">
+                            {item.bank_name || "-"}
+                          </div>
+                          <div className="text-[10px] text-gray-600">
+                            {item.branch_name && <span>{item.branch_name} </span>}
+                            {item.ifsc_code && (
+                              <span className="inline-block bg-gray-100 text-gray-700 px-1 py-0.2 rounded font-mono text-[10px]">
+                                {item.ifsc_code}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Amount Paid */}
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-right font-extrabold text-emerald-700 text-sm">
+                          ₹ {item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </td>
+
+                        {/* Mode & Bucket */}
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-center">
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#eef3f9] text-[#104080] border border-[#c4d4ec] uppercase">
+                            {item.payment_mode === "bank_transfer" ? "Bank Transfer" : item.payment_mode.toUpperCase()}
+                          </span>
+                          <div className="text-[9px] text-gray-500 mt-0.5 capitalize">
+                            {item.wallet_type === "bank" ? "💳 Bank Float" : item.wallet_type === "cash" ? "💵 Cash Float" : "Direct"}
+                          </div>
+                        </td>
+
+                        {/* UTR / Reference */}
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0]">
+                          <div className="flex items-center gap-1">
+                            <span className="font-mono text-[11px] font-bold text-gray-800 truncate max-w-[150px]" title={item.utr_number}>
+                              {item.utr_number}
+                            </span>
+                            <button
+                              onClick={() => handleCopyUtr(item.utr_number)}
+                              className="text-gray-400 hover:text-blue-600 p-0.5 cursor-pointer"
+                              title="Copy UTR"
+                            >
+                              {copiedUtr === item.utr_number ? (
+                                <Check className="w-3 h-3 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+                          {item.note && (
+                            <div className="text-[10px] text-gray-500 italic truncate max-w-[160px]" title={item.note}>
+                              {item.note}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-2 px-2.5 border-r border-[#e2e8f0] text-center">
+                          {item.bounced ? (
+                            <div>
+                              <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-extrabold">
+                                <AlertTriangle className="w-3 h-3 text-rose-600" /> REVERSED
+                              </span>
+                              {item.bounced_reason && (
+                                <div className="text-[9px] text-rose-600 mt-0.5 truncate max-w-[100px]" title={item.bounced_reason}>
+                                  {item.bounced_reason}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-extrabold">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> SUCCESS
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-2 px-2.5 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => setViewDetailsItem(item)}
+                              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-2 py-0.5 rounded text-[11px] border border-gray-300 cursor-pointer"
+                              title="View Voucher Details"
+                            >
+                              Voucher
+                            </button>
+                            {!item.bounced && (
+                              <button
+                                onClick={() => {
+                                  setBounceItem(item);
+                                  setBounceReason("Account Closed / Invalid IFSC");
+                                  setBounceError("");
+                                }}
+                                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold px-2 py-0.5 rounded text-[11px] cursor-pointer flex items-center gap-1"
+                                title="Mark payout as bounced/reversed"
+                              >
+                                <RotateCcw className="w-3 h-3" /> Bounce
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* MODAL 0: ADD FLOAT CREDIT (LIQUIDITY INFLOW) */}
@@ -1456,6 +1889,30 @@ export default function InrDispatchDeskScreen() {
                 <div className="bg-rose-50 border border-rose-300 text-rose-700 px-3 py-1.5 rounded text-xs flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
+                </div>
+              )}
+
+              {/* Actioned from Live Pending Queue Banner */}
+              {actioningPendingItem && (
+                <div className="bg-amber-50 border border-amber-300 text-amber-900 px-3 py-2 rounded text-xs flex items-center justify-between shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">⚡</span>
+                    <div>
+                      <div className="font-bold flex items-center gap-2">
+                        <span>Pre-filled from Booked UAE Order:</span>
+                        <span className="font-mono text-[#104080] font-extrabold bg-blue-100/70 border border-blue-200 px-1.5 py-0.2 rounded">
+                          {actioningPendingItem.order_no}
+                        </span>
+                        <span className="text-[11px] text-gray-600 font-semibold">({actioningPendingItem.order_date})</span>
+                      </div>
+                      <div className="text-[10px] text-gray-700 mt-0.5">
+                        Client / Party: <strong>{actioningPendingItem.party_name}</strong> • Receiver #{actioningPendingItem.receiver_index + 1} • Booked INR: ₹ {actioningPendingItem.inr_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="bg-amber-200 text-amber-900 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider">
+                    Live Dispatch Pre-fill
+                  </span>
                 </div>
               )}
 
