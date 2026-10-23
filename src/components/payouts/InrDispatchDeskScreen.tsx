@@ -169,6 +169,7 @@ export default function InrDispatchDeskScreen() {
   // Form Fields
   const [channel, setChannel] = useState<"servicer" | "direct">("servicer");
   const [selectedServicerId, setSelectedServicerId] = useState<string>("");
+  const [debitFromAccountId, setDebitFromAccountId] = useState<string>("");
   const [walletType, setWalletType] = useState<"bank" | "cash">("bank");
   const [beneficiaryName, setBeneficiaryName] = useState("");
   const [beneficiaryAccount, setBeneficiaryAccount] = useState("");
@@ -182,6 +183,7 @@ export default function InrDispatchDeskScreen() {
   const [utrNumber, setUtrNumber] = useState("");
   const [note, setNote] = useState("");
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [savedBeneficiaries, setSavedBeneficiaries] = useState<any[]>([]);
 
   // Modal 2: View Details Voucher
   const [viewDetailsItem, setViewDetailsItem] = useState<DebitEntryItem | null>(null);
@@ -263,9 +265,22 @@ export default function InrDispatchDeskScreen() {
     }
   };
 
+  // Fetch Saved Beneficiaries from Order Entry
+  const fetchBeneficiaries = async () => {
+    try {
+      const res = await api.get("/records/beneficiaries");
+      if (res.data?.beneficiaries && Array.isArray(res.data.beneficiaries)) {
+        setSavedBeneficiaries(res.data.beneficiaries);
+      }
+    } catch (err) {
+      console.warn("Failed to load order entry beneficiaries:", err);
+    }
+  };
+
   useEffect(() => {
     fetchQueue();
     fetchServicers();
+    fetchBeneficiaries();
   }, [fromDate, toDate, selectedServicerFilter, paymentModeFilter]);
 
   // Debounced live search
@@ -288,6 +303,111 @@ export default function InrDispatchDeskScreen() {
   const amountNum = parseFloat(payoutAmount) || 0;
   const commissionRate = channel === "servicer" && activeServicer ? activeServicer.commission_rate : 0;
   const commissionEarned = Math.round(amountNum * (commissionRate / 100) * 100) / 100;
+
+  // Available Bank Accounts for the selected servicer in Debit Entry modal (From A/C)
+  const availableDebitBankAccounts = React.useMemo(() => {
+    if (!activeServicer) return [];
+    const accounts: { value: string; label: string }[] = [];
+    if (activeServicer.bank_accounts && activeServicer.bank_accounts.length > 0) {
+      activeServicer.bank_accounts.forEach((b) => {
+        accounts.push({
+          value: b.account_number,
+          label: `${b.bank_name || "Bank"} — A/C: ${b.account_number} (${b.ifsc_code || "No IFSC"})${b.account_holder ? ` • ${b.account_holder}` : ""}${b.is_primary ? " [PRIMARY]" : ""}`
+        });
+      });
+    } else if (activeServicer.account_no) {
+      accounts.push({
+        value: activeServicer.account_no,
+        label: `${activeServicer.bank_name || "Bank"} — A/C: ${activeServicer.account_no} (${activeServicer.ifsc_code || ""}) [OPERATING]`
+      });
+    }
+    accounts.push({
+      value: "cash",
+      label: "Cash Handover / Hand Wallet"
+    });
+    return accounts;
+  }, [activeServicer]);
+
+  // Auto-select primary or first account when selected servicer or wallet bucket changes
+  useEffect(() => {
+    if (!activeServicer) {
+      setDebitFromAccountId("");
+      return;
+    }
+    if (walletType === "cash") {
+      setDebitFromAccountId("cash");
+    } else if (activeServicer.bank_accounts && activeServicer.bank_accounts.length > 0) {
+      const primary = activeServicer.bank_accounts.find(b => b.is_primary) || activeServicer.bank_accounts[0];
+      setDebitFromAccountId(primary.account_number);
+    } else if (activeServicer.account_no) {
+      setDebitFromAccountId(activeServicer.account_no);
+    } else {
+      setDebitFromAccountId("cash");
+    }
+  }, [activeServicer, walletType]);
+
+  // Order Entry Beneficiary Autocomplete Lists
+  const uniqueBeneficiaryNames = React.useMemo(() => {
+    const seen = new Set<string>();
+    const list: any[] = [];
+    savedBeneficiaries.forEach(b => {
+      const name = (b.client_name || "").trim();
+      const key = `${name.toUpperCase()}__${(b.account_number || "").trim()}`;
+      if (name && !seen.has(key)) {
+        seen.add(key);
+        list.push(b);
+      }
+    });
+    return list;
+  }, [savedBeneficiaries]);
+
+  const uniqueBeneficiaryAccounts = React.useMemo(() => {
+    const seen = new Set<string>();
+    const list: any[] = [];
+    savedBeneficiaries.forEach(b => {
+      const acc = (b.account_number || "").trim();
+      if (acc && !seen.has(acc)) {
+        seen.add(acc);
+        list.push(b);
+      }
+    });
+    return list;
+  }, [savedBeneficiaries]);
+
+  // Auto-fill from Order Entry suggestions
+  const handleBeneficiaryNameChange = (val: string) => {
+    setBeneficiaryName(val);
+    const trimmed = val.trim().toUpperCase();
+    if (trimmed) {
+      const match = savedBeneficiaries.find(b => (b.client_name || "").toUpperCase() === trimmed);
+      if (match) {
+        if (match.account_number) setBeneficiaryAccount(match.account_number);
+        if (match.ifsc_code) {
+          setBeneficiaryIfsc(match.ifsc_code.toUpperCase());
+          setBeneficiaryBank(match.bank_name || "");
+          setBeneficiaryBranch(match.branch_name || "");
+          setIfscStatus("success");
+        }
+      }
+    }
+  };
+
+  const handleBeneficiaryAccountChange = (val: string) => {
+    setBeneficiaryAccount(val);
+    const trimmed = val.trim();
+    if (trimmed) {
+      const match = savedBeneficiaries.find(b => (b.account_number || "").trim() === trimmed);
+      if (match) {
+        if (match.client_name) setBeneficiaryName(match.client_name);
+        if (match.ifsc_code) {
+          setBeneficiaryIfsc(match.ifsc_code.toUpperCase());
+          setBeneficiaryBank(match.bank_name || "");
+          setBeneficiaryBranch(match.branch_name || "");
+          setIfscStatus("success");
+        }
+      }
+    }
+  };
 
   // Active Credit Servicer & Available Bank Accounts
   const activeCreditServicer = servicers.find(s => String(s.id) === String(creditServicerId));
@@ -483,6 +603,7 @@ export default function InrDispatchDeskScreen() {
     if (servicers.length > 0) {
       setSelectedServicerId(String(servicers[0].id));
     }
+    fetchBeneficiaries();
     setIsEntryModalOpen(true);
   };
 
@@ -509,11 +630,17 @@ export default function InrDispatchDeskScreen() {
     setSubmitting(true);
     setFormError("");
 
+    const fromAccNote = channel === "servicer" && debitFromAccountId && debitFromAccountId !== "cash"
+      ? `From A/C: ${debitFromAccountId}`
+      : "";
+    const combinedNote = [fromAccNote, note.trim()].filter(Boolean).join(" • ");
+
     try {
       const res = await api.post("/payouts/dispatch", {
         channel,
         servicer_id: channel === "servicer" ? selectedServicerId : null,
         wallet_type: channel === "direct" ? "direct" : walletType,
+        from_account: channel === "servicer" ? debitFromAccountId : undefined,
         beneficiary_name: beneficiaryName.trim(),
         beneficiary_account: beneficiaryAccount.trim(),
         beneficiary_ifsc: beneficiaryIfsc.trim().toUpperCase(),
@@ -522,7 +649,7 @@ export default function InrDispatchDeskScreen() {
         actual_paid_amount: amountNum,
         payment_mode: paymentMode,
         utr_number: utrNumber.trim(),
-        note: note.trim() || undefined,
+        note: combinedNote || undefined,
         entry_date: entryDate,
       });
 
@@ -1365,52 +1492,72 @@ export default function InrDispatchDeskScreen() {
                 </div>
 
                 {channel === "servicer" ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-[#e2e8f0]">
+                  <div className="space-y-2 pt-2 border-t border-[#e2e8f0]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
+                          Select Servicer:
+                        </label>
+                        <select
+                          value={selectedServicerId}
+                          onChange={(e) => setSelectedServicerId(e.target.value)}
+                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
+                        >
+                          {servicers.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              [{s.servicer_code}] {s.name} (Float: ₹ {s.wallet.total_float.toLocaleString("en-IN")})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
+                          Deduct From Wallet Bucket:
+                        </label>
+                        <div className="flex items-center gap-3 mt-1">
+                          <label className="flex items-center gap-1 text-xs cursor-pointer">
+                            <input
+                              type="radio"
+                              name="walletType"
+                              value="bank"
+                              checked={walletType === "bank"}
+                              onChange={() => setWalletType("bank")}
+                              className="accent-[#104080]"
+                            />
+                            <span>💳 Bank (₹ {activeServicer?.wallet.bank_balance.toLocaleString("en-IN") || 0})</span>
+                          </label>
+                          <label className="flex items-center gap-1 text-xs cursor-pointer">
+                            <input
+                              type="radio"
+                              name="walletType"
+                              value="cash"
+                              checked={walletType === "cash"}
+                              onChange={() => setWalletType("cash")}
+                              className="accent-[#104080]"
+                            />
+                            <span>💵 Cash (₹ {activeServicer?.wallet.cash_balance.toLocaleString("en-IN") || 0})</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* From Account of Servicer */}
                     <div>
                       <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
-                        Select Servicer:
+                        From Account (Servicer Funding Source A/C):
                       </label>
                       <select
-                        value={selectedServicerId}
-                        onChange={(e) => setSelectedServicerId(e.target.value)}
-                        className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
+                        value={debitFromAccountId}
+                        onChange={(e) => setDebitFromAccountId(e.target.value)}
+                        className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080] bg-white font-medium cursor-pointer"
                       >
-                        {servicers.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            [{s.servicer_code}] {s.name} (Float: ₹ {s.wallet.total_float.toLocaleString("en-IN")})
+                        {availableDebitBankAccounts.map((acc, idx) => (
+                          <option key={idx} value={acc.value}>
+                            {acc.label}
                           </option>
                         ))}
                       </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
-                        Deduct From Wallet Bucket:
-                      </label>
-                      <div className="flex items-center gap-3 mt-1">
-                        <label className="flex items-center gap-1 text-xs cursor-pointer">
-                          <input
-                            type="radio"
-                            name="walletType"
-                            value="bank"
-                            checked={walletType === "bank"}
-                            onChange={() => setWalletType("bank")}
-                            className="accent-[#104080]"
-                          />
-                          <span>💳 Bank (₹ {activeServicer?.wallet.bank_balance.toLocaleString("en-IN") || 0})</span>
-                        </label>
-                        <label className="flex items-center gap-1 text-xs cursor-pointer">
-                          <input
-                            type="radio"
-                            name="walletType"
-                            value="cash"
-                            checked={walletType === "cash"}
-                            onChange={() => setWalletType("cash")}
-                            className="accent-[#104080]"
-                          />
-                          <span>💵 Cash (₹ {activeServicer?.wallet.cash_balance.toLocaleString("en-IN") || 0})</span>
-                        </label>
-                      </div>
                     </div>
                   </div>
                 ) : (
@@ -1445,33 +1592,66 @@ export default function InrDispatchDeskScreen() {
                 </div>
 
                 <div className="space-y-2.5">
-                  {/* 1. Beneficiary Full Name */}
+                  {/* 1. Beneficiary Full Name with Order Entry Suggestions */}
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-700 mb-0.5">
-                      Beneficiary Full Name <span className="text-red-500">*</span>:
-                    </label>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <label className="block text-[11px] font-bold text-gray-700">
+                        Beneficiary Full Name <span className="text-red-500">*</span>:
+                      </label>
+                      {savedBeneficiaries.length > 0 && (
+                        <span className="text-[10px] text-blue-700 font-semibold">
+                          💡 Suggesting from {savedBeneficiaries.length} Order Entry Accounts
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="text"
+                      list="payout-beneficiary-name-suggestions"
+                      autoComplete="off"
                       value={beneficiaryName}
-                      onChange={(e) => setBeneficiaryName(e.target.value)}
+                      onChange={(e) => handleBeneficiaryNameChange(e.target.value)}
                       className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs font-semibold focus:outline-none focus:border-[#104080]"
                       required
                     />
+                    <datalist id="payout-beneficiary-name-suggestions">
+                      {uniqueBeneficiaryNames.map((b, idx) => (
+                        <option
+                          key={`name-${idx}-${b.account_number}`}
+                          value={b.client_name}
+                          label={`${b.account_number ? `A/C: ${b.account_number}` : ""} ${b.bank_name ? `• ${b.bank_name}` : ""}`}
+                        >
+                          {b.account_number ? `A/C: ${b.account_number}` : ""} {b.bank_name ? `• ${b.bank_name}` : ""}
+                        </option>
+                      ))}
+                    </datalist>
                   </div>
 
                   {/* Row: 2. Account Number & 3. IFSC Code */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {/* 2. Account Number */}
+                    {/* 2. Account Number with Order Entry Suggestions */}
                     <div>
                       <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
                         Account Number:
                       </label>
                       <input
                         type="text"
+                        list="payout-beneficiary-acc-suggestions"
+                        autoComplete="off"
                         value={beneficiaryAccount}
-                        onChange={(e) => setBeneficiaryAccount(e.target.value)}
+                        onChange={(e) => handleBeneficiaryAccountChange(e.target.value)}
                         className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs font-mono focus:outline-none focus:border-[#104080]"
                       />
+                      <datalist id="payout-beneficiary-acc-suggestions">
+                        {uniqueBeneficiaryAccounts.map((b, idx) => (
+                          <option
+                            key={`acc-${idx}-${b.account_number}`}
+                            value={b.account_number}
+                            label={`${b.client_name || ""} ${b.bank_name ? `• ${b.bank_name}` : ""}`}
+                          >
+                            {b.client_name || ""} {b.bank_name ? `• ${b.bank_name}` : ""}
+                          </option>
+                        ))}
+                      </datalist>
                     </div>
 
                     {/* 3. IFSC Code */}
@@ -1592,7 +1772,7 @@ export default function InrDispatchDeskScreen() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
-                    Internal Remarks / Note (Optional):
+                    Note:
                   </label>
                   <input
                     type="text"
