@@ -19,9 +19,51 @@ import {
   ArrowLeft,
   Pencil,
   Phone,
-  MapPin
+  MapPin,
+  AlertTriangle
 } from "lucide-react";
 import * as XLSX from "xlsx";
+
+function numberToIndianWords(num: number): string {
+  if (!num || isNaN(num) || num <= 0) return "";
+  const a = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+    "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"
+  ];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+  function convertLessThanOneThousand(n: number): string {
+    let s = "";
+    if (n >= 100) {
+      s += a[Math.floor(n / 100)] + " Hundred ";
+      n %= 100;
+    }
+    if (n >= 20) {
+      s += b[Math.floor(n / 10)] + " ";
+      n %= 10;
+    }
+    if (n > 0) {
+      s += a[n] + " ";
+    }
+    return s.trim();
+  }
+
+  const crore = Math.floor(num / 10000000);
+  num %= 10000000;
+  const lakh = Math.floor(num / 100000);
+  num %= 100000;
+  const thousand = Math.floor(num / 1000);
+  num %= 1000;
+  const remainder = Math.floor(num);
+
+  let result = "";
+  if (crore > 0) result += convertLessThanOneThousand(crore) + " Crore ";
+  if (lakh > 0) result += convertLessThanOneThousand(lakh) + " Lakh ";
+  if (thousand > 0) result += convertLessThanOneThousand(thousand) + " Thousand ";
+  if (remainder > 0) result += convertLessThanOneThousand(remainder) + " ";
+
+  return `Rupees ${result.trim()} Only`;
+}
 
 export interface ServicerBankAccount {
   id?: string;
@@ -131,6 +173,19 @@ export default function ServicerWalletsScreen() {
   const [isBounceOpen, setIsBounceOpen] = useState(false);
   const [bounceTxn, setBounceTxn] = useState<StatementTxn | null>(null);
 
+  // Inter-Servicer Float Transfer Modal State
+  const [isInterTransferOpen, setIsInterTransferOpen] = useState(false);
+  const [transferFromId, setTransferFromId] = useState("");
+  const [transferToId, setTransferToId] = useState("");
+  const [transferFromWallet, setTransferFromWallet] = useState<"bank" | "cash">("bank");
+  const [transferToWallet, setTransferToWallet] = useState<"bank" | "cash">("bank");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferUtr, setTransferUtr] = useState("");
+  const [transferNote, setTransferNote] = useState("");
+  const [transferDate, setTransferDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [transferSubmitting, setTransferSubmitting] = useState(false);
+  const [transferError, setTransferError] = useState("");
+
   // Form States
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -233,6 +288,17 @@ export default function ServicerWalletsScreen() {
   }, [statementSearchQuery]);
 
   const activeServicer = servicers.find(s => String(s.id) === String(selectedId));
+
+  // Inter-Servicer Float Transfer Helpers
+  const fromServicerObj = servicers.find((s) => String(s.id) === String(transferFromId));
+  const toServicerObj = servicers.find((s) => String(s.id) === String(transferToId));
+  const transferAmountNum = parseFloat(transferAmount) || 0;
+  const sourceAvailable = transferFromWallet === "bank"
+    ? (fromServicerObj?.wallet?.bank_balance || 0)
+    : (fromServicerObj?.wallet?.cash_balance || 0);
+  const targetCurrent = transferToWallet === "bank"
+    ? (toServicerObj?.wallet?.bank_balance || 0)
+    : (toServicerObj?.wallet?.cash_balance || 0);
 
   // Fetch eligible verified servicer CIFs from Retail CIF master
   const fetchEligibleCifs = async () => {
@@ -457,7 +523,82 @@ export default function ServicerWalletsScreen() {
     }
   };
 
+  // Open Inter-Servicer Transfer Modal
+  const handleOpenInterTransfer = () => {
+    setTransferError("");
+    setTransferAmount("");
+    setTransferUtr("");
+    setTransferNote("");
+    setTransferDate(new Date().toISOString().slice(0, 10));
+    setTransferFromWallet("bank");
+    setTransferToWallet("bank");
 
+    const defaultFrom = selectedId || (servicers.length > 0 ? String(servicers[0].id) : "");
+    setTransferFromId(defaultFrom);
+
+    const defaultTo = servicers.find((s) => String(s.id) !== defaultFrom);
+    setTransferToId(defaultTo ? String(defaultTo.id) : "");
+
+    setIsInterTransferOpen(true);
+  };
+
+  // Submit Inter-Servicer Float Transfer
+  const handleInterTransferSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(transferAmount);
+    if (!amt || amt <= 0) {
+      setTransferError("Please enter a valid transfer amount greater than ₹0");
+      return;
+    }
+    if (!transferFromId || !transferToId) {
+      setTransferError("Please select both source and destination servicers");
+      return;
+    }
+    if (transferFromId === transferToId) {
+      setTransferError("Source and destination servicers must be different");
+      return;
+    }
+
+    const fromServicer = servicers.find((s) => String(s.id) === String(transferFromId));
+    const availableFloat = transferFromWallet === "bank"
+      ? (fromServicer?.wallet?.bank_balance || 0)
+      : (fromServicer?.wallet?.cash_balance || 0);
+
+    if (amt > availableFloat) {
+      setTransferError(
+        `Insufficient ${transferFromWallet === "bank" ? "Bank" : "Cash"} Float. Available: ₹${availableFloat.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+      );
+      return;
+    }
+
+    setTransferSubmitting(true);
+    setTransferError("");
+
+    try {
+      const res = await api.post("/payouts/servicers/inter-transfer", {
+        from_servicer_id: transferFromId,
+        to_servicer_id: transferToId,
+        from_wallet: transferFromWallet,
+        to_wallet: transferToWallet,
+        amount: amt,
+        utr_number: transferUtr.trim() || undefined,
+        note: transferNote.trim() || undefined,
+        entry_date: transferDate,
+      });
+
+      setIsInterTransferOpen(false);
+      setTransferAmount("");
+      setTransferUtr("");
+      setTransferNote("");
+      alert(res.data?.message || `Successfully transferred ₹${amt.toLocaleString("en-IN")} float between servicers!`);
+      await fetchServicers(selectedId);
+      await fetchStatement();
+    } catch (err: any) {
+      setTransferError(err.response?.data?.error || err.message || "Failed to execute inter-servicer float transfer");
+    } finally {
+      setTransferSubmitting(false);
+    }
+  };
 
   // Handle Float Conversion
   const handleConvert = async (e: React.FormEvent) => {
@@ -556,6 +697,13 @@ export default function ServicerWalletsScreen() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={handleOpenInterTransfer}
+            className="flex items-center gap-1 bg-[#d4af37] hover:bg-[#c49f27] text-[#0a2850] px-2.5 py-0.5 rounded text-[11px] font-extrabold shadow-xs cursor-pointer"
+            title="Transfer working float directly between two servicers"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5" /> ⇄ Inter-Servicer Transfer
+          </button>
+          <button
             onClick={handleOpenAddServicer}
             className="flex items-center gap-1 bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-0.5 rounded text-[11px] font-bold cursor-pointer"
             title="Open an Account and create digital wallet for a verified Servicer CIF"
@@ -600,6 +748,13 @@ export default function ServicerWalletsScreen() {
 
         {/* Action Buttons for Selected Servicer */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleOpenInterTransfer}
+            className="flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded text-xs font-bold shadow-xs cursor-pointer"
+            title="Transfer working float directly between two servicers"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5 text-amber-300" /> ⇄ Inter-Servicer Transfer
+          </button>
           <button
             onClick={() => { setModalError(""); setIsConvertOpen(true); }}
             className="flex items-center gap-1 bg-white hover:bg-gray-100 border border-[#c4d4ec] text-[#104080] px-3 py-1.5 rounded text-xs font-bold shadow-2xs cursor-pointer"
@@ -991,7 +1146,11 @@ export default function ServicerWalletsScreen() {
                           <span className="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded text-[10px]">PAYOUT DEBIT</span>
                         )}
                         {t.txn_type === "conversion" && (
-                          <span className="bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded text-[10px]">WALLET TRANSFER</span>
+                          t.payment_mode === "inter_servicer_transfer" ? (
+                            <span className="bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.5 rounded text-[10px]">INTER-SERVICER</span>
+                          ) : (
+                            <span className="bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded text-[10px]">WALLET TRANSFER</span>
+                          )
                         )}
                         {t.txn_type === "reimbursement" && (
                           <span className="bg-sky-100 text-sky-800 font-bold px-1.5 py-0.5 rounded text-[10px]">POCKET REIMB</span>
@@ -1849,6 +2008,262 @@ export default function ServicerWalletsScreen() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 6: INTER-SERVICER WORKING FLOAT TRANSFER */}
+      {isInterTransferOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
+              <div className="flex items-center gap-2">
+                <span className="text-base">⇄</span>
+                <span className="font-bold text-xs uppercase tracking-wider">
+                  Inter-Servicer Working Float Transfer (Direct Rebalancing)
+                </span>
+              </div>
+              <button
+                onClick={() => setIsInterTransferOpen(false)}
+                className="text-white hover:text-red-300 font-bold text-sm px-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleInterTransferSubmit} className="p-4 space-y-3 text-xs">
+              {transferError && (
+                <div className="bg-rose-50 border border-rose-300 text-rose-700 px-3 py-1.5 rounded text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{transferError}</span>
+                </div>
+              )}
+
+              <div className="bg-blue-50/70 border border-blue-200 text-[#104080] p-2.5 rounded text-[11px] leading-relaxed">
+                ℹ️ <strong>Direct Float Rebalancing:</strong> Moves liquid working float directly from an excess servicer to a deficit servicer in a single atomic entry. No external withdrawal or deposit required.
+              </div>
+
+              {/* Source & Destination Servicers */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* 1. Source Servicer (Debit) */}
+                <div className="border border-rose-200 bg-rose-50/30 p-2.5 rounded-xs space-y-2">
+                  <label className="block text-[11px] font-bold text-rose-800 uppercase tracking-wider">
+                    From Servicer (Source / Debit):
+                  </label>
+                  <select
+                    value={transferFromId}
+                    onChange={(e) => setTransferFromId(e.target.value)}
+                    className="w-full border border-rose-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold focus:outline-none cursor-pointer"
+                    required
+                  >
+                    {servicers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        [{s.servicer_code}] {s.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* From Wallet Bucket */}
+                  <div>
+                    <label className="block text-[10.5px] font-semibold text-gray-600 mb-0.5">Deduct From Bucket:</label>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold text-gray-800">
+                        <input
+                          type="radio"
+                          name="fromWallet"
+                          value="bank"
+                          checked={transferFromWallet === "bank"}
+                          onChange={() => setTransferFromWallet("bank")}
+                          className="accent-[#104080]"
+                        />
+                        <span>💳 Bank Float</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold text-gray-800">
+                        <input
+                          type="radio"
+                          name="fromWallet"
+                          value="cash"
+                          checked={transferFromWallet === "cash"}
+                          onChange={() => setTransferFromWallet("cash")}
+                          className="accent-[#104080]"
+                        />
+                        <span>💵 Cash Float</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Live Available Float */}
+                  <div className="pt-1.5 border-t border-rose-200/60 text-[11px] flex items-center justify-between">
+                    <span className="text-gray-600 font-medium">Available Float:</span>
+                    <span className="font-extrabold font-mono text-[#104080]">
+                      ₹ {sourceAvailable.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. Destination Servicer (Credit) */}
+                <div className="border border-emerald-200 bg-emerald-50/30 p-2.5 rounded-xs space-y-2">
+                  <label className="block text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
+                    To Servicer (Target / Credit):
+                  </label>
+                  <select
+                    value={transferToId}
+                    onChange={(e) => setTransferToId(e.target.value)}
+                    className="w-full border border-emerald-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold focus:outline-none cursor-pointer"
+                    required
+                  >
+                    {servicers
+                      .filter((s) => String(s.id) !== String(transferFromId))
+                      .map((s) => (
+                        <option key={s.id} value={s.id}>
+                          [{s.servicer_code}] {s.name}
+                        </option>
+                      ))}
+                  </select>
+
+                  {/* To Wallet Bucket */}
+                  <div>
+                    <label className="block text-[10.5px] font-semibold text-gray-600 mb-0.5">Credit Into Bucket:</label>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold text-gray-800">
+                        <input
+                          type="radio"
+                          name="toWallet"
+                          value="bank"
+                          checked={transferToWallet === "bank"}
+                          onChange={() => setTransferToWallet("bank")}
+                          className="accent-[#104080]"
+                        />
+                        <span>💳 Bank Float</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold text-gray-800">
+                        <input
+                          type="radio"
+                          name="toWallet"
+                          value="cash"
+                          checked={transferToWallet === "cash"}
+                          onChange={() => setTransferToWallet("cash")}
+                          className="accent-[#104080]"
+                        />
+                        <span>💵 Cash Float</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Current Target Float */}
+                  <div className="pt-1.5 border-t border-emerald-200/60 text-[11px] flex items-center justify-between">
+                    <span className="text-gray-600 font-medium">Current Float:</span>
+                    <span className="font-extrabold font-mono text-emerald-700">
+                      ₹ {targetCurrent.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Amount, UTR, Date, Note */}
+              <div className="border border-[#c4d4ec] p-2.5 rounded-xs space-y-2 bg-[#f8fafc]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-0.5">
+                      Transfer Amount (INR) <span className="text-red-500">*</span>:
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={transferAmount}
+                      onChange={(e) => setTransferAmount(e.target.value)}
+                      className="w-full border-2 border-[#104080] rounded px-2.5 py-1 text-sm font-extrabold text-gray-900 focus:outline-none"
+                      required
+                    />
+                    {transferAmountNum > 0 && (
+                      <div className="text-[10px] text-gray-600 mt-1 italic font-semibold">
+                        {numberToIndianWords(transferAmountNum)}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
+                      Bank UTR / IMPS Reference:
+                    </label>
+                    <input
+                      type="text"
+                      value={transferUtr}
+                      onChange={(e) => setTransferUtr(e.target.value)}
+                      className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs font-mono uppercase focus:outline-none focus:border-[#104080]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
+                      Transfer Date:
+                    </label>
+                    <FinacleDatePicker value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
+                      Note:
+                    </label>
+                    <input
+                      type="text"
+                      value={transferNote}
+                      onChange={(e) => setTransferNote(e.target.value)}
+                      className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
+                    />
+                  </div>
+                </div>
+
+                {/* Real-time Float Impact Preview */}
+                {transferAmountNum > 0 && (
+                  <div className="bg-white border border-[#c4d4ec] p-2.5 rounded text-[11px] space-y-1.5 mt-1">
+                    <div className="font-bold text-[#104080] text-[10.5px] uppercase tracking-wider flex items-center gap-1">
+                      <span>⚡</span>
+                      <span>Live Rebalance Impact Preview:</span>
+                    </div>
+                    <div className="flex items-center justify-between text-rose-700 font-semibold bg-rose-50/50 p-1 rounded">
+                      <span>{fromServicerObj?.name || "Source"}:</span>
+                      <span className="font-mono">
+                        ₹ {sourceAvailable.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ➔ ₹ {Math.max(0, sourceAvailable - transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (-₹{transferAmountNum.toLocaleString("en-IN")})
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-emerald-700 font-semibold bg-emerald-50/50 p-1 rounded">
+                      <span>{toServicerObj?.name || "Target"}:</span>
+                      <span className="font-mono">
+                        ₹ {targetCurrent.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ➔ ₹ {(targetCurrent + transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (+₹{transferAmountNum.toLocaleString("en-IN")})
+                      </span>
+                    </div>
+                    <div className="pt-1 border-t border-gray-100 flex items-center justify-between text-gray-600 font-bold text-[10px]">
+                      <span>Net Company Float Variance:</span>
+                      <span className="text-emerald-700 font-mono">₹ 0.00 (Balanced ✓)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setIsInterTransferOpen(false)}
+                  className="bg-[#d4d0c8] hover:bg-[#e4e4e4] border border-[#808080] px-4 py-1 text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={transferSubmitting || transferAmountNum <= 0 || transferAmountNum > sourceAvailable || transferFromId === transferToId}
+                  className="bg-[#104080] hover:bg-[#1a559e] text-white px-5 py-1.5 text-xs font-bold rounded shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                  {transferSubmitting ? "Executing Transfer..." : "Confirm Inter-Servicer Transfer"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
