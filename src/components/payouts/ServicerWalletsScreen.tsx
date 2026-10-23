@@ -822,7 +822,7 @@ export default function ServicerWalletsScreen() {
               <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Branch Clearing IFSC</span>
               <div className="flex items-center gap-1.5">
                 <span className="font-mono font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 text-xs">
-                  {activeServicer.ifsc_code || (activeServicer.branch === 'UAE' ? 'INFA0000002' : 'INFA0000001')}
+                  {activeServicer.ifsc_code || (activeServicer.branch === 'UAE' ? 'FNCL0000971' : 'FNCL0000091')}
                 </span>
                 <span className="text-[10px] font-bold text-gray-600 uppercase">
                   {activeServicer.branch === 'UAE' ? '🇦🇪 UAE' : '🇮🇳 INDIA'}
@@ -1443,7 +1443,7 @@ export default function ServicerWalletsScreen() {
                       <div className="flex items-center justify-between text-xs bg-white border border-[#c4d4ec] px-2.5 py-1.5 rounded">
                         <span className="font-semibold text-gray-600">Finacle Operating A/C:</span>
                         <span className="font-mono font-extrabold text-[#104080] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                          [ Auto-Generated on Activation ]
+                          {newBranch === "UAE" ? "00971 1010 XXXXX" : "0091 1010 XXXXXX"}
                         </span>
                       </div>
 
@@ -1453,7 +1453,7 @@ export default function ServicerWalletsScreen() {
                         </span>
                         <div className="flex items-center gap-1.5">
                           <span className="font-mono font-extrabold text-[#166534] bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-300">
-                            {newBranch === "UAE" ? "INFA0000002" : "INFA0000001"}
+                            {newBranch === "UAE" ? "FNCL0000971" : "FNCL0000091"}
                           </span>
                           <span className="text-[10px] text-gray-500 font-bold uppercase">
                             ({newBranch === "UAE" ? "UAE Branch" : "India Branch"})
@@ -1463,8 +1463,8 @@ export default function ServicerWalletsScreen() {
                     </div>
 
                     <p className="text-[10px] text-gray-500 leading-relaxed pt-0.5">
-                      ✓ Finacle operating account will be generated automatically upon activation.<br />
-                      ✓ Auto-assigned IFSC <strong>{newBranch === "UAE" ? "INFA0000002" : "INFA0000001"}</strong> routes to the {newBranch === "UAE" ? "UAE" : "India"} clearing branch.<br />
+                      ✓ Finacle operating account <strong>{newBranch === "UAE" ? "00971 1010 XXXXX" : "0091 1010 XXXXXX"}</strong> will be auto-generated sequentially on activation.<br />
+                      ✓ Auto-assigned IFSC <strong>{newBranch === "UAE" ? "FNCL0000971" : "FNCL0000091"}</strong> routes to the {newBranch === "UAE" ? "UAE" : "India"} clearing branch.<br />
                       ✓ External banks & payout accounts will be registered in Step 2.
                     </p>
                   </div>
@@ -1799,9 +1799,15 @@ export default function ServicerWalletsScreen() {
                         </strong>
                       </div>
                       <div>
+                        <span className="text-gray-500 font-semibold">Operating A/C:</span>{" "}
+                        <strong className="font-mono text-[#104080]">
+                          {newBranch === "UAE" ? "00971 1010 XXXXX (Auto)" : "0091 1010 XXXXXX (Auto)"}
+                        </strong>
+                      </div>
+                      <div>
                         <span className="text-gray-500 font-semibold">Clearing IFSC:</span>{" "}
                         <strong className="font-mono text-emerald-700">
-                          {newBranch === "UAE" ? "INFA0000002" : "INFA0000001"}
+                          {newBranch === "UAE" ? "FNCL0000971" : "FNCL0000091"}
                         </strong>
                       </div>
                     </div>
