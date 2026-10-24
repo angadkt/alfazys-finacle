@@ -4,6 +4,7 @@ export type FinacleScreen =
   | 'VERIFY RETAIL CIF CREATION'
   | 'VERIFY RETAIL CIF MODIFICATION'
   | 'VIEW RETAIL CIF'
+  | 'OPEN ACCOUNT'
   | 'ORDER ENTRY'
   | 'CREDIT ENTRY'
   | 'AED COLLECTON'
@@ -19,6 +20,7 @@ export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
   'VERIFY RETAIL CIF CREATION': false, // Admin verification per SRS
   'VERIFY RETAIL CIF MODIFICATION': false, // Admin verification per SRS
   'VIEW RETAIL CIF': true,
+  'OPEN ACCOUNT': true,
   'ORDER ENTRY': true,
   'CREDIT ENTRY': true,
   'AED COLLECTON': true,

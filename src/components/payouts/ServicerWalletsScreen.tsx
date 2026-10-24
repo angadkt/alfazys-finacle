@@ -20,7 +20,8 @@ import {
   Pencil,
   Phone,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  ArrowUpDown
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -152,11 +153,12 @@ interface StatementTxn {
   bounced_reason: string | null;
 }
 
-export default function ServicerWalletsScreen() {
+export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onNavigate?: (screen: string) => void } = {}) {
+  void _onNavigate;
   const [servicers, setServicers] = useState<Servicer[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [statement, setStatement] = useState<StatementTxn[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [, setLoadingStatement] = useState(false);
 
   // Filter States for Passbook & Statement
@@ -165,6 +167,7 @@ export default function ServicerWalletsScreen() {
   const [statementToDate, setStatementToDate] = useState<string>("");
   const [statementTxnType, setStatementTxnType] = useState<string>("all");
   const [statementSearchQuery, setStatementSearchQuery] = useState<string>("");
+  const [statementSortOrder, setStatementSortOrder] = useState<"asc" | "desc">("asc");
 
   // Modals
   const [isAddServicerOpen, setIsAddServicerOpen] = useState(false);
@@ -250,7 +253,8 @@ export default function ServicerWalletsScreen() {
     fromDate = statementFromDate,
     toDate = statementToDate,
     txnType = statementTxnType,
-    search = statementSearchQuery
+    search = statementSearchQuery,
+    sortOrder = statementSortOrder
   ) => {
     setLoadingStatement(true);
     try {
@@ -261,6 +265,7 @@ export default function ServicerWalletsScreen() {
           to_date: toDate || undefined,
           txn_type: txnType !== "all" ? txnType : undefined,
           search: search.trim() || undefined,
+          sort_order: sortOrder,
         },
       });
       setStatement(res.data?.transactions || []);
@@ -276,13 +281,13 @@ export default function ServicerWalletsScreen() {
   }, []);
 
   useEffect(() => {
-    fetchStatement(statementServicerId, statementFromDate, statementToDate, statementTxnType, statementSearchQuery);
-  }, [statementServicerId, statementFromDate, statementToDate, statementTxnType]);
+    fetchStatement(statementServicerId, statementFromDate, statementToDate, statementTxnType, statementSearchQuery, statementSortOrder);
+  }, [statementServicerId, statementFromDate, statementToDate, statementTxnType, statementSortOrder]);
 
   // Debounced search
   useEffect(() => {
     const t = setTimeout(() => {
-      fetchStatement(statementServicerId, statementFromDate, statementToDate, statementTxnType, statementSearchQuery);
+      fetchStatement(statementServicerId, statementFromDate, statementToDate, statementTxnType, statementSearchQuery, statementSortOrder);
     }, 350);
     return () => clearTimeout(t);
   }, [statementSearchQuery]);
@@ -301,7 +306,7 @@ export default function ServicerWalletsScreen() {
     : (toServicerObj?.wallet?.cash_balance || 0);
 
   // Fetch eligible verified servicer CIFs from Retail CIF master
-  const fetchEligibleCifs = async () => {
+  const _fetchEligibleCifs = async () => {
     setLoadingCifs(true);
     try {
       const res = await api.get("/payouts/eligible-cifs");
@@ -312,27 +317,7 @@ export default function ServicerWalletsScreen() {
       setLoadingCifs(false);
     }
   };
-
-  const handleOpenAddServicer = () => {
-    setModalError("");
-    fetchEligibleCifs();
-    setSelectedPartyId("");
-    setNewName("");
-    setNewPhone("");
-    setNewCity("");
-    setNewBranch("INDIA");
-    setModalStep(1);
-    setBankAccounts([]);
-    setEditingBankIndex(null);
-    setEntryAccountHolder("");
-    setEntryAccountNumber("");
-    setEntryIfsc("");
-    setEntryBankName("");
-    setEntryBranchName("");
-    setEntryAccountType("Current");
-    setEntryError("");
-    setIsAddServicerOpen(true);
-  };
+  void _fetchEligibleCifs;
 
   const handleSelectCif = (partyId: string) => {
     setSelectedPartyId(partyId);
@@ -695,28 +680,6 @@ export default function ServicerWalletsScreen() {
           <span className="text-sm">📁</span>
           <span className="font-bold tracking-wider text-xs">FINCORE SERVICER ACCOUNTS & DIGITAL WALLETS</span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleOpenInterTransfer}
-            className="flex items-center gap-1 bg-[#d4af37] hover:bg-[#c49f27] text-[#0a2850] px-2.5 py-0.5 rounded text-[11px] font-extrabold shadow-xs cursor-pointer"
-            title="Transfer working float directly between two servicers"
-          >
-            <ArrowLeftRight className="w-3.5 h-3.5" /> ⇄ Inter-Servicer Transfer
-          </button>
-          <button
-            onClick={handleOpenAddServicer}
-            className="flex items-center gap-1 bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-0.5 rounded text-[11px] font-bold cursor-pointer"
-            title="Open an Account and create digital wallet for a verified Servicer CIF"
-          >
-            <Plus className="w-3.5 h-3.5" /> Open Servicer Account (Link CIF)
-          </button>
-          <button
-            onClick={() => { fetchServicers(selectedId); fetchStatement(); }}
-            className="flex items-center gap-1 bg-[#23528f] hover:bg-[#1a4073] text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
-          </button>
-        </div>
       </div>
 
       {/* Servicer Selector Bar */}
@@ -735,7 +698,7 @@ export default function ServicerWalletsScreen() {
             className="bg-white border-2 border-[#104080] rounded px-2.5 py-1 text-xs font-bold text-gray-900 focus:outline-none min-w-[280px] cursor-pointer"
           >
             {servicers.length === 0 ? (
-              <option value="">No Servicer Accounts Yet — Click [Open Servicer Account] to activate</option>
+              <option value="">No Servicer Accounts Available</option>
             ) : (
               servicers.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -1063,6 +1026,21 @@ export default function ServicerWalletsScreen() {
               <option value="commission_settle">Commission Paid</option>
             </select>
           </div>
+
+          {/* Sort Order Selector (Ascending / Descending) */}
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
+            <span className="text-[#104080] font-bold text-[11px] flex items-center gap-1">
+              <ArrowUpDown className="w-3 h-3 text-[#104080]" /> Sort:
+            </span>
+            <select
+              value={statementSortOrder}
+              onChange={(e) => setStatementSortOrder(e.target.value as "asc" | "desc")}
+              className="bg-transparent text-xs text-gray-800 font-semibold focus:outline-none cursor-pointer"
+            >
+              <option value="asc">Ascending (Oldest First ↑)</option>
+              <option value="desc">Descending (Newest First ↓)</option>
+            </select>
+          </div>
         </div>
 
         {/* Search Input */}
@@ -1092,7 +1070,18 @@ export default function ServicerWalletsScreen() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#f0f4f8] border-b border-[#c4d4ec] text-[10px] font-extrabold text-[#104080] uppercase tracking-wider select-none">
-                <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Txn# & Date</th>
+                <th 
+                  onClick={() => setStatementSortOrder(prev => prev === "asc" ? "desc" : "asc")}
+                  className="py-2 px-2.5 border-r border-[#c4d4ec] cursor-pointer hover:bg-[#e2eaf5] transition-colors group select-none"
+                  title="Click to toggle Ascending / Descending sort"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Txn# & Date</span>
+                    <span className="text-[#104080] font-bold text-xs">
+                      {statementSortOrder === "asc" ? "▲" : "▼"}
+                    </span>
+                  </div>
+                </th>
                 {statementServicerId === "all" && (
                   <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Servicer</th>
                 )}

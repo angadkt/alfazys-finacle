@@ -11,6 +11,7 @@ import AedReportsScreen from '../components/AedReportsScreen';
 import PendingAedReportScreen from '../components/PendingAedReportScreen';
 import InrDispatchDeskScreen from "../components/payouts/InrDispatchDeskScreen";
 import ServicerWalletsScreen from "../components/payouts/ServicerWalletsScreen";
+import OpenAccountScreen from "../components/OpenAccountScreen";
 import AddStaffForm from '../components/AddStaffForm';
 import StaffManagement from '../components/StaffManagement';
 import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
@@ -90,11 +91,13 @@ export default function FincorePage() {
     "VERIFY RETAIL CIF CREATION",
     "VERIFY RETAIL CIF MODIFICATION",
     "VIEW RETAIL CIF",
+    "OPEN ACCOUNT",
     "CREDIT ENTRY"
   ] : [
     ...(permissions['DASHBOARD'] ? ["DASHBOARD"] : []),
     ...(permissions['CREATE RETAIL CIF'] ? ["CREATE RETAIL CIF"] : []),
     ...(permissions['VIEW RETAIL CIF'] ? ["VIEW RETAIL CIF"] : []),
+    ...(permissions['OPEN ACCOUNT'] ? ["OPEN ACCOUNT"] : []),
     ...(permissions['CREDIT ENTRY'] ? ["CREDIT ENTRY"] : []),
     ...(permissions['VERIFY RETAIL CIF CREATION'] ? ["VERIFY RETAIL CIF CREATION"] : []),
     ...(permissions['VERIFY RETAIL CIF MODIFICATION'] ? ["VERIFY RETAIL CIF MODIFICATION"] : [])
@@ -126,6 +129,8 @@ export default function FincorePage() {
       setActiveScreen('AED SUMMARY & REPORTS');
     } else if (upper.includes('ORDER')) {
       setActiveScreen('ORDER ENTRY');
+    } else if ((upper.includes('OPEN') && (upper.includes('ACC') || upper.includes('SERVICER'))) || upper === 'OAAC') {
+      setActiveScreen('OPEN ACCOUNT');
     } else {
       setActiveScreen(screen);
     }
@@ -343,7 +348,9 @@ export default function FincorePage() {
           ) : activeScreen === 'INR DISPATCH DESK' || activeScreen === 'INR PAYOUT' ? (
             <InrDispatchDeskScreen />
           ) : activeScreen === 'SERVICER WALLETS' ? (
-            <ServicerWalletsScreen />
+            <ServicerWalletsScreen onNavigate={(screen) => setActiveScreen(screen)} />
+          ) : activeScreen === 'OPEN ACCOUNT' || activeScreen === 'OPEN SERVICER ACCOUNT' ? (
+            <OpenAccountScreen onNavigate={(screen) => setActiveScreen(screen)} />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <h1 className="text-[44px] font-bold text-black tracking-wide" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
