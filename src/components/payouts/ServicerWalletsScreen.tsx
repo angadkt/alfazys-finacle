@@ -11,6 +11,7 @@ import {
   Award, 
   RefreshCw, 
   FileSpreadsheet, 
+  FileText,
   RotateCcw,
   Search,
   Trash2,
@@ -20,10 +21,11 @@ import {
   Pencil,
   Phone,
   MapPin,
-  AlertTriangle,
-  ArrowUpDown
+  AlertTriangle
 } from "lucide-react";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 function numberToIndianWords(num: number): string {
   if (!num || isNaN(num) || num <= 0) return "";
@@ -647,29 +649,114 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
     }
   };
 
-  // Export Statement
+  // Export Statement Excel
   const exportStatementExcel = () => {
-    if (!activeServicer) return;
-    const data = statement.map((t) => ({
-      "Txn No": t.txn_no,
-      "Date": t.entry_date,
-      "Type": t.txn_type,
-      "Direction": t.direction,
-      "Wallet": t.wallet_type,
-      "Amount (INR)": t.amount,
-      "Order No": t.order_no || "-",
-      "Beneficiary": t.beneficiary_name || "-",
-      "Bank / Mode": t.payment_mode,
-      "UTR / Ref": t.utr_number || "-",
-      "Commission": t.commission_amount || 0,
-      "Commission Settled": t.commission_settled ? "Yes" : "No",
-      "Bounced": t.bounced ? "Yes" : "No",
-      "Notes": t.note || "-",
-    }));
+    if (!statement || statement.length === 0) return;
+    const isConsolidated = statementServicerId === "all";
+    const data = statement.map((t) => {
+      const row: Record<string, any> = {
+        "Txn No": t.txn_no,
+        "Date": t.entry_date,
+      };
+      if (isConsolidated) {
+        row["Servicer"] = t.servicer_name || (servicers.find(s => s.id === t.servicer_id)?.name) || `SER-${t.servicer_id}`;
+      }
+      row["Type"] = t.txn_type;
+      row["Direction"] = t.direction;
+      row["Wallet"] = t.wallet_type;
+      row["Amount (INR)"] = t.amount;
+      row["Order No"] = t.order_no || "-";
+      row["Beneficiary"] = t.beneficiary_name || "-";
+      row["Bank / Mode"] = t.payment_mode || "-";
+      row["UTR / Ref"] = t.utr_number || "-";
+      row["Commission"] = t.commission_amount || 0;
+      row["Commission Settled"] = t.commission_settled ? "Yes" : "No";
+      row["Bounced"] = t.bounced ? "Yes" : "No";
+      row["Notes"] = t.note || "-";
+      return row;
+    });
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Statement");
-    XLSX.writeFile(wb, `Servicer_${activeServicer.servicer_code}_Statement_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    const filenamePrefix = isConsolidated 
+      ? "Consolidated_Servicers" 
+      : `Servicer_${activeServicer?.servicer_code || activeServicer?.id || "Account"}`;
+    XLSX.writeFile(wb, `${filenamePrefix}_Statement_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  // Export Statement PDF
+  const exportStatementPdf = () => {
+    if (!statement || statement.length === 0) return;
+    const isConsolidated = statementServicerId === "all";
+    const doc = new jsPDF("landscape");
+    doc.setFontSize(13);
+    doc.text("FINCORE UNIVERSAL SETTLEMENT — SERVICER PASSBOOK & TRANSACTION STATEMENT", 14, 15);
+    
+    doc.setFontSize(9);
+    const scopeLabel = isConsolidated
+      ? "Scope: All Servicers (Consolidated Ledger)"
+      : `Servicer: ${activeServicer?.name || "N/A"} (${activeServicer?.servicer_code || "-"}) | A/C: ${activeServicer?.account_no || "-"}`;
+    const dateFilterLabel = statementFromDate || statementToDate 
+      ? `Date Range: ${statementFromDate || "Start"} to ${statementToDate || "Present"}`
+      : "Date Range: All Time";
+    const timestamp = `Generated: ${new Date().toLocaleString()}`;
+
+    doc.text(`${scopeLabel} | ${dateFilterLabel} | ${timestamp}`, 14, 21);
+
+    const headers = isConsolidated
+      ? [["Txn #", "Date", "Servicer", "Type", "Wallet", "Details / Beneficiary", "Inward (+)", "Payout Out (-)", "Comm", "UTR / Ref", "Status"]]
+      : [["Txn #", "Date", "Type", "Wallet", "Details / Beneficiary", "Inward (+)", "Payout Out (-)", "Comm", "UTR / Ref", "Status"]];
+
+    const body = statement.map((t) => {
+      const isIn = t.direction === "in";
+      const inwardStr = isIn ? `+${t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "-";
+      const outwardStr = !isIn ? `-${t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "-";
+      const commStr = t.commission_amount > 0 ? t.commission_amount.toFixed(2) : "-";
+      const statusStr = t.bounced ? "BOUNCED" : "COMPLETED";
+
+      if (isConsolidated) {
+        const servName = t.servicer_name || (servicers.find(s => s.id === t.servicer_id)?.name) || `SER-${t.servicer_id}`;
+        return [
+          t.txn_no,
+          t.entry_date,
+          servName,
+          t.txn_type.replace(/_/g, " ").toUpperCase(),
+          t.wallet_type.toUpperCase(),
+          t.beneficiary_name || t.note || "-",
+          inwardStr,
+          outwardStr,
+          commStr,
+          t.utr_number || "-",
+          statusStr
+        ];
+      }
+
+      return [
+        t.txn_no,
+        t.entry_date,
+        t.txn_type.replace(/_/g, " ").toUpperCase(),
+        t.wallet_type.toUpperCase(),
+        t.beneficiary_name || t.note || "-",
+        inwardStr,
+        outwardStr,
+        commStr,
+        t.utr_number || "-",
+        statusStr
+      ];
+    });
+
+    autoTable(doc, {
+      startY: 25,
+      head: headers,
+      body: body,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [16, 64, 128] },
+    });
+
+    const filenamePrefix = isConsolidated 
+      ? "Consolidated_Servicers" 
+      : `Servicer_${activeServicer?.servicer_code || activeServicer?.id || "Account"}`;
+    doc.save(`${filenamePrefix}_Statement_${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   return (
@@ -900,22 +987,35 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             {statement.length} Records
           </span>
         </div>
-        <button
-          onClick={exportStatementExcel}
-          className="flex items-center gap-1 text-[#104080] hover:text-[#0c3162] cursor-pointer"
-        >
-          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" /> Export Statement
-        </button>
+        {/* Export Toolbar */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={exportStatementExcel}
+            className="flex items-center gap-1 bg-white hover:bg-[#f0f4f8] text-gray-700 hover:text-[#104080] border border-[#c4d4ec] px-2 py-0.5 rounded text-[10.5px] font-bold shadow-2xs cursor-pointer transition-colors"
+            title="Export to Excel"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Excel</span>
+          </button>
+          <button
+            onClick={exportStatementPdf}
+            className="flex items-center gap-1 bg-white hover:bg-[#f0f4f8] text-gray-700 hover:text-[#104080] border border-[#c4d4ec] px-2 py-0.5 rounded text-[10.5px] font-bold shadow-2xs cursor-pointer transition-colors"
+            title="Export to PDF"
+          >
+            <FileText className="w-3.5 h-3.5 text-rose-600" />
+            <span>PDF</span>
+          </button>
+        </div>
       </div>
 
-      {/* Finacle Filter Ribbon: Date, Servicer, Txn Type, and Search */}
-      <div className="bg-[#f0f4f8] border-b border-[#c4d4ec] px-3 py-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
+      {/* Finacle Filter Ribbon: Design A (Single-Row High Density Toolbar) */}
+      <div className="bg-[#f0f4f8] border-b border-[#c4d4ec] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 select-none">
+        {/* Left Wing: Servicer & Period Presets & Custom Dates */}
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Servicer Filter */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
-            <span className="text-[#104080] font-bold text-[11px] flex items-center gap-1">
-              <Building2 className="w-3.5 h-3.5" /> Servicer:
-            </span>
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded shadow-2xs">
+            <Building2 className="w-3.5 h-3.5 text-[#104080] shrink-0" />
+            <span className="text-[#104080] font-bold text-[11px] shrink-0">Servicer:</span>
             <select
               value={statementServicerId}
               onChange={(e) => {
@@ -925,7 +1025,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                   setSelectedId(val);
                 }
               }}
-              className="bg-transparent text-xs font-semibold text-gray-800 focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-semibold text-gray-800 focus:outline-none cursor-pointer max-w-[170px] truncate"
             >
               <option value="all">📁 All Servicers (Consolidated)</option>
               {servicers.map((s) => (
@@ -936,8 +1036,8 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             </select>
           </div>
 
-          {/* Quick Date Pills */}
-          <div className="flex items-center gap-1 bg-white border border-[#c4d4ec] rounded p-0.5">
+          {/* Unified Time Controls: Segmented Presets + Date Range */}
+          <div className="flex items-center bg-white border border-[#c4d4ec] rounded shadow-2xs p-0.5">
             <button
               type="button"
               onClick={() => {
@@ -945,11 +1045,11 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 setStatementFromDate(today);
                 setStatementToDate(today);
               }}
-              className={`px-2 py-0.5 text-[11px] font-bold rounded cursor-pointer transition-colors ${
+              className={`px-2 py-0.5 text-[11px] font-bold rounded-xs cursor-pointer transition-colors ${
                 statementFromDate === new Date().toISOString().slice(0, 10) &&
                 statementToDate === new Date().toISOString().slice(0, 10)
                   ? "bg-[#104080] text-white"
-                  : "hover:bg-[#e6edf8] text-[#104080]"
+                  : "hover:bg-[#e6edf8] text-gray-700 hover:text-[#104080]"
               }`}
             >
               Today
@@ -963,7 +1063,12 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 setStatementFromDate(yest);
                 setStatementToDate(yest);
               }}
-              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#104080] rounded cursor-pointer"
+              className={`px-2 py-0.5 text-[11px] font-bold rounded-xs cursor-pointer transition-colors ${
+                statementFromDate === new Date(Date.now() - 86400000).toISOString().slice(0, 10) &&
+                statementToDate === new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+                  ? "bg-[#104080] text-white"
+                  : "hover:bg-[#e6edf8] text-gray-700 hover:text-[#104080]"
+              }`}
             >
               Yesterday
             </button>
@@ -973,50 +1078,55 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 setStatementFromDate("");
                 setStatementToDate("");
               }}
-              className={`px-2 py-0.5 text-[11px] font-bold rounded cursor-pointer transition-colors ${
+              className={`px-2 py-0.5 text-[11px] font-bold rounded-xs cursor-pointer transition-colors ${
                 !statementFromDate && !statementToDate
                   ? "bg-[#104080] text-white"
-                  : "hover:bg-[#e6edf8] text-[#104080]"
+                  : "hover:bg-[#e6edf8] text-gray-700 hover:text-[#104080]"
               }`}
             >
               All Time
             </button>
-          </div>
 
-          {/* Date Pickers */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
-            <span className="text-gray-500 text-[10px] font-semibold">From:</span>
-            <FinacleDatePicker
-              value={statementFromDate}
-              onChange={(e) => setStatementFromDate(e.target.value)}
-            />
-            <span className="text-gray-500 text-[10px] font-semibold">To:</span>
-            <FinacleDatePicker
-              value={statementToDate}
-              onChange={(e) => setStatementToDate(e.target.value)}
-            />
-            {(statementFromDate || statementToDate) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setStatementFromDate("");
-                  setStatementToDate("");
-                }}
-                className="text-gray-400 hover:text-red-500 font-bold ml-1 text-xs"
-                title="Clear Dates"
-              >
-                ✕
-              </button>
-            )}
-          </div>
+            <div className="h-4 w-px bg-[#c4d4ec] mx-1" />
 
+            {/* Compact Paired Date Pickers */}
+            <div className="flex items-center gap-1 pr-1">
+              <span className="text-gray-500 text-[10px] font-semibold pl-1">From:</span>
+              <FinacleDatePicker
+                value={statementFromDate}
+                onChange={(e) => setStatementFromDate(e.target.value)}
+              />
+              <span className="text-gray-500 text-[10px] font-semibold">To:</span>
+              <FinacleDatePicker
+                value={statementToDate}
+                onChange={(e) => setStatementToDate(e.target.value)}
+              />
+              {(statementFromDate || statementToDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatementFromDate("");
+                    setStatementToDate("");
+                  }}
+                  className="text-gray-400 hover:text-red-500 font-bold px-1 text-xs cursor-pointer"
+                  title="Clear Dates"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Wing: Txn Type, Search Query & Reset Action */}
+        <div className="flex items-center gap-2">
           {/* Txn Type Filter */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded shadow-2xs">
             <span className="text-[#104080] font-bold text-[11px]">Type:</span>
             <select
               value={statementTxnType}
               onChange={(e) => setStatementTxnType(e.target.value)}
-              className="bg-transparent text-xs text-gray-800 focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs text-gray-800 focus:outline-none cursor-pointer max-w-[130px] truncate"
             >
               <option value="all">All Types</option>
               <option value="float_credit">Float Top-up (Credit)</option>
@@ -1027,38 +1137,43 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             </select>
           </div>
 
-          {/* Sort Order Selector (Ascending / Descending) */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
-            <span className="text-[#104080] font-bold text-[11px] flex items-center gap-1">
-              <ArrowUpDown className="w-3 h-3 text-[#104080]" /> Sort:
-            </span>
-            <select
-              value={statementSortOrder}
-              onChange={(e) => setStatementSortOrder(e.target.value as "asc" | "desc")}
-              className="bg-transparent text-xs text-gray-800 font-semibold focus:outline-none cursor-pointer"
-            >
-              <option value="asc">Ascending (Oldest First ↑)</option>
-              <option value="desc">Descending (Newest First ↓)</option>
-            </select>
+          {/* Search Input */}
+          <div className="relative">
+            <input
+              type="text"
+              value={statementSearchQuery}
+              onChange={(e) => setStatementSearchQuery(e.target.value)}
+              placeholder="Search UTR, Txn#, Beneficiary..."
+              className="bg-white border border-[#c4d4ec] rounded px-2.5 py-1 text-xs text-gray-700 w-[200px] pl-7 focus:outline-none focus:border-[#104080] shadow-2xs"
+            />
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 top-2 pointer-events-none" />
+            {statementSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setStatementSearchQuery("")}
+                className="absolute right-2 top-1.5 text-gray-400 hover:text-red-500 text-xs font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
           </div>
-        </div>
 
-        {/* Search Input */}
-        <div className="relative">
-          <input
-            type="text"
-            value={statementSearchQuery}
-            onChange={(e) => setStatementSearchQuery(e.target.value)}
-            placeholder="Search UTR, Txn#, Beneficiary..."
-            className="bg-white border border-[#c4d4ec] rounded px-2.5 py-1 text-xs text-gray-700 w-[230px] pl-7 focus:outline-none focus:border-[#104080]"
-          />
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 top-2" />
-          {statementSearchQuery && (
+          {/* Reset All Filters Button */}
+          {(statementServicerId !== "all" || statementFromDate || statementToDate || statementTxnType !== "all" || statementSearchQuery) && (
             <button
-              onClick={() => setStatementSearchQuery("")}
-              className="absolute right-2 top-1.5 text-gray-400 hover:text-red-500 text-xs font-bold"
+              type="button"
+              onClick={() => {
+                setStatementServicerId("all");
+                setStatementFromDate("");
+                setStatementToDate("");
+                setStatementTxnType("all");
+                setStatementSearchQuery("");
+              }}
+              className="flex items-center gap-1 bg-[#fee2e2] hover:bg-[#fecaca] text-red-700 border border-[#fca5a5] px-2 py-1 rounded text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+              title="Reset all filters to default"
             >
-              ✕
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset</span>
             </button>
           )}
         </div>
