@@ -1,23 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-import CreateRetailCifForm from '../components/CreateRetailCifForm';
-import VerifyRetailCif from '../components/VerifyRetailCif';
-import ViewRetailCif from '../components/ViewRetailCif';
-import CreditEntryForm from '../components/CreditEntryForm';
-import OrderEntryForm from '../components/OrderEntryForm';
-import ReceivedAedScreen from '../components/ReceivedAedScreen';
-import AedReportsScreen from '../components/AedReportsScreen';
-import PendingAedReportScreen from '../components/PendingAedReportScreen';
-import InrDispatchDeskScreen from "../components/payouts/InrDispatchDeskScreen";
-import ServicerWalletsScreen from "../components/payouts/ServicerWalletsScreen";
-import OpenAccountScreen from "../components/OpenAccountScreen";
-import AddStaffForm from '../components/AddStaffForm';
-import StaffManagement from '../components/StaffManagement';
+import FinacleErrorBoundary from '../components/FinacleErrorBoundary';
+import FinacleScreenLoader from '../components/FinacleScreenLoader';
 import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
 import type { FinacleScreen } from '../types/staff';
-
 import { dbService } from '../services/db';
+
+const CreateRetailCifForm = lazy(() => import('../components/CreateRetailCifForm'));
+const VerifyRetailCif = lazy(() => import('../components/VerifyRetailCif'));
+const ViewRetailCif = lazy(() => import('../components/ViewRetailCif'));
+const CreditEntryForm = lazy(() => import('../components/CreditEntryForm'));
+const OrderEntryForm = lazy(() => import('../components/OrderEntryForm'));
+const ReceivedAedScreen = lazy(() => import('../components/ReceivedAedScreen'));
+const AedReportsScreen = lazy(() => import('../components/AedReportsScreen'));
+const PendingAedReportScreen = lazy(() => import('../components/PendingAedReportScreen'));
+const InrDispatchDeskScreen = lazy(() => import("../components/payouts/InrDispatchDeskScreen"));
+const ServicerWalletsScreen = lazy(() => import("../components/payouts/ServicerWalletsScreen"));
+const OpenAccountScreen = lazy(() => import("../components/OpenAccountScreen"));
+const AddStaffForm = lazy(() => import('../components/AddStaffForm'));
+const StaffManagement = lazy(() => import('../components/StaffManagement'));
 
 export default function FincorePage() {
   const navigate = useNavigate();
@@ -303,61 +305,65 @@ export default function FincorePage() {
 
         {/* Main Workspace */}
         <div className="flex-1 flex flex-col bg-white overflow-hidden">
-          {!isScreenAllowed() ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#f4f7fb]">
-              <div className="bg-[#e4e4e4] border-2 border-[#104080] p-4 max-w-md shadow-lg text-center">
-                <div className="bg-[#104080] text-white py-1 px-2 text-[12px] font-bold mb-3 flex items-center justify-between">
-                  <span>FINACLE CORE — ACCESS DENIED</span>
-                  <span>SECURITY EXCEPTION</span>
+          <FinacleErrorBoundary key={activeScreen}>
+            <Suspense fallback={<FinacleScreenLoader message={`Loading ${activeScreen}...`} />}>
+              {!isScreenAllowed() ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#f4f7fb]">
+                  <div className="bg-[#e4e4e4] border-2 border-[#104080] p-4 max-w-md shadow-lg text-center">
+                    <div className="bg-[#104080] text-white py-1 px-2 text-[12px] font-bold mb-3 flex items-center justify-between">
+                      <span>FINACLE CORE — ACCESS DENIED</span>
+                      <span>SECURITY EXCEPTION</span>
+                    </div>
+                    <div className="text-[13px] font-bold text-red-600 mb-1">
+                      Unauthorized Module Access
+                    </div>
+                    <p className="text-[12px] text-gray-700 mb-4">
+                      Your staff account does not have permission to view <strong>{activeScreen}</strong>. Please request module authorization from the Administrator.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveScreen('DASHBOARD')}
+                      className="bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-4 py-1 text-[12px] font-bold hover:bg-[#e4e4e4]"
+                    >
+                      Return to Dashboard
+                    </button>
+                  </div>
                 </div>
-                <div className="text-[13px] font-bold text-red-600 mb-1">
-                  Unauthorized Module Access
+              ) : activeScreen === 'ADD STAFF' ? (
+                <AddStaffForm onNavigateToManagement={() => setActiveScreen('STAFF MANAGEMENT')} />
+              ) : activeScreen === 'STAFF MANAGEMENT' ? (
+                <StaffManagement onNavigateToAddStaff={() => setActiveScreen('ADD STAFF')} />
+              ) : activeScreen === 'CREATE RETAIL CIF' ? (
+                <CreateRetailCifForm />
+              ) : activeScreen === 'VERIFY RETAIL CIF CREATION' ? (
+                <VerifyRetailCif />
+              ) : activeScreen === 'VIEW RETAIL CIF' ? (
+                <ViewRetailCif />
+              ) : activeScreen === 'CREDIT ENTRY' ? (
+                <CreditEntryForm />
+              ) : activeScreen === 'ORDER ENTRY' ? (
+                <OrderEntryForm />
+              ) : activeScreen === 'RECEIVED AED' || activeScreen === 'AED COLLECTON' ? (
+                <ReceivedAedScreen />
+              ) : activeScreen === 'AED SUMMARY & REPORTS' || activeScreen === 'AED REPORTS' ? (
+                <AedReportsScreen />
+              ) : activeScreen === 'PENDING AED REPORT' ? (
+                <PendingAedReportScreen />
+              ) : activeScreen === 'INR DISPATCH DESK' || activeScreen === 'INR PAYOUT' ? (
+                <InrDispatchDeskScreen />
+              ) : activeScreen === 'SERVICER WALLETS' ? (
+                <ServicerWalletsScreen onNavigate={(screen) => setActiveScreen(screen)} />
+              ) : activeScreen === 'OPEN ACCOUNT' || activeScreen === 'OPEN SERVICER ACCOUNT' ? (
+                <OpenAccountScreen onNavigate={(screen) => setActiveScreen(screen)} />
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <h1 className="text-[44px] font-bold text-black tracking-wide" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+                    Welcome to Finacle Payment Solutions
+                  </h1>
                 </div>
-                <p className="text-[12px] text-gray-700 mb-4">
-                  Your staff account does not have permission to view <strong>{activeScreen}</strong>. Please request module authorization from the Administrator.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveScreen('DASHBOARD')}
-                  className="bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-4 py-1 text-[12px] font-bold hover:bg-[#e4e4e4]"
-                >
-                  Return to Dashboard
-                </button>
-              </div>
-            </div>
-          ) : activeScreen === 'ADD STAFF' ? (
-            <AddStaffForm onNavigateToManagement={() => setActiveScreen('STAFF MANAGEMENT')} />
-          ) : activeScreen === 'STAFF MANAGEMENT' ? (
-            <StaffManagement onNavigateToAddStaff={() => setActiveScreen('ADD STAFF')} />
-          ) : activeScreen === 'CREATE RETAIL CIF' ? (
-            <CreateRetailCifForm />
-          ) : activeScreen === 'VERIFY RETAIL CIF CREATION' ? (
-            <VerifyRetailCif />
-          ) : activeScreen === 'VIEW RETAIL CIF' ? (
-            <ViewRetailCif />
-          ) : activeScreen === 'CREDIT ENTRY' ? (
-            <CreditEntryForm />
-          ) : activeScreen === 'ORDER ENTRY' ? (
-            <OrderEntryForm />
-          ) : activeScreen === 'RECEIVED AED' || activeScreen === 'AED COLLECTON' ? (
-            <ReceivedAedScreen />
-          ) : activeScreen === 'AED SUMMARY & REPORTS' || activeScreen === 'AED REPORTS' ? (
-            <AedReportsScreen />
-          ) : activeScreen === 'PENDING AED REPORT' ? (
-            <PendingAedReportScreen />
-          ) : activeScreen === 'INR DISPATCH DESK' || activeScreen === 'INR PAYOUT' ? (
-            <InrDispatchDeskScreen />
-          ) : activeScreen === 'SERVICER WALLETS' ? (
-            <ServicerWalletsScreen onNavigate={(screen) => setActiveScreen(screen)} />
-          ) : activeScreen === 'OPEN ACCOUNT' || activeScreen === 'OPEN SERVICER ACCOUNT' ? (
-            <OpenAccountScreen onNavigate={(screen) => setActiveScreen(screen)} />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <h1 className="text-[44px] font-bold text-black tracking-wide" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-                Welcome to Finacle Payment Solutions
-              </h1>
-            </div>
-          )}
+              )}
+            </Suspense>
+          </FinacleErrorBoundary>
         </div>
       </div>
 

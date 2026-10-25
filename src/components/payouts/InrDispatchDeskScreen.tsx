@@ -1129,49 +1129,12 @@ export default function InrDispatchDeskScreen() {
             FINCORE UNIVERSAL SETTLEMENT — DIRECT BENEFICIARY PAYOUT (DEBIT ENTRY) DESK
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleOpenInterTransfer}
-            className="flex items-center gap-1.5 bg-[#4f46e5] hover:bg-[#4338ca] text-white px-3 py-1 rounded text-xs font-extrabold shadow-sm transition-all cursor-pointer"
-            title="Directly rebalance working float between two servicers"
-          >
-            <ArrowLeftRight className="w-3.5 h-3.5" /> ⇄ Inter-Servicer Transfer
-          </button>
-          <button
-            onClick={handleOpenCreditModal}
-            className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1 rounded text-xs font-extrabold shadow-sm transition-all cursor-pointer"
-            title="Inject float credit into a servicer's operating wallet"
-          >
-            <Plus className="w-3.5 h-3.5" /> + Add Float (Credit)
-          </button>
-          <button
-            onClick={handleOpenNewEntry}
-            className="flex items-center gap-1.5 bg-[#d4af37] hover:bg-[#c49f27] text-[#0a2850] px-3 py-1 rounded text-xs font-extrabold shadow-sm transition-all cursor-pointer"
-            title="Log a direct beneficiary payout debit"
-          >
-            <Plus className="w-3.5 h-3.5" /> + New Debit Entry
-          </button>
-          <button
-            onClick={exportToExcel}
-            className="flex items-center gap-1 bg-[#23528f] hover:bg-[#1a4073] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer"
-            title="Export Excel"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" /> Excel
-          </button>
-          <button
-            onClick={exportToPdf}
-            className="flex items-center gap-1 bg-[#23528f] hover:bg-[#1a4073] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer"
-            title="Export PDF"
-          >
-            <FileText className="w-3.5 h-3.5 text-rose-400" /> PDF
-          </button>
-          <button
-            onClick={() => { fetchQueue(); fetchServicers(); fetchPendingOrders(); }}
-            className="flex items-center gap-1 bg-[#23528f] hover:bg-[#1a4073] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer"
-            title="Refresh Desks"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${(loading || loadingPending) ? "animate-spin" : ""}`} /> Refresh
-          </button>
+        <div className="flex items-center gap-2 text-[10.5px] text-blue-200">
+          <span className="font-mono">BRANCH: INDIA CLEARING (INR)</span>
+          <span className="text-blue-400">•</span>
+          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wider">
+            LIVE DESK
+          </span>
         </div>
       </div>
 
@@ -1197,7 +1160,7 @@ export default function InrDispatchDeskScreen() {
                 setFromDate(today);
                 setToDate(today);
               }}
-              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#1e4676] rounded cursor-pointer"
+              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#104080] rounded cursor-pointer"
             >
               Today
             </button>
@@ -1209,13 +1172,13 @@ export default function InrDispatchDeskScreen() {
                 setFromDate(yest);
                 setToDate(yest);
               }}
-              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#1e4676] rounded cursor-pointer"
+              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#104080] rounded cursor-pointer"
             >
               Yesterday
             </button>
             <button
               onClick={() => { setFromDate(""); setToDate(""); }}
-              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#1e4676] rounded cursor-pointer"
+              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#104080] rounded cursor-pointer"
             >
               All Time
             </button>
@@ -1240,7 +1203,7 @@ export default function InrDispatchDeskScreen() {
 
           {/* Servicer Filter */}
           <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
-            <span className="text-[#1e4676] font-bold text-[11px]">Servicer:</span>
+            <span className="text-[#104080] font-bold text-[11px]">Servicer:</span>
             <select
               value={selectedServicerFilter}
               onChange={(e) => setSelectedServicerFilter(e.target.value)}
@@ -1257,7 +1220,7 @@ export default function InrDispatchDeskScreen() {
 
           {/* Payment Mode Filter */}
           <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
-            <span className="text-[#1e4676] font-bold text-[11px]">Mode:</span>
+            <span className="text-[#104080] font-bold text-[11px]">Mode:</span>
             <select
               value={paymentModeFilter}
               onChange={(e) => setPaymentModeFilter(e.target.value)}
@@ -1274,7 +1237,7 @@ export default function InrDispatchDeskScreen() {
 
           {/* Status Filter */}
           <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded">
-            <span className="text-[#1e4676] font-bold text-[11px]">Status:</span>
+            <span className="text-[#104080] font-bold text-[11px]">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -1377,8 +1340,8 @@ export default function InrDispatchDeskScreen() {
         </div>
       </div>
 
-      {/* Desk View Switcher Tabs */}
-      <div className="bg-[#e4ebf5] border-b border-[#c4d4ec] px-3 pt-2 flex items-center justify-between select-none">
+      {/* Desk View Switcher Tabs & Command Actions */}
+      <div className="bg-[#e4ebf5] border-b border-[#c4d4ec] px-3 pt-2 pb-1.5 flex flex-wrap items-center justify-between gap-2 select-none">
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveDeskTab("dispatched_ledger")}
@@ -1404,33 +1367,89 @@ export default function InrDispatchDeskScreen() {
             }`}
           >
             <Clock className="w-3.5 h-3.5 text-amber-600" />
-            <span>Pending Payouts Queue (Booked Orders)</span>
+            <span>Pending Payouts Queue</span>
             <span className="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold">
               {pendingPayouts.length}
             </span>
           </button>
         </div>
 
-        <div className="text-[11px] text-gray-600 pb-1 font-semibold flex items-center gap-2">
-          {activeDeskTab === "pending_queue" ? (
-            <span>
-              ⚡ Showing <strong>{filteredPendingPayouts.length}</strong> unpaid beneficiaries booked in UAE waiting for dispatch in India
-            </span>
-          ) : (
-            <span>
-              📜 Showing <strong>{filteredRecords.length}</strong> logged debit payout vouchers
-            </span>
-          )}
+        {/* Action Controls & Utilities Toolbar */}
+        <div className="flex items-center gap-2">
+          {/* Transactional Buttons */}
+          <button
+            onClick={handleOpenInterTransfer}
+            className="flex items-center gap-1.5 bg-white hover:bg-[#f0f4f8] text-[#104080] border border-[#c4d4ec] px-2.5 py-1 rounded text-xs font-bold transition-all shadow-2xs cursor-pointer active:bg-[#e2eaf5]"
+            title="Directly rebalance working float between two servicers"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5 text-[#104080]" />
+            <span>Inter-Servicer Transfer</span>
+          </button>
+
+          <button
+            onClick={handleOpenCreditModal}
+            className="flex items-center gap-1.5 bg-[#0f5132] hover:bg-[#0b3d26] text-white border border-[#0f5132] px-2.5 py-1 rounded text-xs font-bold transition-all shadow-2xs cursor-pointer active:bg-[#08291a]"
+            title="Inject float credit into a servicer's operating wallet"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Float Credit</span>
+          </button>
+
+          <button
+            onClick={handleOpenNewEntry}
+            className="flex items-center gap-1.5 bg-[#104080] hover:bg-[#0c3266] text-white border border-[#104080] px-2.5 py-1 rounded text-xs font-bold transition-all shadow-2xs cursor-pointer active:bg-[#09254d]"
+            title="Log a direct beneficiary payout debit"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Debit Entry</span>
+          </button>
+
+          <div className="h-4 w-px bg-[#c4d4ec] mx-0.5" />
+
+          {/* Export & Refresh Toolbar */}
+          <div className="flex items-center bg-white border border-[#c4d4ec] rounded shadow-2xs overflow-hidden">
+            <button
+              onClick={exportToExcel}
+              className="flex items-center gap-1 hover:bg-[#f0f4f8] text-gray-700 hover:text-[#104080] px-2 py-1 text-[11px] font-bold border-r border-[#c4d4ec] cursor-pointer transition-colors"
+              title="Export to Excel"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Excel</span>
+            </button>
+            <button
+              onClick={exportToPdf}
+              className="flex items-center gap-1 hover:bg-[#f0f4f8] text-gray-700 hover:text-[#104080] px-2 py-1 text-[11px] font-bold border-r border-[#c4d4ec] cursor-pointer transition-colors"
+              title="Export to PDF"
+            >
+              <FileText className="w-3.5 h-3.5 text-rose-600" />
+              <span>PDF</span>
+            </button>
+            <button
+              onClick={() => { fetchQueue(); fetchServicers(); fetchPendingOrders(); }}
+              className="flex items-center gap-1 hover:bg-[#f0f4f8] text-gray-700 hover:text-[#104080] px-2 py-1 text-[11px] font-bold cursor-pointer transition-colors"
+              title="Refresh Desks"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${(loading || loadingPending) ? "animate-spin text-[#104080]" : ""}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Main Table Container */}
       <div className="flex-1 overflow-auto custom-scrollbar p-3">
+        <div className="mb-2 flex items-center justify-between text-[11px] text-gray-600 font-semibold px-0.5">
+          {activeDeskTab === "pending_queue" ? (
+            <span>⚡ Showing <strong>{filteredPendingPayouts.length}</strong> unpaid beneficiaries booked in UAE waiting for dispatch in India</span>
+          ) : (
+            <span>📜 Showing <strong>{filteredRecords.length}</strong> logged debit payout vouchers</span>
+          )}
+        </div>
         {activeDeskTab === "pending_queue" ? (
           /* ── VIEW 1: LIVE PENDING PAYOUTS QUEUE DIRECTLY POPULATED BY BOOKED ORDERS ── */
-          <div className="border border-[#c4d4ec] rounded-xs overflow-hidden shadow-2xs bg-white">
+          <div className="border border-[#c4d4ec] rounded-xs shadow-2xs bg-white relative">
             <table className="w-full text-left border-collapse">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-[#e4e4e4] shadow-[0_1px_0_0_#a0a0a0]">
                 <tr className="bg-[#e4e4e4] border-b border-[#a0a0a0] text-[11px] font-bold text-[#104080] uppercase tracking-wider select-none">
                   <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Order # & Date</th>
                   <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Remitting Party / Client</th>
@@ -1440,7 +1459,7 @@ export default function InrDispatchDeskScreen() {
                   <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-right">Booked INR Amount</th>
                   <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-center">Assigned Servicer</th>
                   <th className="py-2 px-2.5 border-r border-[#c4d4ec] text-center">Status</th>
-                  <th className="py-2 px-2.5 text-center bg-[#f0f4f8]">Action</th>
+                  <th className="py-2 px-2.5 text-center bg-[#e4e4e4]">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0] text-[12px]">
@@ -1576,9 +1595,9 @@ export default function InrDispatchDeskScreen() {
           </div>
         ) : (
           /* ── VIEW 2: DISPATCHED DEBITS LEDGER ── */
-          <div className="border border-[#c4d4ec] rounded-xs overflow-hidden shadow-2xs bg-white">
+          <div className="border border-[#c4d4ec] rounded-xs shadow-2xs bg-white relative">
             <table className="w-full text-left border-collapse">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-[#e4e4e4] shadow-[0_1px_0_0_#a0a0a0]">
                 <tr className="bg-[#e4e4e4] border-b border-[#a0a0a0] text-[11px] font-bold text-[#104080] uppercase tracking-wider select-none">
                   <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Txn# & Date</th>
                   <th className="py-2 px-2.5 border-r border-[#c4d4ec]">Servicer / Funding Float</th>

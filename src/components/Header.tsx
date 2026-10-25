@@ -72,14 +72,14 @@ export default function Header({
         
         {/* Left Side Navigation Info */}
         <div className="flex items-center h-full">
-          <div className="text-[#1e4676] font-semibold flex items-center gap-1.5">
+          <div className="text-[#104080] font-semibold flex items-center gap-1.5">
             <span>User: {userName}</span>
-            <span className="text-[9px] bg-[#1e4676] text-white px-1.5 py-0.2 rounded uppercase font-bold">
+            <span className="text-[9px] bg-[#104080] text-white px-1.5 py-0.2 rounded uppercase font-bold">
               {isSuperAdmin ? 'ADMIN' : 'STAFF'}
             </span>
           </div>
           <div className="w-[1px] h-4 bg-gray-300 mx-5"></div>
-          <div className="flex items-center gap-2 text-[#1e4676] font-semibold">
+          <div className="flex items-center gap-2 text-[#104080] font-semibold">
             Time Zone: GMT
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
               <circle cx="15" cy="15" r="3"></circle>
@@ -92,9 +92,9 @@ export default function Header({
         {/* Right Side Controls */}
         <div className="flex items-center">
           <div className="flex items-center gap-3">
-            <span className="text-[#1e4676] font-semibold">Solution:</span>
+            <span className="text-[#104080] font-semibold">Solution:</span>
             <select 
-              className="border border-gray-300 rounded-md bg-white text-gray-700 text-[11px] w-[180px] py-1 px-2 focus:outline-none focus:ring-1 focus:ring-[#1e4676] focus:border-[#1e4676] transition-colors" 
+              className="border border-gray-300 rounded-md bg-white text-gray-700 text-[11px] w-[180px] py-1 px-2 focus:outline-none focus:ring-1 focus:ring-[#104080] focus:border-[#104080] transition-colors" 
               value={isFincoreActive ? 'FINCORE' : 'Select'}
               onChange={(e) => {
                 if (e.target.value === 'FINCORE') {
@@ -159,7 +159,7 @@ export default function Header({
           </div>
 
           {/* Top Right Toolbar */}
-          <div className="absolute top-0 right-0 flex items-center text-[11px] font-bold text-[#1e4676] bg-[#f4f7f9] border border-[#a0a0a0] border-t-0 border-r-0 z-10">
+          <div className="absolute top-0 right-0 flex items-center text-[11px] font-bold text-[#104080] bg-[#f4f7f9] border border-[#a0a0a0] border-t-0 border-r-0 z-10">
             <button className="px-2 py-0.5 hover:bg-[#e4e9f0] flex items-center justify-center h-full">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10"/><path d="M17 7 7 17"/></svg>
             </button>
@@ -182,7 +182,7 @@ export default function Header({
           background: 'linear-gradient(to bottom, #758eab 0%, #a6bcd0 25%, #aec3d6 50%, #9cb3c8 75%, #b1c6d8 85%, #88a1b9 95%, #5e7a94 100%)'
         }}
       >
-        <span className="text-[#1e4676] font-bold text-[14px] tracking-wide text-shadow-sm">
+        <span className="text-[#104080] font-bold text-[14px] tracking-wide text-shadow-sm">
           Universal Payment Solution from Infazys
         </span>
         

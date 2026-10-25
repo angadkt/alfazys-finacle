@@ -521,7 +521,7 @@ Generated on: ${new Date().toLocaleString()}`;
 
         {/* Function selection & shortcuts */}
         <div className="flex items-center gap-2 text-[11px]">
-          <span className="font-bold text-[#1e4676]">Function:</span>
+          <span className="font-bold text-[#104080]">Function:</span>
           <select 
             value={isFormModalOpen ? (editingId ? 'M-MODIFY' : 'A-ADD') : selectedFunction} 
             onChange={(e) => {
@@ -602,7 +602,7 @@ Generated on: ${new Date().toLocaleString()}`;
             <div className="bg-[#f0f0f5] border border-[#7f9db9] p-2 mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px]">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-1">
-                  <span className="font-bold text-[#1e4676]">Search:</span>
+                  <span className="font-bold text-[#104080]">Search:</span>
                   <input 
                     type="text" 
                     value={searchQuery}
@@ -665,7 +665,7 @@ Generated on: ${new Date().toLocaleString()}`;
                   onClick={loadEntries}
                   disabled={isRefreshing}
                   title="Refresh Entries"
-                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] px-2 h-[24px] flex items-center justify-center gap-1 text-[11px] font-bold text-[#1e4676] cursor-pointer"
+                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] px-2 h-[24px] flex items-center justify-center gap-1 text-[11px] font-bold text-[#104080] cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
                   <span>Refresh</span>
@@ -724,7 +724,7 @@ Generated on: ${new Date().toLocaleString()}`;
                   ) : (
                     filteredEntries.map(entry => (
                       <tr key={entry.id} className="border-b border-[#e4e4e4] hover:bg-[#f0f4f8]">
-                        <td className="p-2 border-r border-[#e4e4e4] font-bold text-[#1e4676]">
+                        <td className="p-2 border-r border-[#e4e4e4] font-bold text-[#104080]">
                           {entry.id}
                         </td>
                         <td className="p-2 border-r border-[#e4e4e4] text-gray-700">
@@ -733,7 +733,7 @@ Generated on: ${new Date().toLocaleString()}`;
                         <td className="p-2 border-r border-[#e4e4e4] font-bold text-black uppercase">
                           {entry.beneficiaryName}
                         </td>
-                        <td className="p-2 border-r border-[#e4e4e4] font-mono text-[#1e4676]">
+                        <td className="p-2 border-r border-[#e4e4e4] font-mono text-[#104080]">
                           {entry.accountNumber.length > 6 
                             ? `••••${entry.accountNumber.slice(-6)}` 
                             : entry.accountNumber}
@@ -742,7 +742,7 @@ Generated on: ${new Date().toLocaleString()}`;
                           <div className="font-semibold">{entry.bankName}</div>
                           <div className="text-[10px] text-gray-500 font-mono">{entry.ifscCode}</div>
                         </td>
-                        <td className="p-2 border-r border-[#e4e4e4] text-right font-bold text-[#1e4676] font-mono">
+                        <td className="p-2 border-r border-[#e4e4e4] text-right font-bold text-[#104080] font-mono">
                           ₹ {entry.totalAmount.toLocaleString()}
                         </td>
                         <td className="p-2 border-r border-[#e4e4e4]">
@@ -750,7 +750,7 @@ Generated on: ${new Date().toLocaleString()}`;
                             {entry.utrItems.map((u, idx) => (
                               <div key={idx} className="flex items-center gap-1 font-mono text-[10px]">
                                 <span className="bg-gray-100 border border-gray-300 px-1 font-bold">{u.utrNumber}</span>
-                                <span className="text-[#1e4676]">(₹{u.amount.toLocaleString()})</span>
+                                <span className="text-[#104080]">(₹{u.amount.toLocaleString()})</span>
                               </div>
                             ))}
                           </div>
@@ -812,7 +812,7 @@ Generated on: ${new Date().toLocaleString()}`;
               <div>
                 Showing <strong>{filteredEntries.length}</strong> of <strong>{entries.length}</strong> total credit entries.
               </div>
-              <div className="font-bold text-[#1e4676]">
+              <div className="font-bold text-[#104080]">
                 Total Outgoing Sum: ₹ {filteredEntries.filter(e => e.status !== 'Cancelled').reduce((sum, e) => sum + e.totalAmount, 0).toLocaleString()}
               </div>
             </div>
@@ -846,7 +846,7 @@ Generated on: ${new Date().toLocaleString()}`;
             <div className="grid grid-cols-4 gap-3 mb-4">
               <div className="border border-[#7f9db9] p-3 bg-[#fafbfc]">
                 <div className="text-gray-500 text-[10px] uppercase font-bold">Total Outgoing Disbursed</div>
-                <div className="text-[18px] font-bold text-[#1e4676] font-mono mt-1">
+                <div className="text-[18px] font-bold text-[#104080] font-mono mt-1">
                   ₹ {entries.filter(e => e.status === 'Completed').reduce((s, e) => s + e.totalAmount, 0).toLocaleString()}
                 </div>
                 <div className="text-[10px] text-green-700 mt-0.5">Reflected in FINCORE Treasury</div>
@@ -854,7 +854,7 @@ Generated on: ${new Date().toLocaleString()}`;
 
               <div className="border border-[#7f9db9] p-3 bg-[#fafbfc]">
                 <div className="text-gray-500 text-[10px] uppercase font-bold">Total Completed Transactions</div>
-                <div className="text-[18px] font-bold text-[#1e4676] mt-1">
+                <div className="text-[18px] font-bold text-[#104080] mt-1">
                   {entries.filter(e => e.status === 'Completed').length}
                 </div>
                 <div className="text-[10px] text-gray-600 mt-0.5">100% verified settlement</div>
@@ -862,7 +862,7 @@ Generated on: ${new Date().toLocaleString()}`;
 
               <div className="border border-[#7f9db9] p-3 bg-[#fafbfc]">
                 <div className="text-gray-500 text-[10px] uppercase font-bold">Linked Banking UTRs</div>
-                <div className="text-[18px] font-bold text-[#1e4676] mt-1">
+                <div className="text-[18px] font-bold text-[#104080] mt-1">
                   {entries.reduce((s, e) => s + e.utrItems.length, 0)}
                 </div>
                 <div className="text-[10px] text-gray-600 mt-0.5">Across all tranches</div>
@@ -870,7 +870,7 @@ Generated on: ${new Date().toLocaleString()}`;
 
               <div className="border border-[#7f9db9] p-3 bg-[#fafbfc]">
                 <div className="text-gray-500 text-[10px] uppercase font-bold">Audit History Records</div>
-                <div className="text-[18px] font-bold text-[#1e4676] mt-1">
+                <div className="text-[18px] font-bold text-[#104080] mt-1">
                   {entries.length} Entries
                 </div>
                 <div className="text-[10px] text-gray-600 mt-0.5">Zero destructive deletions</div>
@@ -878,7 +878,7 @@ Generated on: ${new Date().toLocaleString()}`;
             </div>
 
             <div className="border border-[#a0a0a0] bg-white p-3 flex-1 overflow-auto">
-              <div className="font-bold text-[#1e4676] text-[12px] mb-2 border-b border-gray-200 pb-1">
+              <div className="font-bold text-[#104080] text-[12px] mb-2 border-b border-gray-200 pb-1">
                 UTR-Wise Payment Breakdown & Audit Log (SRS 13.5)
               </div>
               <table className="w-full border-collapse text-[11px]">
@@ -899,11 +899,11 @@ Generated on: ${new Date().toLocaleString()}`;
                     entry.utrItems.map((u, idx) => (
                       <tr key={`${entry.id}-${idx}`} className="border-b border-[#e4e4e4] hover:bg-[#f9fafb]">
                         <td className="p-1.5 border-r border-[#e4e4e4] font-mono font-bold text-black">{u.utrNumber}</td>
-                        <td className="p-1.5 border-r border-[#e4e4e4] font-mono font-bold text-[#1e4676]">₹ {u.amount.toLocaleString()}</td>
+                        <td className="p-1.5 border-r border-[#e4e4e4] font-mono font-bold text-[#104080]">₹ {u.amount.toLocaleString()}</td>
                         <td className="p-1.5 border-r border-[#e4e4e4] font-semibold">{entry.beneficiaryName}</td>
                         <td className="p-1.5 border-r border-[#e4e4e4]">{entry.bankName} ({entry.ifscCode})</td>
                         <td className="p-1.5 border-r border-[#e4e4e4]">{entry.companyBankAccount}</td>
-                        <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#1e4676]">{entry.id}</td>
+                        <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#104080]">{entry.id}</td>
                         <td className="p-1.5 border-r border-[#e4e4e4]">{entry.createdBy || '-'}</td>
                         <td className="p-1.5">{entry.verifiedBy || '-'}</td>
                       </tr>
@@ -948,15 +948,15 @@ Generated on: ${new Date().toLocaleString()}`;
                   
                   {/* Retro 2004 Stepper Progress Bar */}
                   <div className="bg-[#f0f0f5] border border-[#7f9db9] p-2 mb-3 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.1)]">
-                    <div className="flex items-center justify-between text-[11px] mb-1.5 font-bold text-[#1e4676]">
+                    <div className="flex items-center justify-between text-[11px] mb-1.5 font-bold text-[#104080]">
                       <div className="flex items-center gap-2">
-                        <span className="bg-[#1e4676] text-white px-2 py-0.5 text-[10px]">
+                        <span className="bg-[#104080] text-white px-2 py-0.5 text-[10px]">
                           STAGE {currentStep} OF 3
                         </span>
                         <span>Credit Entry Data Input Workflow</span>
                       </div>
                       <div className="text-[11px] text-gray-700">
-                        Target Amount: <span className="font-bold text-[#1e4676]">₹ {totalEnteredAmount.toLocaleString()}</span> | 
+                        Target Amount: <span className="font-bold text-[#104080]">₹ {totalEnteredAmount.toLocaleString()}</span> | 
                         Allocated UTR: <span className="font-bold text-green-700">₹ {totalUtrAllocated.toLocaleString()}</span>
                         {remainingUtrBalance !== 0 && (
                           <span className="text-red-600 font-bold ml-1"> (Bal: ₹{remainingUtrBalance.toLocaleString()})</span>
@@ -1069,7 +1069,7 @@ Generated on: ${new Date().toLocaleString()}`;
                             value={formData.accountNumber}
                             onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
                             placeholder=""
-                            className="flex-1 border border-[#7f9db9] px-2 h-[38px] focus:outline-none font-mono text-[12px] font-bold text-[#1e4676]"
+                            className="flex-1 border border-[#7f9db9] px-2 h-[38px] focus:outline-none font-mono text-[12px] font-bold text-[#104080]"
                           />
                         </div>
 
@@ -1084,7 +1084,7 @@ Generated on: ${new Date().toLocaleString()}`;
                             onChange={(e) => setFormData({ ...formData, ifscCode: e.target.value.toUpperCase() })}
                             placeholder=""
                             maxLength={11}
-                            className="flex-1 border border-[#7f9db9] px-2 h-[38px] focus:outline-none uppercase font-mono font-bold text-[#1e4676] text-[12px]"
+                            className="flex-1 border border-[#7f9db9] px-2 h-[38px] focus:outline-none uppercase font-mono font-bold text-[#104080] text-[12px]"
                           />
                         </div>
 
@@ -1118,7 +1118,7 @@ Generated on: ${new Date().toLocaleString()}`;
 
                       {/* Info Note */}
                       <div className="mt-4 p-2 bg-[#f4f7f9] border border-[#a0a0a0] text-[11px] text-gray-700 w-full">
-                        <div className="font-bold text-[#1e4676] mb-0.5">ℹ Banking Validation Note:</div>
+                        <div className="font-bold text-[#104080] mb-0.5">ℹ Banking Validation Note:</div>
                         Beneficiary details are validated against standard Indian Banking IFSC clearing formats.
                         Once verified, the payout amount will be scheduled in Step 2.
                       </div>
@@ -1149,7 +1149,7 @@ Generated on: ${new Date().toLocaleString()}`;
                               value={formData.totalAmount}
                               onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
                               placeholder=""
-                              className="flex-1 border border-[#7f9db9] px-2 h-[38px] focus:outline-none font-bold text-[#1e4676] text-[13px]"
+                              className="flex-1 border border-[#7f9db9] px-2 h-[38px] focus:outline-none font-bold text-[#104080] text-[13px]"
                             />
                           </div>
                         </div>
@@ -1169,7 +1169,7 @@ Generated on: ${new Date().toLocaleString()}`;
                         {/* Amount in words banner */}
                         <div className="col-span-2 bg-[#fdfbe8] border border-[#d3c06d] p-1.5 flex items-center gap-2">
                           <span className="font-bold text-[#745e06] text-[11px]">Amount in Words:</span>
-                          <span className="font-bold text-[#1e4676] text-[12px] italic">
+                          <span className="font-bold text-[#104080] text-[12px] italic">
                             {numberToIndianWords(totalEnteredAmount) || 'Zero Rupees'}
                           </span>
                         </div>
@@ -1178,10 +1178,10 @@ Generated on: ${new Date().toLocaleString()}`;
 
                       {/* Accounting Impact Preview Box */}
                       <div className="mt-2 p-1.5 bg-[#f0f4f8] border border-[#8fa8c0] text-[11px] text-black w-full">
-                        <div className="font-bold text-[#1e4676] mb-0.5">
+                        <div className="font-bold text-[#104080] mb-0.5">
                           SRS 13.3 Accounting Impact Notification:
                         </div>
-                        This payment will credit <span className="font-bold text-[#1e4676]">{formData.beneficiaryName}</span> and debit the originating treasury account <span className="font-bold">{formData.companyBankAccount}</span>.
+                        This payment will credit <span className="font-bold text-[#104080]">{formData.beneficiaryName}</span> and debit the originating treasury account <span className="font-bold">{formData.companyBankAccount}</span>.
                       </div>
                     </div>
                   )}
@@ -1204,7 +1204,7 @@ Generated on: ${new Date().toLocaleString()}`;
                         </button>
                         <button 
                           onClick={handleAddUtrRow}
-                          className="bg-[#316ac5] text-white px-3 py-1 text-[11px] font-bold border border-[#1e4676] hover:bg-[#2055a4]"
+                          className="bg-[#316ac5] text-white px-3 py-1 text-[11px] font-bold border border-[#104080] hover:bg-[#2055a4]"
                         >
                           + Add UTR Row
                         </button>
@@ -1259,7 +1259,7 @@ Generated on: ${new Date().toLocaleString()}`;
                           <tbody>
                             {utrItems.map((item, index) => (
                               <tr key={item.id || index} className="border-b border-[#e4e4e4] hover:bg-[#f9fafb]">
-                                <td className="py-1 px-2 border-r border-[#e4e4e4] text-center font-bold text-[#1e4676]">
+                                <td className="py-1 px-2 border-r border-[#e4e4e4] text-center font-bold text-[#104080]">
                                   #{index + 1}
                                 </td>
                                 <td className="py-1 px-2 border-r border-[#e4e4e4]">
@@ -1270,7 +1270,7 @@ Generated on: ${new Date().toLocaleString()}`;
                                       value={item.amount || ''}
                                       onChange={(e) => handleUtrChange(index, 'amount', parseFloat(e.target.value) || 0)}
                                       placeholder="Amount"
-                                      className="w-full border border-[#7f9db9] px-2 h-[30px] focus:outline-none font-bold text-[#1e4676]"
+                                      className="w-full border border-[#7f9db9] px-2 h-[30px] focus:outline-none font-bold text-[#104080]"
                                     />
                                   </div>
                                 </td>
@@ -1317,7 +1317,7 @@ Generated on: ${new Date().toLocaleString()}`;
                           <tfoot>
                             <tr className="bg-[#e4e9f0] font-bold text-black border-t border-[#a0a0a0]">
                               <td className="py-1.5 px-2 text-center" colSpan={1}>Total</td>
-                              <td className="py-1.5 px-2 text-[#1e4676] font-mono text-[13px]">₹ {totalUtrAllocated.toLocaleString()}</td>
+                              <td className="py-1.5 px-2 text-[#104080] font-mono text-[13px]">₹ {totalUtrAllocated.toLocaleString()}</td>
                               <td className="py-1.5 px-2 text-gray-700" colSpan={4}>
                                 {utrItems.length} linked UTR transaction(s) entered
                               </td>
@@ -1329,7 +1329,7 @@ Generated on: ${new Date().toLocaleString()}`;
                       {/* Example helper banner */}
                       <div className="mt-2.5 p-2 bg-white border border-dashed border-[#a0a0a0] flex items-center justify-between text-[11px] shadow-sm">
                         <div>
-                          <span className="font-bold text-[#1e4676]">Client Reference Example:</span>
+                          <span className="font-bold text-[#104080]">Client Reference Example:</span>
                           <span className="ml-2 font-mono text-gray-800">44,000 Total | 24,000-005624886268 | 20,000-293973571072 (Completed)</span>
                         </div>
                         <button 
@@ -1369,7 +1369,7 @@ Generated on: ${new Date().toLocaleString()}`;
                       <div className="grid grid-cols-2 gap-4 text-[11px] mb-3">
                         {/* Summary Box 1: Beneficiary */}
                         <div className="border border-[#7f9db9] p-3 bg-[#fafbfc]">
-                          <div className="font-bold text-[#1e4676] border-b border-[#c8d6e5] pb-1 mb-2 text-[12px]">
+                          <div className="font-bold text-[#104080] border-b border-[#c8d6e5] pb-1 mb-2 text-[12px]">
                             Beneficiary Particulars
                           </div>
                           <div className="grid grid-cols-[140px_1fr] gap-y-1.5">
@@ -1377,7 +1377,7 @@ Generated on: ${new Date().toLocaleString()}`;
                             <span className="font-bold text-black uppercase">{formData.beneficiaryName}</span>
 
                             <span className="text-gray-600 font-semibold">Account Number:</span>
-                            <span className="font-mono font-bold text-[#1e4676]">{formData.accountNumber}</span>
+                            <span className="font-mono font-bold text-[#104080]">{formData.accountNumber}</span>
 
                             <span className="text-gray-600 font-semibold">IFSC Code:</span>
                             <span className="font-mono font-bold">{formData.ifscCode}</span>
@@ -1392,12 +1392,12 @@ Generated on: ${new Date().toLocaleString()}`;
 
                         {/* Summary Box 2: Payment Details */}
                         <div className="border border-[#7f9db9] p-3 bg-[#fafbfc]">
-                          <div className="font-bold text-[#1e4676] border-b border-[#c8d6e5] pb-1 mb-2 text-[12px]">
+                          <div className="font-bold text-[#104080] border-b border-[#c8d6e5] pb-1 mb-2 text-[12px]">
                             Payment & Settlement Summary
                           </div>
                           <div className="grid grid-cols-[140px_1fr] gap-y-1.5">
                             <span className="text-gray-600 font-semibold">Total Amount:</span>
-                            <span className="font-bold text-[#1e4676] text-[13px]">₹ {totalEnteredAmount.toLocaleString()}</span>
+                            <span className="font-bold text-[#104080] text-[13px]">₹ {totalEnteredAmount.toLocaleString()}</span>
 
                             <span className="text-gray-600 font-semibold">Amount In Words:</span>
                             <span className="italic font-semibold text-gray-800">{numberToIndianWords(totalEnteredAmount)}</span>
@@ -1416,7 +1416,7 @@ Generated on: ${new Date().toLocaleString()}`;
 
                       {/* UTR Breakdown in Step 3 */}
                       <div className="border border-[#7f9db9] p-2 bg-white mb-3">
-                        <div className="font-bold text-[#1e4676] text-[11px] mb-1">
+                        <div className="font-bold text-[#104080] text-[11px] mb-1">
                           Linked Bank UTR Records ({utrItems.length} Tranches):
                         </div>
                         <table className="w-full border-collapse text-[11px]">
@@ -1433,7 +1433,7 @@ Generated on: ${new Date().toLocaleString()}`;
                             {utrItems.map((u, i) => (
                               <tr key={i} className="border-b border-[#e4e4e4]">
                                 <td className="p-1.5 border-r border-[#e4e4e4] font-bold">{i + 1}</td>
-                                <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#1e4676]">₹ {u.amount.toLocaleString()}</td>
+                                <td className="p-1.5 border-r border-[#e4e4e4] font-bold text-[#104080]">₹ {u.amount.toLocaleString()}</td>
                                 <td className="p-1.5 border-r border-[#e4e4e4] font-mono font-bold">{u.utrNumber}</td>
                                 <td className="p-1.5 border-r border-[#e4e4e4] text-green-700 font-bold">{u.status}</td>
                                 <td className="p-1.5 text-gray-600 text-[10px]">{u.timestamp}</td>
@@ -1445,9 +1445,9 @@ Generated on: ${new Date().toLocaleString()}`;
 
                       {/* Accounting Journal Entry Preview (SRS 13.3) */}
                       <div className="border border-[#285f8f] bg-[#eef5fa] p-2.5 text-[11px]">
-                        <div className="font-bold text-[#1e4676] mb-1 flex items-center justify-between">
+                        <div className="font-bold text-[#104080] mb-1 flex items-center justify-between">
                           <span>FINCORE General Ledger Double Entry Post Preview (SRS Section 13.3)</span>
-                          <span className="text-[10px] bg-[#1e4676] text-white px-2 py-0.5">Automated Double Entry</span>
+                          <span className="text-[10px] bg-[#104080] text-white px-2 py-0.5">Automated Double Entry</span>
                         </div>
                         <div className="font-mono text-[11px] bg-white border border-[#bed3e6] p-2 leading-relaxed">
                           <div className="text-blue-900">
@@ -1476,7 +1476,7 @@ Generated on: ${new Date().toLocaleString()}`;
                       </button>
                       <button
                         onClick={handleLoadUserSample}
-                        className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-3 py-1 text-xs text-[#1e4676] font-bold"
+                        className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-3 py-1 text-xs text-[#104080] font-bold"
                       >
                         Reset To Client Sample
                       </button>
@@ -1552,7 +1552,7 @@ Generated on: ${new Date().toLocaleString()}`;
                   i
                 </div>
                 <div className="text-[12px] text-black">
-                  <div className="font-bold text-[13px] text-[#1e4676] mb-1">
+                  <div className="font-bold text-[13px] text-[#104080] mb-1">
                     Credit Entry {submittedEntry.id} Posted Successfully.
                   </div>
                   <div>Beneficiary: <strong>{submittedEntry.beneficiaryName}</strong> (A/C: {submittedEntry.accountNumber})</div>
@@ -1623,9 +1623,9 @@ Generated on: ${new Date().toLocaleString()}`;
             <div className="bg-white border border-[#8f8f9d] p-5 m-1 text-black font-sans">
               
               {/* Voucher Header */}
-              <div className="border-b-2 border-[#1e4676] pb-3 mb-3 flex items-start justify-between">
+              <div className="border-b-2 border-[#104080] pb-3 mb-3 flex items-start justify-between">
                 <div>
-                  <div className="text-[16px] font-bold text-[#1e4676]">INFAZYS FINACLE CORE BANKING</div>
+                  <div className="text-[16px] font-bold text-[#104080]">INFAZYS FINACLE CORE BANKING</div>
                   <div className="text-[11px] text-gray-600">Universal Payment Solution • Outgoing Credit Settlement Advice</div>
                 </div>
                 <div className="text-right text-[11px]">
@@ -1638,7 +1638,7 @@ Generated on: ${new Date().toLocaleString()}`;
               {/* Voucher Content */}
               <div className="grid grid-cols-2 gap-4 text-[11px] mb-4">
                 <div className="border border-gray-300 p-2 bg-[#fbfbfb]">
-                  <div className="font-bold text-[#1e4676] mb-1">Beneficiary Credentials</div>
+                  <div className="font-bold text-[#104080] mb-1">Beneficiary Credentials</div>
                   <div>Name: <strong>{selectedVoucher.beneficiaryName}</strong></div>
                   <div>Account No: <strong>{selectedVoucher.accountNumber}</strong></div>
                   <div>IFSC: <strong>{selectedVoucher.ifscCode}</strong></div>
@@ -1646,8 +1646,8 @@ Generated on: ${new Date().toLocaleString()}`;
                 </div>
 
                 <div className="border border-gray-300 p-2 bg-[#fbfbfb]">
-                  <div className="font-bold text-[#1e4676] mb-1">Origin & Payment Details</div>
-                  <div>Disbursed Amount: <strong className="text-[#1e4676]">₹ {selectedVoucher.totalAmount.toLocaleString()}</strong></div>
+                  <div className="font-bold text-[#104080] mb-1">Origin & Payment Details</div>
+                  <div>Disbursed Amount: <strong className="text-[#104080]">₹ {selectedVoucher.totalAmount.toLocaleString()}</strong></div>
                   <div>Payment Mode: <strong>{selectedVoucher.paymentMode}</strong></div>
                   <div>Treasury Account: <strong>{selectedVoucher.companyBankAccount}</strong></div>
                   <div>Maker ID: <strong>{selectedVoucher.createdBy}</strong></div>
@@ -1656,7 +1656,7 @@ Generated on: ${new Date().toLocaleString()}`;
 
               {/* UTR Settlement Details */}
               <div className="border border-gray-300 p-2 mb-4">
-                <div className="font-bold text-[#1e4676] text-[11px] mb-1">Settlement UTR Tranches:</div>
+                <div className="font-bold text-[#104080] text-[11px] mb-1">Settlement UTR Tranches:</div>
                 <table className="w-full border-collapse text-[11px]">
                   <thead>
                     <tr className="bg-gray-100 border-b border-gray-300">
@@ -1670,7 +1670,7 @@ Generated on: ${new Date().toLocaleString()}`;
                     {selectedVoucher.utrItems.map((u, i) => (
                       <tr key={i} className="border-b border-gray-200">
                         <td className="p-1 font-bold">{i + 1}</td>
-                        <td className="p-1 font-bold text-[#1e4676]">₹ {u.amount.toLocaleString()}</td>
+                        <td className="p-1 font-bold text-[#104080]">₹ {u.amount.toLocaleString()}</td>
                         <td className="p-1 font-mono">{u.utrNumber}</td>
                         <td className="p-1 text-green-700 font-bold">{u.status}</td>
                       </tr>

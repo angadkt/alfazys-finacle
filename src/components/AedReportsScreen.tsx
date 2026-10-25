@@ -290,7 +290,7 @@ export default function AedReportsScreen() {
         </div>
 
         <div className="flex items-center gap-2 text-xs">
-          <span className="bg-[#eaf0f8] border border-[#a2b5cd] text-[#1e4676] font-bold px-2.5 py-1 rounded">
+          <span className="bg-[#eaf0f8] border border-[#a2b5cd] text-[#104080] font-bold px-2.5 py-1 rounded">
             Filtered Date: {filterDate ? filterDate : 'All Available Dates'}
           </span>
         </div>
@@ -307,7 +307,7 @@ export default function AedReportsScreen() {
                 onClick={() => setFilterDate(new Date().toISOString().slice(0, 10))}
                 className={`px-3 py-1 font-bold cursor-pointer ${
                   filterDate === new Date().toISOString().slice(0, 10)
-                    ? 'bg-[#1e4676] text-white'
+                    ? 'bg-[#104080] text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -326,7 +326,7 @@ export default function AedReportsScreen() {
               <button
                 onClick={() => setFilterDate('')}
                 className={`px-3 py-1 font-bold cursor-pointer border-l border-[#c4d4ec] ${
-                  !filterDate ? 'bg-[#1e4676] text-white' : 'text-gray-700 hover:bg-gray-100'
+                  !filterDate ? 'bg-[#104080] text-white' : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 All Time
@@ -335,7 +335,7 @@ export default function AedReportsScreen() {
 
             {/* Custom Date Input */}
             <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">Select Date:</span>
+              <span className="text-[#104080] font-bold text-[11px]">Select Date:</span>
               <FinacleDatePicker
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
@@ -354,7 +354,7 @@ export default function AedReportsScreen() {
 
             {/* Agent / Customer Filter */}
             <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">Agent/Customer:</span>
+              <span className="text-[#104080] font-bold text-[11px]">Agent/Customer:</span>
               <select
                 value={filterAgent}
                 onChange={(e) => setFilterAgent(e.target.value)}
@@ -380,7 +380,7 @@ export default function AedReportsScreen() {
 
             <button
               onClick={fetchData}
-              className="bg-[#1e4676] text-white text-[11px] font-bold px-3 py-1 rounded hover:bg-[#15345b] cursor-pointer"
+              className="bg-[#104080] text-white text-[11px] font-bold px-3 py-1 rounded hover:bg-[#0c3266] cursor-pointer"
             >
               Refresh Report
             </button>
@@ -478,8 +478,8 @@ export default function AedReportsScreen() {
 
           {/* ── Group 2: INR Remittances (3 Cards) ── */}
           <div className="mb-2">
-            <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#1e4676] mb-1 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1e4676]"></span>
+            <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080] mb-1 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#104080]"></span>
               INR Remittances (Beneficiary Payouts)
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -487,14 +487,14 @@ export default function AedReportsScreen() {
               <div className="bg-[#f8f9fc] border border-[#c4d4ec] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#1e4676]">Total INR Amount</span>
-                    <span className="text-[9px] font-bold text-[#1e4676] bg-[#eef3fb] border border-[#c4d4ec] px-1.5 py-0.2 rounded-full">
+                    <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080]">Total INR Amount</span>
+                    <span className="text-[9px] font-bold text-[#104080] bg-[#eef3fb] border border-[#c4d4ec] px-1.5 py-0.2 rounded-full">
                       Total Obligation
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-[10px] font-bold text-[#1e4676]">INR</span>
-                    <span className="text-[15px] font-extrabold text-[#1e4676] tracking-tight font-mono">
+                    <span className="text-[10px] font-bold text-[#104080]">INR</span>
+                    <span className="text-[15px] font-extrabold text-[#104080] tracking-tight font-mono">
                       ₹ {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -562,11 +562,11 @@ export default function AedReportsScreen() {
           </div>
 
           {/* ── Group 3: Financial Yield & Profit Analysis ── */}
-          <div className="bg-[#f8f9fa] border-2 border-[#1e4676] rounded-sm p-4 shadow-sm">
+          <div className="bg-[#f8f9fa] border-2 border-[#104080] rounded-sm p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3 border-b border-[#c4d4ec] pb-2">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#1e4676]"></span>
-                <span className="text-[13px] font-extrabold text-[#1e4676] uppercase tracking-wider">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#104080]"></span>
+                <span className="text-[13px] font-extrabold text-[#104080] uppercase tracking-wider">
                   Net Profit & Forex Yield Audit
                 </span>
               </div>
@@ -622,7 +622,7 @@ export default function AedReportsScreen() {
                 <span className="text-[10.5px] font-bold text-gray-500 uppercase block mb-1">
                   Forex Margin %
                 </span>
-                <span className={`text-[22px] font-extrabold font-mono ${marginPct >= 0 ? 'text-[#1e4676]' : 'text-red-600'}`}>
+                <span className={`text-[22px] font-extrabold font-mono ${marginPct >= 0 ? 'text-[#104080]' : 'text-red-600'}`}>
                   {marginPct.toFixed(2)}%
                 </span>
                 <span className="text-[10px] text-gray-400 block mt-1">Net profit margin over gross AED</span>
@@ -647,7 +647,7 @@ export default function AedReportsScreen() {
           <div className="border border-[#c4d4ec] bg-white rounded-sm p-4 shadow-xs">
             <div className="flex items-center justify-between mb-4 border-b border-[#e4e4e4] pb-2">
               <div className="flex items-center gap-2">
-                <span className="text-[13px] font-extrabold text-[#1e4676] uppercase tracking-wide">
+                <span className="text-[13px] font-extrabold text-[#104080] uppercase tracking-wide">
                   Financial Volume & Collection Breakdown Graph
                 </span>
               </div>
@@ -702,7 +702,7 @@ export default function AedReportsScreen() {
 
                   {/* Profit Bar */}
                   <div>
-                    <div className="flex justify-between text-xs font-bold text-[#1e4676] mb-1">
+                    <div className="flex justify-between text-xs font-bold text-[#104080] mb-1">
                       <span>Estimated Profit Yield</span>
                       <span>{totalProfitAed.toLocaleString('en-US', { minimumFractionDigits: 2 })} AED ({marginPct.toFixed(1)}% margin)</span>
                     </div>
@@ -720,8 +720,8 @@ export default function AedReportsScreen() {
               <div className="bg-[#f8f9fa] border border-[#c4d4ec] rounded p-3 flex flex-col justify-between shadow-xs">
                 <div>
                   <div className="flex items-center justify-between mb-2 border-b border-[#e4e4e4] pb-1.5">
-                    <span className="text-[11px] font-bold text-[#1e4676] uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-[#1e4676]"></span>
+                    <span className="text-[11px] font-bold text-[#104080] uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-[#104080]"></span>
                       Top Agents by Volume
                     </span>
                     <span className="text-[10px] text-gray-500 font-semibold">
@@ -751,11 +751,11 @@ export default function AedReportsScreen() {
                                 <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded ${badgeColor} shrink-0`}>
                                   #{idx + 1}
                                 </span>
-                                <span className="text-xs font-bold text-[#1e4676] truncate" title={item.name}>
+                                <span className="text-xs font-bold text-[#104080] truncate" title={item.name}>
                                   {item.name}
                                 </span>
                               </div>
-                              <span className="text-[10px] bg-[#f0f4f8] text-[#1e4676] font-semibold px-1.5 py-0.2 rounded border border-[#d2dfec] shrink-0">
+                              <span className="text-[10px] bg-[#f0f4f8] text-[#104080] font-semibold px-1.5 py-0.2 rounded border border-[#d2dfec] shrink-0">
                                 {item.count} {item.count === 1 ? 'order' : 'orders'}
                               </span>
                             </div>
@@ -771,7 +771,7 @@ export default function AedReportsScreen() {
 
                             <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
                               <div 
-                                className="bg-[#1e4676] h-full rounded-full transition-all duration-300" 
+                                className="bg-[#104080] h-full rounded-full transition-all duration-300" 
                                 style={{ width: `${Math.min(100, Math.max(2, parseFloat(pct)))}%` }}
                               ></div>
                             </div>
@@ -788,7 +788,7 @@ export default function AedReportsScreen() {
 
                 <div className="mt-2.5 pt-2 border-t border-[#e4e4e4] text-[10px] text-gray-500 flex justify-between items-center">
                   <span>Source: Booked Orders Ledger</span>
-                  <span className="font-semibold text-[#1e4676]">
+                  <span className="font-semibold text-[#104080]">
                     {agentLeaderboard.length > 5 ? `Top 5 of ${agentLeaderboard.length} shown` : 'Live Order Ranking'}
                   </span>
                 </div>

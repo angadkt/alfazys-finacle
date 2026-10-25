@@ -1,4 +1,5 @@
 import FinacleDatePicker from './FinacleDatePicker';
+import FinacleButton from './FinacleButton';
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
@@ -139,7 +140,7 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
 
           {/* Date Picker */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-[#1e4676] flex items-center justify-between">
+            <label className="text-[11px] font-bold text-[#104080] flex items-center justify-between">
               <span>Date: <span className="text-red-600">*</span></span>
               {loading && <span className="text-gray-400 font-normal italic text-[10px]">Loading...</span>}
             </label>
@@ -158,7 +159,7 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
 
           {/* Cost Rate Input */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-[#1e4676]">
+            <label className="text-[11px] font-bold text-[#104080]">
               Cost Rate: <span className="text-red-600">*</span>
             </label>
             <input 
@@ -168,7 +169,7 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
               placeholder="Enter cost rate (e.g. 22.8500)"
               value={costRateInput}
               onChange={(e) => setCostRateInput(e.target.value)}
-              className="bg-white border border-[#7f9db9] px-2 py-1.5 text-xs text-black font-mono font-semibold outline-none focus:border-[#1e4676] rounded-[2px]"
+              className="bg-white border border-[#7f9db9] px-2 py-1.5 text-xs text-black font-mono font-semibold outline-none focus:border-[#104080] rounded-[2px]"
               required
               autoFocus
             />
@@ -179,20 +180,20 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
 
           {/* Modal Footer Buttons */}
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#e2e8f0] mt-1">
-            <button
+            <FinacleButton
               type="button"
+              variant="retro"
               onClick={onClose}
-              className="bg-[#d4d0c8] hover:bg-[#e4e4e4] text-black px-3 py-1 text-[11px] font-bold border-t border-l border-white border-b border-r border-[#8f8f9d] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white cursor-pointer"
             >
               Cancel
-            </button>
-            <button
+            </FinacleButton>
+            <FinacleButton
               type="submit"
-              disabled={saving}
-              className="bg-[#1e4676] hover:bg-[#163559] disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-1 text-[11px] font-bold border border-[#0d2746] rounded-[2px] shadow-xs cursor-pointer flex items-center gap-1"
+              variant="primary"
+              loading={saving}
             >
-              {saving ? 'Saving...' : 'Save Cost Rate'}
-            </button>
+              Save Cost Rate
+            </FinacleButton>
           </div>
 
         </form>

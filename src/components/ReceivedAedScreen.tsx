@@ -233,7 +233,7 @@ export default function ReceivedAedScreen() {
       {/* Main Workspace */}
       <div className="flex-1 bg-white border border-[#a0a0a0] m-1 flex flex-col overflow-hidden">
         {/* Navigator Action Bar */}
-        <div className="flex items-center gap-3 px-3 py-1.5 bg-[#f8f9fa] border-b border-[#a0a0a0] text-[#1e4676] font-bold text-[11px]">
+        <div className="flex items-center gap-3 px-3 py-1.5 bg-[#f8f9fa] border-b border-[#a0a0a0] text-[#104080] font-bold text-[11px]">
           <span className="cursor-pointer text-[14px] leading-none hover:text-[#0a244d]">↗</span>
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span 
@@ -251,7 +251,7 @@ export default function ReceivedAedScreen() {
           </span>
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span className="text-gray-500 font-normal">
-            Total Records: <strong className="text-[#1e4676]">{total}</strong>
+            Total Records: <strong className="text-[#104080]">{total}</strong>
           </span>
         </div>
 
@@ -260,13 +260,13 @@ export default function ReceivedAedScreen() {
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Date Range: From & To */}
             <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">From:</span>
+              <span className="text-[#104080] font-bold text-[11px]">From:</span>
               <FinacleDatePicker
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
               />
-              <span className="text-[#1e4676] font-bold text-[11px] ml-1">To:</span>
+              <span className="text-[#104080] font-bold text-[11px] ml-1">To:</span>
               <FinacleDatePicker
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
@@ -285,11 +285,11 @@ export default function ReceivedAedScreen() {
 
             {/* Agent Filter */}
             <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">Agent:</span>
+              <span className="text-[#104080] font-bold text-[11px]">Agent:</span>
               <select
                 value={agentFilter}
                 onChange={(e) => setAgentFilter(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676] max-w-[180px] truncate"
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] max-w-[180px] truncate"
               >
                 <option value="">All Agents</option>
                 {customers.map((c) => (
@@ -311,11 +311,11 @@ export default function ReceivedAedScreen() {
 
             {/* Mode Filter */}
             <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">Mode:</span>
+              <span className="text-[#104080] font-bold text-[11px]">Mode:</span>
               <select
                 value={modeFilter}
                 onChange={(e) => setModeFilter(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080]"
               >
                 <option value="">All Modes</option>
                 <option value="CDM">CDM</option>
@@ -339,7 +339,7 @@ export default function ReceivedAedScreen() {
 
             <button
               onClick={() => fetchRecords(1, fromDate, toDate, modeFilter, agentFilter)}
-              className="bg-[#1e4676] text-white text-[11px] font-bold px-3 py-1 rounded hover:bg-[#15345b] cursor-pointer"
+              className="bg-[#104080] text-white text-[11px] font-bold px-3 py-1 rounded hover:bg-[#0c3266] cursor-pointer"
             >
               Apply Filter
             </button>
@@ -362,7 +362,7 @@ export default function ReceivedAedScreen() {
 
           {/* Quick Metrics */}
           <div className="flex items-center gap-3 text-xs">
-            <span className="bg-[#eef2f9] border border-[#c4d4ec] px-2.5 py-1 rounded text-[#1e4676]">
+            <span className="bg-[#eef2f9] border border-[#c4d4ec] px-2.5 py-1 rounded text-[#104080]">
               Total Collected: <strong>{totalAedShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong>
             </span>
             <span className="bg-[#fef9ec] border border-[#fae29c] px-2.5 py-1 rounded text-[#92400e]">
@@ -379,11 +379,11 @@ export default function ReceivedAedScreen() {
             </div>
           ) : records.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-              <span className="text-lg font-bold text-[#1e4676] mb-1">No Received AED Records Found</span>
+              <span className="text-lg font-bold text-[#104080] mb-1">No Received AED Records Found</span>
               <span className="text-xs text-gray-400 mb-3">Try clearing filters or add a new entry.</span>
               <button
                 onClick={handleOpenAdd}
-                className="bg-[#1e4676] text-white text-xs font-bold px-4 py-1.5 rounded hover:bg-[#15345b] cursor-pointer"
+                className="bg-[#104080] text-white text-xs font-bold px-4 py-1.5 rounded hover:bg-[#0c3266] cursor-pointer"
               >
                 + Create Received AED Entry
               </button>
@@ -391,17 +391,17 @@ export default function ReceivedAedScreen() {
           ) : (
             <table className="w-full text-[12px] border-collapse">
               <thead>
-                <tr className="bg-[#1e4676] text-white text-left sticky top-0 z-10 shadow-xs">
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">#</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Entry Date</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Agent / Customer</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">AED Amount</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Mode</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">UTR / Ref</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Cash Staff</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Remaining AED</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Description</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Created By</th>
+                <tr className="bg-[#104080] text-white text-left sticky top-0 z-10 shadow-xs">
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">#</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Entry Date</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Agent / Customer</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">AED Amount</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Mode</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">UTR / Ref</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Cash Staff</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Remaining AED</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Description</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Created By</th>
                   <th className="px-3 py-2 font-semibold whitespace-nowrap text-center">Actions</th>
                 </tr>
               </thead>
@@ -430,7 +430,7 @@ export default function ReceivedAedScreen() {
                       {parseFloat(rec.aed_amount || 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                     </td>
                     <td className="px-3 py-2 border-r border-[#e4e4e4]">
-                      <span className="bg-[#e8f0fb] text-[#1e4676] px-2 py-0.5 rounded font-bold text-[11px]">
+                      <span className="bg-[#e8f0fb] text-[#104080] px-2 py-0.5 rounded font-bold text-[11px]">
                         {rec.mode_of_txn}
                       </span>
                     </td>
@@ -455,7 +455,7 @@ export default function ReceivedAedScreen() {
                       <div className="flex items-center justify-center gap-3">
                         <button
                           onClick={() => handleEdit(rec)}
-                          className="text-[#1e4676] hover:underline font-bold text-[11px] cursor-pointer"
+                          className="text-[#104080] hover:underline font-bold text-[11px] cursor-pointer"
                         >
                           Edit
                         </button>
@@ -471,7 +471,7 @@ export default function ReceivedAedScreen() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-[#eef2f9] font-bold text-[#1e4676] border-t-2 border-[#c4d4ec]">
+                <tr className="bg-[#eef2f9] font-bold text-[#104080] border-t-2 border-[#c4d4ec]">
                   <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}>
                     Page Total ({records.length} records shown)
                   </td>
@@ -498,17 +498,17 @@ export default function ReceivedAedScreen() {
             <button
               disabled={page <= 1}
               onClick={() => fetchRecords(page - 1)}
-              className="bg-white border border-[#c4d4ec] px-3 py-1 rounded hover:bg-[#f0f4f8] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#1e4676]"
+              className="bg-white border border-[#c4d4ec] px-3 py-1 rounded hover:bg-[#f0f4f8] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#104080]"
             >
               Previous
             </button>
-            <span className="font-bold text-[#1e4676]">
+            <span className="font-bold text-[#104080]">
               Page {page} of {Math.max(1, Math.ceil(total / 50))}
             </span>
             <button
               disabled={page >= Math.ceil(total / 50)}
               onClick={() => fetchRecords(page + 1)}
-              className="bg-white border border-[#c4d4ec] px-3 py-1 rounded hover:bg-[#f0f4f8] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#1e4676]"
+              className="bg-white border border-[#c4d4ec] px-3 py-1 rounded hover:bg-[#f0f4f8] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#104080]"
             >
               Next
             </button>
@@ -558,7 +558,7 @@ export default function ReceivedAedScreen() {
                       autoComplete="off"
                       value={agentCustomer}
                       onChange={(e) => setAgentCustomer(e.target.value)}
-                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full text-xs"
+                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#104080] w-full text-xs"
                     />
                     <datalist id="received-aed-screen-agent-list">
                       {customers.map((c) => (
@@ -569,7 +569,7 @@ export default function ReceivedAedScreen() {
 
                   {/* Option A Calculation Info Banner */}
                   {agentBalanceInfo && (
-                    <div className="col-span-2 -my-1 p-2.5 bg-[#e2ebf6] rounded border border-[#b6cded] text-[11px] text-[#1e4676] flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                    <div className="col-span-2 -my-1 p-2.5 bg-[#e2ebf6] rounded border border-[#b6cded] text-[11px] text-[#104080] flex flex-wrap items-center justify-between gap-2 shadow-xs">
                       <div className="flex flex-wrap items-center gap-3">
                         <span>Booked: <strong>{agentBalanceInfo.booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong></span>
                         <span className="text-gray-400">•</span>
@@ -577,7 +577,7 @@ export default function ReceivedAedScreen() {
                         <span className="text-gray-400">•</span>
                         <span className="text-[#0d6e5a]">Pending: <strong>{agentBalanceInfo.pending_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong></span>
                       </div>
-                      <span className="bg-[#1e4676] text-white px-2 py-0.5 rounded text-[10px] font-bold tracking-wide">
+                      <span className="bg-[#104080] text-white px-2 py-0.5 rounded text-[10px] font-bold tracking-wide">
                         OPTION A AUTO-CALCULATED
                       </span>
                     </div>
@@ -595,7 +595,7 @@ export default function ReceivedAedScreen() {
                     onChange={(e) => handleAedAmountChange(e.target.value)}
                     placeholder="0.00"
                     autoFocus
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full font-bold text-gray-800"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#104080] w-full font-bold text-gray-800"
                   />
 
                   {/* Mode of Transaction */}
@@ -608,7 +608,7 @@ export default function ReceivedAedScreen() {
                       setModeOfTxn(e.target.value);
                       if (e.target.value !== 'BY CASH') setCashStaff('');
                     }}
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none focus:border-[#104080] w-full"
                   >
                     <option value="">Select Mode...</option>
                     <option value="CDM">CDM</option>
@@ -629,7 +629,7 @@ export default function ReceivedAedScreen() {
                     value={utrNo}
                     onChange={(e) => setUtrNo(e.target.value)}
                     placeholder="e.g. UTR / Bank Reference No"
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full text-xs"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#104080] w-full text-xs"
                   />
 
                   {/* Cash Staff */}
@@ -643,7 +643,7 @@ export default function ReceivedAedScreen() {
                         value={cashStaff}
                         onChange={(e) => setCashStaff(e.target.value)}
                         placeholder="Staff name"
-                        className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full"
+                        className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#104080] w-full"
                       />
                     </>
                   )}
@@ -660,7 +660,7 @@ export default function ReceivedAedScreen() {
                       value={remainingAed}
                       onChange={(e) => setRemainingAed(e.target.value)}
                       placeholder="0.00"
-                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#104080] w-full"
                     />
                     <span className="text-[10px] text-gray-500 italic mt-0.5 block">
                       Auto-calculated from Booked AED − Received AED − This Entry. Editable if manual override is needed.
@@ -676,7 +676,7 @@ export default function ReceivedAedScreen() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Enter remarks or description..."
-                    className="border border-[#c4d4ec] rounded-md p-2 bg-white focus:outline-none focus:border-[#1e4676] w-full text-xs"
+                    className="border border-[#c4d4ec] rounded-md p-2 bg-white focus:outline-none focus:border-[#104080] w-full text-xs"
                   />
                 </div>
 
@@ -685,7 +685,7 @@ export default function ReceivedAedScreen() {
                   <button
                     disabled={submitting}
                     onClick={handleSubmit}
-                    className="bg-[#1e4676] text-white rounded-md px-6 py-2 shadow-sm font-bold hover:bg-[#15345b] text-[13px] disabled:opacity-50 cursor-pointer"
+                    className="bg-[#104080] text-white rounded-md px-6 py-2 shadow-sm font-bold hover:bg-[#0c3266] text-[13px] disabled:opacity-50 cursor-pointer"
                   >
                     {submitting ? 'Saving...' : editingId ? 'Update Entry' : 'Submit Entry'}
                   </button>

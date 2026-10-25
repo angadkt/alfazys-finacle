@@ -13,7 +13,7 @@ export default function DashboardPage() {
         
         {/* Placeholder Dashboard Background */}
         <div className="opacity-20 text-center select-none pointer-events-none">
-          <h1 className="text-5xl font-bold text-[#1e4676]">Infazys Finacle</h1>
+          <h1 className="text-5xl font-bold text-[#104080]">Infazys Finacle</h1>
           <p className="text-xl mt-3 font-semibold text-gray-600">Universal Payment Solution Dashboard</p>
         </div>
         

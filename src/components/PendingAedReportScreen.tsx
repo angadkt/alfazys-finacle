@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import FinacleDatePicker from './FinacleDatePicker';
+import FinacleBadge from './FinacleBadge';
 import api from '../services/api';
 import { FileSpreadsheet, FileText, RefreshCw, Eye, ArrowUpDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -378,7 +379,7 @@ export default function PendingAedReportScreen() {
 
           <button
             onClick={fetchReport}
-            className="bg-[#1e4676] text-white font-bold text-[12px] px-3 py-1.5 rounded shadow-xs hover:bg-[#15345b] flex items-center gap-1.5 cursor-pointer"
+            className="bg-[#104080] text-white font-bold text-[12px] px-3 py-1.5 rounded shadow-xs hover:bg-[#0c3266] flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -389,7 +390,7 @@ export default function PendingAedReportScreen() {
       {/* Main Workspace */}
       <div className="flex-1 bg-white border border-[#a0a0a0] m-1 flex flex-col overflow-hidden">
         {/* Navigator Action Strip */}
-        <div className="flex items-center gap-3 px-3 py-1.5 bg-[#f8f9fa] border-b border-[#a0a0a0] text-[#1e4676] font-bold text-[11px]">
+        <div className="flex items-center gap-3 px-3 py-1.5 bg-[#f8f9fa] border-b border-[#a0a0a0] text-[#104080] font-bold text-[11px]">
           <span className="cursor-pointer text-[14px] leading-none hover:text-[#0a244d]">↗</span>
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span>Active Period: <strong className="text-gray-800">{dateRangeLabel}</strong></span>
@@ -419,13 +420,13 @@ export default function PendingAedReportScreen() {
 
           {/* Card 2: Total Booked Orders */}
           <div className="bg-[#f0f4f8] border border-[#c4d4ec] rounded p-2.5 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[11px] font-bold text-[#1e4676]">
+            <div className="flex items-center justify-between text-[11px] font-bold text-[#104080]">
               <span>TOTAL BOOKED ORDERS</span>
-              <span className="bg-[#e2ebf6] px-1.5 py-0.5 rounded text-[10px] text-[#1e4676] font-bold">
+              <span className="bg-[#e2ebf6] px-1.5 py-0.5 rounded text-[10px] text-[#104080] font-bold">
                 {records.reduce((s, r) => s + r.order_count, 0)} ORDERS
               </span>
             </div>
-            <div className="text-[18px] font-black text-[#1e4676] font-mono mt-1">
+            <div className="text-[18px] font-black text-[#104080] font-mono mt-1">
               {summary.total_booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} <span className="text-[12px]">AED</span>
             </div>
             <span className="text-[10px] text-gray-500 mt-0.5">
@@ -453,7 +454,7 @@ export default function PendingAedReportScreen() {
           <div className="bg-[#f8fafc] border border-[#cbd5e1] rounded p-2.5 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center justify-between text-[11px] font-bold text-[#334155]">
               <span>COLLECTION PERFORMANCE</span>
-              <span className="text-[11px] font-extrabold text-[#1e4676]">
+              <span className="text-[11px] font-extrabold text-[#104080]">
                 {summary.collection_rate_pct.toFixed(1)}%
               </span>
             </div>
@@ -483,14 +484,14 @@ export default function PendingAedReportScreen() {
           <div className="flex flex-wrap items-center gap-2">
             {/* From - To Date Pickers */}
             <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">From:</span>
+              <span className="text-[#104080] font-bold text-[11px]">From:</span>
               <FinacleDatePicker
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
               />
 
-              <span className="text-[#1e4676] font-bold text-[11px] ml-0.5">To:</span>
+              <span className="text-[#104080] font-bold text-[11px] ml-0.5">To:</span>
               <FinacleDatePicker
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
@@ -501,14 +502,14 @@ export default function PendingAedReportScreen() {
                 <button
                   type="button"
                   onClick={handleSetToday}
-                  className="bg-[#1e4676] hover:bg-[#15345b] text-white px-1.5 py-0.5 text-[10px] font-bold rounded cursor-pointer"
+                  className="bg-[#104080] hover:bg-[#0c3266] text-white px-1.5 py-0.5 text-[10px] font-bold rounded cursor-pointer"
                 >
                   Today
                 </button>
                 <button
                   type="button"
                   onClick={handleSetThisMonth}
-                  className="bg-white border border-[#c4d4ec] text-[#1e4676] hover:bg-[#eaf0f8] px-1.5 py-0.5 text-[10px] font-bold rounded cursor-pointer"
+                  className="bg-white border border-[#c4d4ec] text-[#104080] hover:bg-[#eaf0f8] px-1.5 py-0.5 text-[10px] font-bold rounded cursor-pointer"
                 >
                   This Month
                 </button>
@@ -527,14 +528,14 @@ export default function PendingAedReportScreen() {
 
             {/* Agent Search Filter */}
             <div className="flex items-center gap-1 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">Agent:</span>
+              <span className="text-[#104080] font-bold text-[11px]">Agent:</span>
               <input
                 type="text"
                 list="pending-aed-agent-list"
                 value={agentSearch}
                 onChange={(e) => setAgentSearch(e.target.value)}
                 placeholder="Search Agent / CIF..."
-                className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 w-[160px] h-[26px] focus:outline-none focus:border-[#1e4676]"
+                className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 w-[160px] h-[26px] focus:outline-none focus:border-[#104080]"
               />
               <datalist id="pending-aed-agent-list">
                 {customers.map((c) => (
@@ -554,11 +555,11 @@ export default function PendingAedReportScreen() {
 
             {/* Status Filter */}
             <div className="flex items-center gap-1 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <span className="text-[#1e4676] font-bold text-[11px]">Status:</span>
+              <span className="text-[#104080] font-bold text-[11px]">Status:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676] h-[26px]"
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] h-[26px]"
               >
                 <option value="pending_only">Pending Collection Only</option>
                 <option value="all">All Statuses</option>
@@ -570,11 +571,11 @@ export default function PendingAedReportScreen() {
 
             {/* Sort Filter */}
             <div className="flex items-center gap-1 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <ArrowUpDown className="w-3 h-3 text-[#1e4676]" />
+              <ArrowUpDown className="w-3 h-3 text-[#104080]" />
               <select
                 value={sortBy}
                 onChange={(e: any) => setSortBy(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676] h-[26px]"
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] h-[26px]"
               >
                 <option value="pending_desc">Pending AED: Highest First</option>
                 <option value="pending_asc">Pending AED: Lowest First</option>
@@ -585,7 +586,7 @@ export default function PendingAedReportScreen() {
           </div>
 
           <span className="text-[11px] text-gray-500 font-medium">
-            Showing <strong className="text-[#1e4676]">{sortedRecords.length}</strong> agent record{sortedRecords.length !== 1 ? 's' : ''}
+            Showing <strong className="text-[#104080]">{sortedRecords.length}</strong> agent record{sortedRecords.length !== 1 ? 's' : ''}
           </span>
         </div>
 
@@ -593,12 +594,12 @@ export default function PendingAedReportScreen() {
         <div className="flex-1 overflow-auto bg-white">
           {loading ? (
             <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
-              <RefreshCw className="w-4 h-4 mr-2 animate-spin text-[#1e4676]" />
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin text-[#104080]" />
               Loading Pending AED report data...
             </div>
           ) : sortedRecords.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-              <span className="text-lg font-bold text-[#1e4676] mb-1">No Pending AED Records Found</span>
+              <span className="text-lg font-bold text-[#104080] mb-1">No Pending AED Records Found</span>
               <span className="text-xs text-gray-400 mb-3">
                 {statusFilter === 'pending_only'
                   ? 'All agents are currently settled with zero pending balance in this period.'
@@ -612,7 +613,7 @@ export default function PendingAedReportScreen() {
                   setToDate('');
                   setAgentSearch('');
                 }}
-                className="bg-[#1e4676] text-white text-xs font-bold px-4 py-1.5 rounded hover:bg-[#15345b] cursor-pointer"
+                className="bg-[#104080] text-white text-xs font-bold px-4 py-1.5 rounded hover:bg-[#0c3266] cursor-pointer"
               >
                 Reset All Filters
               </button>
@@ -620,16 +621,16 @@ export default function PendingAedReportScreen() {
           ) : (
             <table className="w-full text-[12px] border-collapse">
               <thead>
-                <tr className="bg-[#1e4676] text-white text-left sticky top-0 z-10 shadow-xs">
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">#</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">CIF No</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Agent / Customer Name</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap text-center">Orders</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap text-right">Booked AED</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap text-right">Collected AED</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap text-right">Pending to Collect (AED)</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap text-center min-w-[120px]">Collection %</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap text-center">Status</th>
+                <tr className="bg-[#104080] text-white text-left sticky top-0 z-10 shadow-xs">
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">#</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">CIF No</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Agent / Customer Name</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-center">Orders</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-right">Booked AED</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-right">Collected AED</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-right">Pending to Collect (AED)</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-center min-w-[120px]">Collection %</th>
+                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-center">Status</th>
                   <th className="px-3 py-2 font-semibold whitespace-nowrap text-center">Statement</th>
                 </tr>
               </thead>
@@ -659,12 +660,12 @@ export default function PendingAedReportScreen() {
                       </td>
 
                       <td className="px-3 py-2 border-r border-[#e4e4e4] text-center font-bold text-gray-700">
-                        <span className="bg-[#eaf0f8] px-2 py-0.5 rounded text-[11px] text-[#1e4676]">
+                        <span className="bg-[#eaf0f8] px-2 py-0.5 rounded text-[11px] text-[#104080]">
                           {rec.order_count}
                         </span>
                       </td>
 
-                      <td className="px-3 py-2 border-r border-[#e4e4e4] text-right font-mono font-bold text-[#1e4676] whitespace-nowrap">
+                      <td className="px-3 py-2 border-r border-[#e4e4e4] text-right font-mono font-bold text-[#104080] whitespace-nowrap">
                         {rec.booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                       </td>
 
@@ -700,17 +701,11 @@ export default function PendingAedReportScreen() {
 
                       <td className="px-3 py-2 border-r border-[#e4e4e4] text-center whitespace-nowrap">
                         {isSettled ? (
-                          <span className="bg-[#dcfce7] text-[#15803d] border border-[#bbf7d0] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase">
-                            Settled
-                          </span>
+                          <FinacleBadge variant="success" dot>Settled</FinacleBadge>
                         ) : isPartial ? (
-                          <span className="bg-[#fef3c7] text-[#b45309] border border-[#fde68a] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase">
-                            Partial
-                          </span>
+                          <FinacleBadge variant="warning" dot>Partial</FinacleBadge>
                         ) : (
-                          <span className="bg-[#fee2e2] text-[#b91c1c] border border-[#fecaca] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase">
-                            Uncollected
-                          </span>
+                          <FinacleBadge variant="danger" dot>Uncollected</FinacleBadge>
                         )}
                       </td>
 
@@ -719,7 +714,7 @@ export default function PendingAedReportScreen() {
                           <button
                             type="button"
                             onClick={() => handleOpenPartyDetails(rec)}
-                            className="bg-[#1e4676] hover:bg-[#15345b] text-white px-2.5 py-1 rounded text-[11px] font-bold shadow-xs cursor-pointer inline-flex items-center gap-1"
+                            className="bg-[#104080] hover:bg-[#0c3266] text-white px-2.5 py-1 rounded text-[11px] font-bold shadow-xs cursor-pointer inline-flex items-center gap-1"
                           >
                             <Eye className="w-3 h-3" />
                             <span>Statement</span>
@@ -733,14 +728,14 @@ export default function PendingAedReportScreen() {
                 })}
               </tbody>
               <tfoot>
-                <tr className="bg-[#eef2f9] font-bold text-[#1e4676] border-t-2 border-[#c4d4ec] sticky bottom-0 z-10 shadow-xs">
+                <tr className="bg-[#eef2f9] font-bold text-[#104080] border-t-2 border-[#c4d4ec] sticky bottom-0 z-10 shadow-xs">
                   <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}>
                     Report Total ({sortedRecords.length} parties displayed)
                   </td>
                   <td className="px-3 py-2 border-r border-[#c4d4ec] text-center">
                     {sortedRecords.reduce((s, r) => s + r.order_count, 0)}
                   </td>
-                  <td className="px-3 py-2 border-r border-[#c4d4ec] text-right text-[#1e4676] font-mono whitespace-nowrap">
+                  <td className="px-3 py-2 border-r border-[#c4d4ec] text-right text-[#104080] font-mono whitespace-nowrap">
                     {sortedRecords.reduce((s, r) => s + r.booked_aed, 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                   </td>
                   <td className="px-3 py-2 border-r border-[#c4d4ec] text-right text-[#166534] font-mono whitespace-nowrap">
@@ -770,12 +765,12 @@ export default function PendingAedReportScreen() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <div className="bg-white shadow-2xl flex flex-col w-full max-w-5xl max-h-[90vh] rounded-md overflow-hidden pointer-events-auto border border-[#c4d4ec]">
               {/* Header */}
-              <div className="bg-[#1e4676] text-white px-5 py-3 font-bold text-[14px] flex items-center justify-between shrink-0">
+              <div className="bg-[#104080] text-white px-5 py-3 font-bold text-[14px] flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                   <span>Party Statement:</span>
                   <span className="text-amber-300 font-extrabold">{selectedParty.party_name}</span>
                   {selectedParty.cif_no && (
-                    <span className="bg-[#2a5a9a] text-white px-2 py-0.5 rounded text-xs font-mono">
+                    <span className="bg-[#20549c] text-white px-2 py-0.5 rounded text-xs font-mono">
                       {selectedParty.cif_no}
                     </span>
                   )}
@@ -793,7 +788,7 @@ export default function PendingAedReportScreen() {
               <div className="bg-[#f0f4f8] border-b border-[#c4d4ec] px-5 py-3 grid grid-cols-3 gap-4 shrink-0">
                 <div className="bg-white border border-[#c4d4ec] rounded p-2 text-center">
                   <div className="text-[10px] text-gray-500 font-bold uppercase">Total Booked AED</div>
-                  <div className="text-[15px] font-black text-[#1e4676] font-mono">
+                  <div className="text-[15px] font-black text-[#104080] font-mono">
                     {selectedParty.booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                   </div>
                   <span className="text-[9.5px] text-gray-500">{selectedParty.order_count} Orders</span>
@@ -822,7 +817,7 @@ export default function PendingAedReportScreen() {
               <div className="flex-1 overflow-auto p-4 flex flex-col gap-4">
                 {loadingDetails ? (
                   <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin text-[#1e4676]" />
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin text-[#104080]" />
                     Loading detailed party transactions...
                   </div>
                 ) : !partyDetails ? (
@@ -831,7 +826,7 @@ export default function PendingAedReportScreen() {
                   <>
                     {/* Section 1: Booked Orders */}
                     <div>
-                      <h5 className="font-bold text-[#1e4676] text-[12px] uppercase tracking-wide mb-1 flex items-center justify-between">
+                      <h5 className="font-bold text-[#104080] text-[12px] uppercase tracking-wide mb-1 flex items-center justify-between">
                         <span>1. Booked Orders ({partyDetails.orders?.length || 0})</span>
                         <span className="text-gray-500 font-normal">
                           Total: <strong>{partyDetails.booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong>
@@ -839,7 +834,7 @@ export default function PendingAedReportScreen() {
                       </h5>
                       <div className="border border-[#c4d4ec] rounded overflow-hidden max-h-[200px] overflow-auto">
                         <table className="w-full text-[11px] border-collapse">
-                          <thead className="bg-[#f0f4f8] text-[#1e4676] font-bold sticky top-0 border-b border-[#c4d4ec]">
+                          <thead className="bg-[#f0f4f8] text-[#104080] font-bold sticky top-0 border-b border-[#c4d4ec]">
                             <tr>
                               <th className="px-2 py-1.5 text-left">Order No</th>
                               <th className="px-2 py-1.5 text-left">Date</th>
@@ -853,7 +848,7 @@ export default function PendingAedReportScreen() {
                           <tbody>
                             {(partyDetails.orders || []).map((o: any) => (
                               <tr key={o.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                <td className="px-2 py-1 font-mono font-bold text-[#1e4676]">{o.order_no}</td>
+                                <td className="px-2 py-1 font-mono font-bold text-[#104080]">{o.order_no}</td>
                                 <td className="px-2 py-1 whitespace-nowrap">{o.order_date ? o.order_date.slice(0, 10) : '—'}</td>
                                 <td className="px-2 py-1 font-medium">{o.receiver_name || 'Multiple / See Order'}</td>
                                 <td className="px-2 py-1 text-right font-mono font-bold text-[#0f5132]">
@@ -900,7 +895,7 @@ export default function PendingAedReportScreen() {
                             {(partyDetails.received_entries || []).map((r: any) => (
                               <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50">
                                 <td className="px-2 py-1 whitespace-nowrap">{r.entry_date ? r.entry_date.slice(0, 10) : '—'}</td>
-                                <td className="px-2 py-1 font-bold text-[#1e4676]">{r.mode_of_txn}</td>
+                                <td className="px-2 py-1 font-bold text-[#104080]">{r.mode_of_txn}</td>
                                 <td className="px-2 py-1 font-mono text-gray-700">{r.utr_no || '—'}</td>
                                 <td className="px-2 py-1 text-right font-mono font-bold text-[#166534]">
                                   {parseFloat(r.aed_amount || 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
@@ -928,7 +923,7 @@ export default function PendingAedReportScreen() {
                 <button
                   type="button"
                   onClick={() => setSelectedParty(null)}
-                  className="bg-[#1e4676] text-white px-4 py-1 rounded text-xs font-bold hover:bg-[#15345b] cursor-pointer"
+                  className="bg-[#104080] text-white px-4 py-1 rounded text-xs font-bold hover:bg-[#0c3266] cursor-pointer"
                 >
                   Close
                 </button>

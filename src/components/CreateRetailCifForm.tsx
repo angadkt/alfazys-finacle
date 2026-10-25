@@ -263,10 +263,10 @@ export default function CreateRetailCifForm() {
         
         {/* Selected Function and CIF ID */}
         <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-2 text-[12px] text-black items-center w-fit">
-          <span className="font-bold text-[#1e4676]">Function:</span>
+          <span className="font-bold text-[#104080]">Function:</span>
           <span className="bg-white px-2 border border-[#a0a0a0] min-w-[150px] h-[22px] flex items-center shadow-[inset_1px_1px_2px_rgba(0,0,0,0.2)]">{selectedFunction || ''}</span>
           
-          <span className="font-bold text-[#1e4676]">CIF ID:</span>
+          <span className="font-bold text-[#104080]">CIF ID:</span>
           <span className="bg-white px-2 border border-[#a0a0a0] min-w-[150px] h-[22px] flex items-center shadow-[inset_1px_1px_2px_rgba(0,0,0,0.2)]">{inputCifId || ''}</span>
         </div>
       </div>

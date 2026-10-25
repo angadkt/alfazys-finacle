@@ -716,7 +716,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             className="flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded text-xs font-bold shadow-xs cursor-pointer"
             title="Transfer working float directly between two servicers"
           >
-            <ArrowLeftRight className="w-3.5 h-3.5 text-amber-300" /> ⇄ Inter-Servicer Transfer
+            <ArrowLeftRight className="w-3.5 h-3.5 text-amber-300" /> Inter-Servicer Transfer
           </button>
           <button
             onClick={() => { setModalError(""); setIsConvertOpen(true); }}
@@ -949,7 +949,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 statementFromDate === new Date().toISOString().slice(0, 10) &&
                 statementToDate === new Date().toISOString().slice(0, 10)
                   ? "bg-[#104080] text-white"
-                  : "hover:bg-[#e6edf8] text-[#1e4676]"
+                  : "hover:bg-[#e6edf8] text-[#104080]"
               }`}
             >
               Today
@@ -963,7 +963,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 setStatementFromDate(yest);
                 setStatementToDate(yest);
               }}
-              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#1e4676] rounded cursor-pointer"
+              className="px-2 py-0.5 text-[11px] font-bold hover:bg-[#e6edf8] text-[#104080] rounded cursor-pointer"
             >
               Yesterday
             </button>
@@ -976,7 +976,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
               className={`px-2 py-0.5 text-[11px] font-bold rounded cursor-pointer transition-colors ${
                 !statementFromDate && !statementToDate
                   ? "bg-[#104080] text-white"
-                  : "hover:bg-[#e6edf8] text-[#1e4676]"
+                  : "hover:bg-[#e6edf8] text-[#104080]"
               }`}
             >
               All Time
@@ -1066,9 +1066,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
 
       {/* Statement Table */}
       <div className="flex-1 overflow-auto custom-scrollbar p-3">
-        <div className="border border-[#c4d4ec] rounded-xs overflow-hidden shadow-2xs bg-white">
+        <div className="border border-[#c4d4ec] rounded-xs shadow-2xs bg-white relative">
           <table className="w-full text-left border-collapse">
-            <thead>
+            <thead className="sticky top-0 z-10 bg-[#f0f4f8] shadow-[0_1px_0_0_#c4d4ec]">
               <tr className="bg-[#f0f4f8] border-b border-[#c4d4ec] text-[10px] font-extrabold text-[#104080] uppercase tracking-wider select-none">
                 <th 
                   onClick={() => setStatementSortOrder(prev => prev === "asc" ? "desc" : "asc")}

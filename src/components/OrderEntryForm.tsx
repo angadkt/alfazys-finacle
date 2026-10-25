@@ -965,7 +965,7 @@ export default function OrderEntryForm() {
         </div>
 
         <div className="flex items-center gap-2 text-[11px]">
-          <span className="font-bold text-[#1e4676]">Function:</span>
+          <span className="font-bold text-[#104080]">Function:</span>
           <select 
             value={selectedFunction} 
             onChange={(e) => setSelectedFunction(e.target.value)}
@@ -985,7 +985,7 @@ export default function OrderEntryForm() {
         <div className="flex-1 bg-white border border-[#a0a0a0] m-1 pr-3 pb-3 flex flex-col overflow-auto">
         
         {/* Navigator Bar */}
-        <div className="flex items-center gap-2 px-2 py-1 bg-[#f8f9fa] border-y border-[#a0a0a0] text-[#1e4676] font-bold text-[11px] w-fit">
+        <div className="flex items-center gap-2 px-2 py-1 bg-[#f8f9fa] border-y border-[#a0a0a0] text-[#104080] font-bold text-[11px] w-fit">
           <span className="cursor-pointer text-[14px] leading-none hover:text-[#0a244d]">↗</span>
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span 
@@ -1006,12 +1006,12 @@ export default function OrderEntryForm() {
 
         <div className="p-4 bg-white overflow-auto flex-1">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <h3 className="font-bold text-[#1e4676] text-sm tracking-wide">Fetched Orders List</h3>
+              <h3 className="font-bold text-[#104080] text-sm tracking-wide">Fetched Orders List</h3>
               
               <div className="flex flex-wrap items-center gap-2">
                 {/* Date Filter (Option A: From & To Range with Single-Day / Today Shortcut) */}
                 <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-                  <span className="text-[#1e4676] font-bold text-[11px]">From:</span>
+                  <span className="text-[#104080] font-bold text-[11px]">From:</span>
                   <FinacleDatePicker
                     value={filterFromDate}
                     onChange={(e) => {
@@ -1021,7 +1021,7 @@ export default function OrderEntryForm() {
                     className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[115px] h-[26px]"
                   />
 
-                  <span className="text-[#1e4676] font-bold text-[11px] ml-0.5">To:</span>
+                  <span className="text-[#104080] font-bold text-[11px] ml-0.5">To:</span>
                   <FinacleDatePicker
                     value={filterToDate}
                     onChange={(e) => {
@@ -1042,7 +1042,7 @@ export default function OrderEntryForm() {
                         setCurrentPage(1);
                         fetchOrders(1, searchQuery, todayStr, todayStr, filterAgent);
                       }}
-                      className="bg-[#1e4676] hover:bg-[#15345b] text-white px-2 py-0.5 text-[10px] font-bold rounded shadow-2xs cursor-pointer transition-colors"
+                      className="bg-[#104080] hover:bg-[#0c3266] text-white px-2 py-0.5 text-[10px] font-bold rounded shadow-2xs cursor-pointer transition-colors"
                       title="Filter for Today's Orders (Single Day)"
                     >
                       Today
@@ -1068,14 +1068,14 @@ export default function OrderEntryForm() {
 
                 {/* Agent / Customer Filter */}
                 <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-                  <span className="text-[#1e4676] font-bold text-[11px]">Agent:</span>
+                  <span className="text-[#104080] font-bold text-[11px]">Agent:</span>
                   <select
                     value={filterAgent}
                     onChange={(e) => {
                       setFilterAgent(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676] max-w-[180px]"
+                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] max-w-[180px]"
                   >
                     <option value="">All Agents / Customers</option>
                     {customers.map((c) => (
@@ -1105,7 +1105,7 @@ export default function OrderEntryForm() {
                       setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="border border-[#c4d4ec] pl-3 pr-6 py-1 rounded text-xs focus:outline-none focus:border-[#1e4676] w-64 sm:w-72"
+                    className="border border-[#c4d4ec] pl-3 pr-6 py-1 rounded text-xs focus:outline-none focus:border-[#104080] w-64 sm:w-72"
                   />
                   {searchQuery && (
                     <button
@@ -1248,8 +1248,8 @@ export default function OrderEntryForm() {
 
               {/* ── Group 2: INR Remittances (3 Cards) ── */}
               <div>
-                <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#1e4676] mb-1 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#1e4676]"></span>
+                <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080] mb-1 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#104080]"></span>
                   INR Remittances (Beneficiary Payouts)
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -1257,14 +1257,14 @@ export default function OrderEntryForm() {
                   <div className="bg-[#f8f9fc] border border-[#c4d4ec] rounded-sm px-2.5 py-1.5 flex flex-col justify-between shadow-2xs">
                     <div>
                       <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#1e4676]">Total INR Amount</span>
-                        <span className="text-[9px] font-bold text-[#1e4676] bg-[#eef3fb] border border-[#c4d4ec] px-1.5 py-0.2 rounded-full">
+                        <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080]">Total INR Amount</span>
+                        <span className="text-[9px] font-bold text-[#104080] bg-[#eef3fb] border border-[#c4d4ec] px-1.5 py-0.2 rounded-full">
                           Total Obligation
                         </span>
                       </div>
                       <div className="flex items-baseline gap-1 mt-0.5">
-                        <span className="text-[10px] font-bold text-[#1e4676]">INR</span>
-                        <span className="text-[15px] font-extrabold text-[#1e4676] tracking-tight font-mono">
+                        <span className="text-[10px] font-bold text-[#104080]">INR</span>
+                        <span className="text-[15px] font-extrabold text-[#104080] tracking-tight font-mono">
                           ₹ {totalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -1335,7 +1335,7 @@ export default function OrderEntryForm() {
               <>
               <table className="w-full text-left border-collapse text-[12px]">
                 <thead>
-                  <tr className="bg-[#1e4676] text-white">
+                  <tr className="bg-[#104080] text-white">
                     <th className="p-2 border border-[#a0a0a0] w-6"></th>
                     <th className="p-2 border border-[#a0a0a0]">Order No</th>
                     <th className="p-2 border border-[#a0a0a0]">Date</th>
@@ -1374,19 +1374,19 @@ export default function OrderEntryForm() {
                         <tr
                           key={o.id}
                           className={`cursor-pointer transition-colors ${
-                            isExpanded ? 'bg-[#eef3fb] border-l-4 border-l-[#1e4676]' : 'hover:bg-[#f5f8fc]'
+                            isExpanded ? 'bg-[#eef3fb] border-l-4 border-l-[#104080]' : 'hover:bg-[#f5f8fc]'
                           }`}
                           onClick={() => setExpandedOrderId(isExpanded ? null : o.id)}
                         >
                           {/* Expand toggle */}
-                          <td className="p-2 border border-[#c4d4ec] text-center text-[#1e4676] font-bold select-none">
+                          <td className="p-2 border border-[#c4d4ec] text-center text-[#104080] font-bold select-none">
                             {isExpanded ? '▾' : '▸'}
                           </td>
                           <td className="p-2 border border-[#c4d4ec] font-bold text-blue-800 whitespace-nowrap">{o.order_no}</td>
                           <td className="p-2 border border-[#c4d4ec] font-bold whitespace-nowrap">{(o.order_date || '').split('T')[0]}</td>
                           <td className="p-2 border border-[#c4d4ec] font-bold text-gray-900">{o.party_name || o.party_id || 'N/A'}</td>
                           <td className="p-2 border border-[#c4d4ec]">
-                            <span className="bg-[#e8eef8] text-[#1e4676] border border-[#c4d4ec] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            <span className="bg-[#e8eef8] text-[#104080] border border-[#c4d4ec] text-[10px] font-bold px-2 py-0.5 rounded-full">
                               {recs.length} {recs.length === 1 ? 'receiver' : 'receivers'}
                             </span>
                           </td>
@@ -1457,7 +1457,7 @@ export default function OrderEntryForm() {
                           <tr key={`${o.id}-detail`}>
                             <td colSpan={13} className="p-0 border-x border-b border-[#c4d4ec] bg-[#f5f8ff]">
                               <div className="px-6 py-3">
-                                <div className="text-[11px] font-extrabold text-[#1e4676] uppercase tracking-wider mb-2">
+                                <div className="text-[11px] font-extrabold text-[#104080] uppercase tracking-wider mb-2">
                                   Receiver Payment Details — {o.order_no}
                                 </div>
                                 {recs.length === 0 ? (
@@ -1465,7 +1465,7 @@ export default function OrderEntryForm() {
                                 ) : (
                                   <table className="w-full text-left border-collapse text-[11px]">
                                     <thead>
-                                      <tr className="bg-[#dce6f7] text-[#1e4676]">
+                                      <tr className="bg-[#dce6f7] text-[#104080]">
                                         <th className="p-1.5 border border-[#c4d4ec] font-bold">#</th>
                                         <th className="p-1.5 border border-[#c4d4ec] font-bold">Client / Beneficiary</th>
                                         <th className="p-1.5 border border-[#c4d4ec] font-bold">Account Number</th>
@@ -1537,7 +1537,7 @@ export default function OrderEntryForm() {
                                                     e.stopPropagation();
                                                     handleReceiverPaymentStatus(o.id, idx, 'Partial');
                                                   }}
-                                                  className="text-[9.5px] text-[#1e4676] hover:underline font-semibold block mt-1"
+                                                  className="text-[9.5px] text-[#104080] hover:underline font-semibold block mt-1"
                                                   title="Click to edit transferred amount"
                                                 >
                                                   Edit Paid: ₹{(parseFloat(rec.paid_amount) || 0).toLocaleString('en-IN')}
@@ -1585,7 +1585,7 @@ export default function OrderEntryForm() {
               </table>
               
               {!loadingOrders && totalPages > 1 && (
-                <div className="flex items-center justify-end gap-4 mt-4 text-[12px] text-[#1e4676]">
+                <div className="flex items-center justify-end gap-4 mt-4 text-[12px] text-[#104080]">
                   <button 
                     disabled={currentPage === 1} 
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -1874,7 +1874,7 @@ export default function OrderEntryForm() {
 
                   return (
                     <div className="mt-2">
-                      <div className="font-medium text-[#1e4676] mb-2 text-[14px]">Added Accounts ({accounts.length})</div>
+                      <div className="font-medium text-[#104080] mb-2 text-[14px]">Added Accounts ({accounts.length})</div>
                       <div className="border border-[#c4d4ec] rounded-md overflow-hidden shadow-xs">
                         <table className="w-full text-left text-[13px] border-collapse">
                           <thead className="bg-[#eef2f9] border-b border-[#c4d4ec]">
@@ -1900,7 +1900,7 @@ export default function OrderEntryForm() {
                                   <td className="p-3 border-r border-[#e4e4e4]">{acc.accountNumber}</td>
                                   <td className="p-3 border-r border-[#e4e4e4]">{acc.bankName} ({acc.ifscCode})</td>
                                   <td className="p-3 border-r border-[#e4e4e4]">{acc.branchName}</td>
-                                  <td className="p-3 border-r border-[#e4e4e4] font-medium text-[#1e4676]">
+                                  <td className="p-3 border-r border-[#e4e4e4] font-medium text-[#104080]">
                                     ₹{inr.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                   </td>
                                   <td className="p-3 border-r border-[#e4e4e4] font-semibold text-gray-800">
@@ -1928,10 +1928,10 @@ export default function OrderEntryForm() {
                           </tbody>
                           <tfoot className="bg-[#eef2f9] border-t-2 border-[#c4d4ec] font-bold text-[13px]">
                             <tr>
-                              <td colSpan={4} className="p-3 text-right text-[#1e4676] uppercase tracking-wider text-[12px] border-r border-[#c4d4ec]">
+                              <td colSpan={4} className="p-3 text-right text-[#104080] uppercase tracking-wider text-[12px] border-r border-[#c4d4ec]">
                                 Total:
                               </td>
-                              <td className="p-3 text-[#1e4676] border-r border-[#c4d4ec]">
+                              <td className="p-3 text-[#104080] border-r border-[#c4d4ec]">
                                 ₹{totalAddedInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="p-3 text-[#0f5132] border-r border-[#c4d4ec]">
@@ -1987,7 +1987,7 @@ export default function OrderEntryForm() {
                     i
                   </div>
                   <div className="text-[12px] text-black">
-                    <div className="font-bold text-[#1e4676]">{existingDailyOrder ? `Accounts Appended to Order ${orderRef} Successfully.` : `Order ${orderRef} Registered Successfully.`}</div>
+                    <div className="font-bold text-[#104080]">{existingDailyOrder ? `Accounts Appended to Order ${orderRef} Successfully.` : `Order ${orderRef} Registered Successfully.`}</div>
                   </div>
                 </div>
               </div>
@@ -2063,7 +2063,7 @@ export default function OrderEntryForm() {
                       autoComplete="off"
                       value={receivedAedAgent}
                       onChange={(e) => setReceivedAedAgent(e.target.value)}
-                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full text-xs"
+                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#104080] w-full text-xs"
                     />
                     <datalist id="received-aed-agent-list">
                       {customers.map((c) => (
@@ -2074,7 +2074,7 @@ export default function OrderEntryForm() {
 
                   {/* Option A Calculation Info Banner */}
                   {receivedAedBalanceInfo && (
-                    <div className="col-span-2 -my-1 p-2.5 bg-[#e2ebf6] rounded border border-[#b6cded] text-[11px] text-[#1e4676] flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                    <div className="col-span-2 -my-1 p-2.5 bg-[#e2ebf6] rounded border border-[#b6cded] text-[11px] text-[#104080] flex flex-wrap items-center justify-between gap-2 shadow-xs">
                       <div className="flex flex-wrap items-center gap-3">
                         <span>Booked: <strong>{receivedAedBalanceInfo.booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong></span>
                         <span className="text-gray-400">•</span>
@@ -2082,7 +2082,7 @@ export default function OrderEntryForm() {
                         <span className="text-gray-400">•</span>
                         <span className="text-[#0d6e5a]">Pending: <strong>{receivedAedBalanceInfo.pending_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong></span>
                       </div>
-                      <span className="bg-[#1e4676] text-white px-2 py-0.5 rounded text-[10px] font-bold tracking-wide">
+                      <span className="bg-[#104080] text-white px-2 py-0.5 rounded text-[10px] font-bold tracking-wide">
                         OPTION A AUTO-CALCULATED
                       </span>
                     </div>
@@ -2100,7 +2100,7 @@ export default function OrderEntryForm() {
                     onChange={(e) => handleOrderReceivedAedAmountChange(e.target.value)}
                     placeholder="0.00"
                     autoFocus
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full font-bold"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#104080] w-full font-bold"
                   />
 
                   {/* Mode of Transaction */}
@@ -2113,7 +2113,7 @@ export default function OrderEntryForm() {
                       setModeOfTransaction(e.target.value);
                       if (e.target.value !== 'BY CASH') setCollectionStaff('');
                     }}
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none focus:border-[#104080] w-full"
                   >
                     <option value=""></option>
                     <option value="CDM">CDM</option>
@@ -2134,7 +2134,7 @@ export default function OrderEntryForm() {
                     value={receivedAedUtrNo}
                     onChange={(e) => setReceivedAedUtrNo(e.target.value)}
                     placeholder="e.g. UTR / Bank Reference No"
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full text-xs"
+                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#104080] w-full text-xs"
                   />
 
                   {/* Collection Staff — only when BY CASH */}
@@ -2148,7 +2148,7 @@ export default function OrderEntryForm() {
                         value={collectionStaff}
                         onChange={(e) => setCollectionStaff(e.target.value)}
                         placeholder="Staff name"
-                        className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#1e4676] w-full"
+                        className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase focus:outline-none focus:border-[#104080] w-full"
                       />
                     </>
                   )}
@@ -2165,7 +2165,7 @@ export default function OrderEntryForm() {
                       value={remainingAed}
                       onChange={(e) => setRemainingAed(e.target.value)}
                       placeholder="0.00"
-                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#1e4676] w-full"
+                      className="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white focus:outline-none focus:border-[#104080] w-full"
                     />
                     <span className="text-[10px] text-gray-500 italic mt-0.5 block">
                       Auto-calculated from Booked AED − Received AED − This Entry. Editable if manual override is needed.
@@ -2181,7 +2181,7 @@ export default function OrderEntryForm() {
                     value={receivedAedDescription}
                     onChange={(e) => setReceivedAedDescription(e.target.value)}
                     placeholder="Enter remarks or description..."
-                    className="border border-[#c4d4ec] rounded-md p-2 bg-white focus:outline-none focus:border-[#1e4676] w-full text-xs"
+                    className="border border-[#c4d4ec] rounded-md p-2 bg-white focus:outline-none focus:border-[#104080] w-full text-xs"
                   />
 
                 </div>
@@ -2287,7 +2287,7 @@ export default function OrderEntryForm() {
               {/* Filters */}
               <div className="px-5 py-3 bg-[#f4f7fb] border-b border-[#c4d4ec] flex flex-wrap items-center gap-3 shrink-0">
                 <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
-                  <span className="text-[#1e4676] font-bold text-[11px]">Date:</span>
+                  <span className="text-[#104080] font-bold text-[11px]">Date:</span>
                   <FinacleDatePicker
                     value={viewDateFilter}
                     onChange={(e) => { setViewDateFilter(e.target.value); fetchReceivedAed(1, e.target.value, viewModeFilter); }}
@@ -2298,11 +2298,11 @@ export default function OrderEntryForm() {
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
-                  <span className="text-[#1e4676] font-bold text-[11px]">Mode:</span>
+                  <span className="text-[#104080] font-bold text-[11px]">Mode:</span>
                   <select
                     value={viewModeFilter}
                     onChange={(e) => { setViewModeFilter(e.target.value); fetchReceivedAed(1, viewDateFilter, e.target.value); }}
-                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#1e4676]"
+                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080]"
                   >
                     <option value="">All Modes</option>
                     <option value="CDM">CDM</option>
@@ -2335,17 +2335,17 @@ export default function OrderEntryForm() {
                 ) : (
                   <table className="w-full text-[12px] border-collapse">
                     <thead>
-                      <tr className="bg-[#1e4676] text-white text-left">
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">#</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Date</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Agent / Customer</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">AED Amount</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Mode</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">UTR / Ref</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Cash Staff</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Remaining AED</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Description</th>
-                        <th className="px-3 py-2 font-semibold border-r border-[#2a5a9a] whitespace-nowrap">Created By</th>
+                      <tr className="bg-[#104080] text-white text-left">
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">#</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Date</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Agent / Customer</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">AED Amount</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Mode</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">UTR / Ref</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Cash Staff</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Remaining AED</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Description</th>
+                        <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Created By</th>
                         <th className="px-3 py-2 font-semibold whitespace-nowrap text-center">Action</th>
                       </tr>
                     </thead>
@@ -2363,7 +2363,7 @@ export default function OrderEntryForm() {
                             {parseFloat(rec.aed_amount).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                           </td>
                           <td className="px-3 py-2 border-r border-[#e4e4e4]">
-                            <span className="bg-[#e8f0fb] text-[#1e4676] px-2 py-0.5 rounded font-medium">{rec.mode_of_txn}</span>
+                            <span className="bg-[#e8f0fb] text-[#104080] px-2 py-0.5 rounded font-medium">{rec.mode_of_txn}</span>
                           </td>
                           <td className="px-3 py-2 border-r border-[#e4e4e4] font-mono text-gray-700 text-xs">
                             {rec.utr_no || <span className="text-gray-400 font-sans">—</span>}
@@ -2398,7 +2398,7 @@ export default function OrderEntryForm() {
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr className="bg-[#eef2f9] font-bold text-[#1e4676] border-t-2 border-[#c4d4ec]">
+                      <tr className="bg-[#eef2f9] font-bold text-[#104080] border-t-2 border-[#c4d4ec]">
                         <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}>Total ({receivedAedRecords.length} shown)</td>
                         <td className="px-3 py-2 border-r border-[#c4d4ec] whitespace-nowrap text-[#0f5132]">
                           {receivedAedRecords.reduce((s, r) => s + parseFloat(r.aed_amount || 0), 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
@@ -2446,9 +2446,9 @@ export default function OrderEntryForm() {
             className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
             onClick={() => !isDeletingReceiver && setDeleteReceiverTarget(null)}
           ></div>
-          <div className="bg-white border-2 border-[#1e4676] rounded-md shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white border-2 border-[#104080] rounded-md shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Title Bar */}
-            <div className="bg-[#1e4676] text-white px-4 py-2 flex items-center justify-between">
+            <div className="bg-[#104080] text-white px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-sm tracking-wide">
                 <span>⚠️</span>
                 <span>Confirm Beneficiary Deletion</span>
@@ -2465,7 +2465,7 @@ export default function OrderEntryForm() {
             {/* Modal Body */}
             <div className="p-5 text-xs text-gray-700 space-y-4">
               <p className="text-[13px] text-gray-800">
-                Are you sure you want to permanently delete this beneficiary from Order <strong className="text-[#1e4676] font-bold">{deleteReceiverTarget.orderNo}</strong>?
+                Are you sure you want to permanently delete this beneficiary from Order <strong className="text-[#104080] font-bold">{deleteReceiverTarget.orderNo}</strong>?
               </p>
 
               {/* Summary Card */}

@@ -8,6 +8,14 @@
   --font-sans: 'Inter', sans-serif;
   --font-outfit: 'Outfit', sans-serif;
   --font-montserrat: 'Montserrat', sans-serif;
+
+  /* Finacle Unified Color Tokens */
+  --color-finacle-navy: #104080;
+  --color-finacle-navy-hover: #0c3266;
+  --color-finacle-navy-light: #eaf0f8;
+  --color-finacle-canvas: #f4f7fb;
+  --color-finacle-border: #c4d4ec;
+  --color-finacle-border-subtle: #e2e8f0;
 }
 
 body {
@@ -39,5 +47,37 @@ body {
 
 .animate-header-marquee:hover {
   animation-play-state: paused;
+}
+
+/* Print optimization for Bank Vouchers & Financial Ledgers */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, sidebars, banners, and interactive buttons */
+  header,
+  nav,
+  aside,
+  .no-print,
+  button:not(.print-keep),
+  .print-hide {
+    display: none !important;
+  }
+
+  /* Avoid awkward breaks inside voucher cards and table rows */
+  tr, .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Expand workspace to full printable width */
+  main, .flex-1 {
+    width: 100% !important;
+    overflow: visible !important;
+  }
 }
 

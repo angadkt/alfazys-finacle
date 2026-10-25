@@ -74,7 +74,7 @@ export default function FinacleDatePicker({
       </span>
 
       {/* Calendar SVG Icon */}
-      <span className="ml-1.5 flex-shrink-0 text-gray-500 hover:text-[#1e4676]">
+      <span className="ml-1.5 flex-shrink-0 text-gray-500 hover:text-[#104080]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-3.5 h-3.5"

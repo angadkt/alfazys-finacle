@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import FinacleDatePicker from "./FinacleDatePicker";
 import {
   Building2,
   User,
@@ -1029,8 +1030,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                           <label className="block text-[11px] font-bold text-gray-700 mb-0.5">
                             Sanction Effective Date:
                           </label>
-                          <input
-                            type="date"
+                          <FinacleDatePicker
                             value={sanctionDate}
                             onChange={(e) => setSanctionDate(e.target.value)}
                             className="w-full bg-white border border-[#c4d4ec] rounded px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-[#104080]"
@@ -1040,8 +1040,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                           <label className="block text-[11px] font-bold text-gray-700 mb-0.5">
                             Annual Review Date:
                           </label>
-                          <input
-                            type="date"
+                          <FinacleDatePicker
                             value={reviewDate}
                             onChange={(e) => setReviewDate(e.target.value)}
                             className="w-full bg-white border border-[#c4d4ec] rounded px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-[#104080]"

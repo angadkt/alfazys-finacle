@@ -138,17 +138,17 @@ export default function ViewRetailCif() {
       <div className="flex-1 flex flex-col p-4 relative overflow-hidden">
       
       <div className="flex justify-between items-end mb-4">
-        <h2 className="text-[18px] font-bold text-[#1e4676] m-0">View Verified Retail CIFs</h2>
+        <h2 className="text-[18px] font-bold text-[#104080] m-0">View Verified Retail CIFs</h2>
         
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
-            <label className="text-[12px] font-semibold text-[#1e4676]">Search:</label>
+            <label className="text-[12px] font-semibold text-[#104080]">Search:</label>
             <input 
               type="text" 
               placeholder="Search by ID, Name, Phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-[#a0a0a0] px-2 py-1 text-[12px] w-64 focus:outline-none focus:border-[#1e4676]"
+              className="border border-[#a0a0a0] px-2 py-1 text-[12px] w-64 focus:outline-none focus:border-[#104080]"
             />
           </div>
 
@@ -202,7 +202,7 @@ export default function ViewRetailCif() {
               filteredCifs.map((cif) => (
                 <tr key={cif.id} className="border-b border-[#e4e4e4] text-[12px] hover:bg-[#f0f0f5]">
                   <td 
-                    className="p-2 border-r border-[#e4e4e4] font-semibold text-[#1e4676] cursor-pointer hover:underline"
+                    className="p-2 border-r border-[#e4e4e4] font-semibold text-[#104080] cursor-pointer hover:underline"
                     onClick={() => handleCifClick(cif.id)}
                   >
                     {loadingDetails ? '...' : (cif.cif_no || cif.id)}
@@ -241,13 +241,13 @@ export default function ViewRetailCif() {
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedCif(null)}></div>
           <div className="absolute inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
             <div className="bg-[#e4e4e4] border-2 border-[#a0a0a0] w-[650px] shadow-2xl flex flex-col font-sans max-h-[calc(100%-2rem)] mt-2">
-            <div className="bg-[#1e4676] text-white px-3 py-2 flex justify-between items-center">
+            <div className="bg-[#104080] text-white px-3 py-2 flex justify-between items-center">
               <h3 className="text-sm font-bold m-0 tracking-wide">CIF Details - {selectedCif.cif_no || selectedCif.id}</h3>
               <button onClick={() => setSelectedCif(null)} className="text-white hover:text-gray-300 text-lg leading-none font-bold">&times;</button>
             </div>
             
             <div className="p-4 bg-white m-1.5 border border-[#a0a0a0] overflow-y-auto">
-              <h4 className="text-[#1e4676] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Basic Information</h4>
+              <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Basic Information</h4>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[12px] mb-6">
                 <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Title:</span><span>{selectedCif.title || '-'}</span></div>
                 <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">First Name:</span><span>{selectedCif.first_name || '-'}</span></div>
@@ -259,7 +259,7 @@ export default function ViewRetailCif() {
                 <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">CIF Type ID:</span><span>{selectedCif.cif_type_id || '-'}</span></div>
               </div>
 
-              <h4 className="text-[#1e4676] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Contact & Address</h4>
+              <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Contact & Address</h4>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[12px] mb-6">
                 <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Contact No:</span><span>{selectedCif.contact_number || '-'}</span></div>
                 <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Email:</span><span>{selectedCif.email || '-'}</span></div>
@@ -279,7 +279,7 @@ export default function ViewRetailCif() {
                 )}
               </div>
 
-              <h4 className="text-[#1e4676] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Uploaded Documents</h4>
+              <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Uploaded Documents</h4>
               {(!selectedCif.documents || selectedCif.documents.length === 0) ? (
                 <div className="text-[12px] text-gray-500 italic p-2 bg-gray-50 text-center border border-dashed border-gray-300">
                   No documents uploaded for this CIF.
@@ -298,7 +298,7 @@ export default function ViewRetailCif() {
                     <tbody>
                       {selectedCif.documents.map((doc: any) => (
                         <tr key={doc.id} className="border-b border-[#e4e4e4] last:border-0 hover:bg-gray-50">
-                          <td className="p-2 font-semibold text-[#1e4676] capitalize">
+                          <td className="p-2 font-semibold text-[#104080] capitalize">
                             {doc.doc_type ? doc.doc_type.replace(/_/g, ' ') : '-'}
                           </td>
                           <td className="p-2 text-gray-700 truncate max-w-[160px]">
@@ -311,7 +311,7 @@ export default function ViewRetailCif() {
                             <div className="flex items-center justify-center gap-1.5">
                               <button
                                 onClick={() => handlePreviewDoc(selectedCif.id, doc)}
-                                className="bg-[#1e4676] hover:bg-[#163459] text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
+                                className="bg-[#104080] hover:bg-[#0c3266] text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
                                 title="View Document"
                               >
                                 View
@@ -336,7 +336,7 @@ export default function ViewRetailCif() {
             <div className="bg-[#d4d0c8] border-t border-[#a0a0a0] p-2 flex justify-end">
               <button 
                 onClick={() => setSelectedCif(null)}
-                className="bg-gray-100 border border-gray-400 px-6 py-1 text-[12px] hover:bg-gray-200 font-bold text-[#1e4676] cursor-pointer"
+                className="bg-gray-100 border border-gray-400 px-6 py-1 text-[12px] hover:bg-gray-200 font-bold text-[#104080] cursor-pointer"
               >
                 Close
               </button>
@@ -380,9 +380,9 @@ export default function ViewRetailCif() {
             className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
             onClick={() => !isDeletingCif && setDeleteCifTarget(null)}
           ></div>
-          <div className="bg-white border-2 border-[#1e4676] rounded-md shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150 font-sans">
+          <div className="bg-white border-2 border-[#104080] rounded-md shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150 font-sans">
             {/* Modal Title Bar */}
-            <div className="bg-[#1e4676] text-white px-4 py-2 flex items-center justify-between">
+            <div className="bg-[#104080] text-white px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-sm tracking-wide">
                 <span>⚠️</span>
                 <span>Confirm CIF Deletion</span>
@@ -399,14 +399,14 @@ export default function ViewRetailCif() {
             {/* Modal Body */}
             <div className="p-5 text-xs text-gray-700 space-y-4">
               <p className="text-[13px] text-gray-800">
-                Are you sure you want to permanently delete CIF <strong className="text-[#1e4676] font-bold">{deleteCifTarget.cif_no || deleteCifTarget.id}</strong>?
+                Are you sure you want to permanently delete CIF <strong className="text-[#104080] font-bold">{deleteCifTarget.cif_no || deleteCifTarget.id}</strong>?
               </p>
 
               {/* Summary Card */}
               <div className="bg-[#f8fafc] border border-[#cbd5e1] rounded p-3 space-y-2">
                 <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
                   <span className="text-gray-500 font-medium">CIF ID:</span>
-                  <span className="font-bold text-[#1e4676]">{deleteCifTarget.cif_no || deleteCifTarget.id}</span>
+                  <span className="font-bold text-[#104080]">{deleteCifTarget.cif_no || deleteCifTarget.id}</span>
                 </div>
                 <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
                   <span className="text-gray-500 font-medium">Customer / Agent Name:</span>

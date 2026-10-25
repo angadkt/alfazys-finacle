@@ -138,7 +138,7 @@ export default function VerifyRetailCif() {
       </div>
       <div className="flex-1 flex flex-col p-4 relative overflow-hidden">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-[18px] font-bold text-[#1e4676] m-0">Verify Retail CIF Requests</h2>
+        <h2 className="text-[18px] font-bold text-[#104080] m-0">Verify Retail CIF Requests</h2>
 
         <div className="flex items-center gap-1.5">
           <button 
@@ -186,7 +186,7 @@ export default function VerifyRetailCif() {
             ) : (
               pendingCifs.map((cif) => (
                 <tr key={cif.id} className="border-b border-[#e4e4e4] text-[12px] hover:bg-[#f0f0f5]">
-                  <td className="p-2 border-r border-[#e4e4e4] font-semibold text-[#1e4676]">{cif.id}</td>
+                  <td className="p-2 border-r border-[#e4e4e4] font-semibold text-[#104080]">{cif.id}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.name}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.email || '-'}</td>
                   <td className="p-2 border-r border-[#e4e4e4]">{cif.phone || '-'}</td>
@@ -200,7 +200,7 @@ export default function VerifyRetailCif() {
                       <button 
                         onClick={() => handleViewCif(cif)}
                         disabled={loadingDetails}
-                        className="bg-[#1e4676] hover:bg-[#153a63] text-white px-2 py-0.5 text-xs font-bold rounded-xs cursor-pointer shadow-xs"
+                        className="bg-[#104080] hover:bg-[#0c3266] text-white px-2 py-0.5 text-xs font-bold rounded-xs cursor-pointer shadow-xs"
                         title="View Details & KYC Identification Documents"
                       >
                         View KYC Docs
@@ -230,7 +230,7 @@ export default function VerifyRetailCif() {
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedCif(null)}></div>
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-[#e4e4e4] border-2 border-[#a0a0a0] w-full max-w-2xl max-h-[90vh] shadow-2xl flex flex-col font-sans">
-              <div className="bg-[#1e4676] text-white px-3 py-2 flex justify-between items-center">
+              <div className="bg-[#104080] text-white px-3 py-2 flex justify-between items-center">
                 <h3 className="text-sm font-bold m-0 tracking-wide">
                   Review CIF & KYC Documents — {selectedCif.cif_no || selectedCif.id}
                 </h3>
@@ -238,7 +238,7 @@ export default function VerifyRetailCif() {
               </div>
 
               <div className="p-4 bg-white m-1.5 border border-[#a0a0a0] overflow-y-auto flex-1">
-                <h4 className="text-[#1e4676] font-bold border-b border-[#e4e4e4] pb-1 mb-2 text-[13px] uppercase">
+                <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-2 text-[13px] uppercase">
                   Customer Information
                 </h4>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[12px] mb-4">
@@ -250,7 +250,7 @@ export default function VerifyRetailCif() {
                   <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Currency:</span><span>{selectedCif.ccy || 'AED'}</span></div>
                 </div>
 
-                <h4 className="text-[#1e4676] font-bold border-b border-[#e4e4e4] pb-1 mb-2 text-[13px] uppercase">
+                <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-2 text-[13px] uppercase">
                   Uploaded Identification & KYC Documents
                 </h4>
                 {(!selectedCif.documents || selectedCif.documents.length === 0) ? (
@@ -271,7 +271,7 @@ export default function VerifyRetailCif() {
                       <tbody>
                         {selectedCif.documents.map((doc: any) => (
                           <tr key={doc.id} className="border-b border-[#e4e4e4] last:border-0 hover:bg-gray-50">
-                            <td className="p-2 font-semibold text-[#1e4676] capitalize">
+                            <td className="p-2 font-semibold text-[#104080] capitalize">
                               {doc.doc_type ? doc.doc_type.replace(/_/g, ' ') : '-'}
                             </td>
                             <td className="p-2 text-gray-700 truncate max-w-[150px]">
@@ -284,7 +284,7 @@ export default function VerifyRetailCif() {
                               <div className="flex items-center justify-center gap-1.5">
                                 <button
                                   onClick={() => handlePreviewDoc(selectedCif.id, doc)}
-                                  className="bg-[#1e4676] hover:bg-[#163459] text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
+                                  className="bg-[#104080] hover:bg-[#0c3266] text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
                                   title="View Document"
                                 >
                                   View
