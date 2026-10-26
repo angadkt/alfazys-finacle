@@ -105,7 +105,7 @@ export default function CreditEntryForm() {
     setIsRefreshing(true);
     try {
       const res = await api.get('/records/credit');
-      const data = res.data.records.map((r: any) => ({
+      const data = (res.data?.records || []).map((r: any) => ({
         id: r.id,
         receiptNo: r.receipt_no || `RC-${r.id}`,
         paymentDate: r.entry_date ? r.entry_date.split('T')[0] : '',

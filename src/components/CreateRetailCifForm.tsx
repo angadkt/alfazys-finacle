@@ -149,10 +149,10 @@ export default function CreateRetailCifForm() {
         if (val === 'CUSTOMER') return 2;
         if (val === 'EMPLOYEE') return 3;
         if (val === 'OTHER') return 4;
-        if (val === 'GENERAL') return 5;
-        if (val === 'SERVICER') return 6;
+        if (val === 'SERVICER') return 5;
+        if (val === 'PAYMENT DISTRIBUTER' || val === 'PAYMENT_DISTRIBUTER') return 6;
         if (val === 'SUPPLIER') return 7;
-        return 4;
+        return 2;
       })(),
       email: formData.email.trim(),
       indian_number: formData.indianNo.trim(),
@@ -653,8 +653,10 @@ export default function CreateRetailCifForm() {
                       <>
                         <option value="Customer">Customer</option>
                         <option value="Agent">Agent</option>
+                        <option value="Servicer">Servicer</option>
+                        <option value="Payment Distributer">Payment Distributer</option>
+                        <option value="Employee">Employee</option>
                         <option value="Supplier">Supplier</option>
-                        <option value="General">General</option>
                         <option value="Other">Other</option>
                       </>
                     )}

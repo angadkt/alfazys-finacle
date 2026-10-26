@@ -229,7 +229,8 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
     try {
       setLoadingCifs(true);
       const res = await api.get("/payouts/eligible-cifs");
-      setEligibleCifs(Array.isArray(res.data) ? res.data : []);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.cifs || []);
+      setEligibleCifs(list);
     } catch {
       setEligibleCifs([]);
     } finally {

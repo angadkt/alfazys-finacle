@@ -408,8 +408,8 @@ export default function OrderEntryForm() {
       if (date) params.date = date;
       if (mode) params.mode_of_txn = mode;
       const res = await api.get('/records/received-aed', { params });
-      setReceivedAedRecords(res.data.records);
-      setReceivedAedTotal(res.data.total);
+      setReceivedAedRecords(res.data?.records || []);
+      setReceivedAedTotal(res.data?.total || 0);
       setReceivedAedPage(page);
     } catch { /* silent */ } finally {
       setReceivedAedLoading(false);
@@ -603,7 +603,7 @@ export default function OrderEntryForm() {
     const loadCustomers = async () => {
       try {
         const res = await api.get('/records/parties');
-        const verified = res.data.records.filter((c: any) => c.status === 'verified');
+        const verified = (res.data?.records || []).filter((c: any) => c.status === 'verified');
         const formatted = verified.map((c: any) => ({
           id: c.cif_no || c.id,
           internal_id: c.id,
