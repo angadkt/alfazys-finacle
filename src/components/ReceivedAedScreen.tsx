@@ -1,5 +1,6 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect } from 'react';
+import { ExternalLink, X } from 'lucide-react';
 import api from '../services/api';
 
 interface Customer {
@@ -234,7 +235,7 @@ export default function ReceivedAedScreen() {
       <div className="flex-1 bg-white border border-[#a0a0a0] m-1 flex flex-col overflow-hidden">
         {/* Navigator Action Bar */}
         <div className="flex items-center gap-3 px-3 py-1.5 bg-[#f8f9fa] border-b border-[#a0a0a0] text-[#104080] font-bold text-[11px]">
-          <span className="cursor-pointer text-[14px] leading-none hover:text-[#0a244d]">↗</span>
+          <ExternalLink className="w-3.5 h-3.5 text-[#104080] hover:text-[#0a244d] cursor-pointer" />
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span 
             className="cursor-pointer hover:underline tracking-wide flex items-center gap-1"
@@ -275,10 +276,10 @@ export default function ReceivedAedScreen() {
               {(fromDate || toDate) && (
                 <button
                   onClick={() => { setFromDate(''); setToDate(''); }}
-                  className="text-gray-400 hover:text-red-500 font-bold text-xs ml-1 cursor-pointer"
+                  className="text-gray-400 hover:text-red-500 ml-1 cursor-pointer"
                   title="Clear Dates"
                 >
-                  ✕
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               )}
             </div>
@@ -301,10 +302,10 @@ export default function ReceivedAedScreen() {
               {agentFilter && (
                 <button
                   onClick={() => setAgentFilter('')}
-                  className="text-gray-400 hover:text-red-500 font-bold text-xs cursor-pointer"
+                  className="text-gray-400 hover:text-red-500 cursor-pointer"
                   title="Clear Agent"
                 >
-                  ✕
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               )}
             </div>
@@ -329,10 +330,10 @@ export default function ReceivedAedScreen() {
               {modeFilter && (
                 <button
                   onClick={() => setModeFilter('')}
-                  className="text-gray-400 hover:text-red-500 font-bold text-xs cursor-pointer"
+                  className="text-gray-400 hover:text-red-500 cursor-pointer"
                   title="Clear Mode"
                 >
-                  ✕
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               )}
             </div>

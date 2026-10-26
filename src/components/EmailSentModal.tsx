@@ -1,4 +1,5 @@
 import type { StaffEmailNotification } from '../types/staff';
+import { Check, Info, X } from 'lucide-react';
 
 interface EmailSentModalProps {
   notification: StaffEmailNotification | null;
@@ -22,9 +23,9 @@ export default function EmailSentModal({ notification, onClose }: EmailSentModal
           </div>
           <button 
             onClick={onClose}
-            className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] text-[11px] font-bold"
+            className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] cursor-pointer"
           >
-            ✕
+            <X className="w-3 h-3 stroke-[2.5]" />
           </button>
         </div>
 
@@ -33,13 +34,17 @@ export default function EmailSentModal({ notification, onClose }: EmailSentModal
           
           {notification.smtpDispatched ? (
             <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d8d8] text-green-700 font-bold text-[13px]">
-              <span className="w-5 h-5 rounded-full bg-green-100 border border-green-500 flex items-center justify-center text-xs">✓</span>
+              <span className="w-5 h-5 rounded-full bg-green-100 border border-green-500 flex items-center justify-center">
+                <Check className="w-3 h-3 text-green-700 stroke-[2.5]" />
+              </span>
               <span>Credentials Successfully Dispatched via Live SMTP Email Server</span>
             </div>
           ) : (
             <div className="flex flex-col gap-1.5 pb-3 border-b border-[#d8d8d8]">
               <div className="flex items-center gap-2 text-[#b45309] font-bold text-[13px]">
-                <span className="w-5 h-5 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center text-xs">ℹ</span>
+                <span className="w-5 h-5 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center">
+                  <Info className="w-3 h-3 text-amber-700 stroke-[2.5]" />
+                </span>
                 <span>Staff Account Created &amp; Dispatch Scheduled</span>
               </div>
               <div className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded-xs">

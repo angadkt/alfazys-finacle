@@ -1,6 +1,7 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import FinacleButton from './FinacleButton';
 import React, { useState, useEffect } from 'react';
+import { X, Check } from 'lucide-react';
 import api from '../services/api';
 
 interface CostRateModalProps {
@@ -110,10 +111,10 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
           </div>
           <button 
             onClick={onClose}
-            className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] font-bold leading-none cursor-pointer"
+            className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] cursor-pointer"
             title="Close"
           >
-            ✕
+            <X className="w-3 h-3 stroke-[2.5]" />
           </button>
         </div>
 
@@ -133,7 +134,7 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
                 onClick={() => setMessage(null)} 
                 className="font-bold ml-2 text-gray-500 hover:text-black cursor-pointer"
               >
-                ✕
+                <X className="w-3 h-3 stroke-[2.5]" />
               </button>
             </div>
           )}
@@ -151,8 +152,8 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
               required
             />
             {hasSavedRate && (
-              <span className="text-[10px] text-emerald-700 font-medium">
-                ✓ Cost rate currently configured for this date
+              <span className="text-[10px] text-emerald-700 font-medium flex items-center gap-1">
+                <Check className="w-3 h-3 text-emerald-600 stroke-[2.5]" /> Cost rate currently configured for this date
               </span>
             )}
           </div>

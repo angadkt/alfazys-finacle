@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import FinacleDatePicker from './FinacleDatePicker';
 import FinacleBadge from './FinacleBadge';
 import api from '../services/api';
-import { FileSpreadsheet, FileText, RefreshCw, Eye, ArrowUpDown } from 'lucide-react';
+import { FileSpreadsheet, FileText, RefreshCw, Eye, ArrowUpDown, ExternalLink, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -391,7 +391,7 @@ export default function PendingAedReportScreen() {
       <div className="flex-1 bg-white border border-[#a0a0a0] m-1 flex flex-col overflow-hidden">
         {/* Navigator Action Strip */}
         <div className="flex items-center gap-3 px-3 py-1.5 bg-[#f8f9fa] border-b border-[#a0a0a0] text-[#104080] font-bold text-[11px]">
-          <span className="cursor-pointer text-[14px] leading-none hover:text-[#0a244d]">↗</span>
+          <ExternalLink className="w-3.5 h-3.5 text-[#104080] hover:text-[#0a244d] cursor-pointer" />
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span>Active Period: <strong className="text-gray-800">{dateRangeLabel}</strong></span>
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
@@ -517,10 +517,10 @@ export default function PendingAedReportScreen() {
                   <button
                     type="button"
                     onClick={handleClearDates}
-                    className="text-gray-400 hover:text-red-600 font-bold text-xs px-1 cursor-pointer"
+                    className="text-gray-400 hover:text-red-600 px-1 cursor-pointer"
                     title="Clear Dates (All Time)"
                   >
-                    ✕
+                    <X className="w-3 h-3 stroke-[2.5]" />
                   </button>
                 )}
               </div>
@@ -546,9 +546,9 @@ export default function PendingAedReportScreen() {
                 <button
                   type="button"
                   onClick={() => setAgentSearch('')}
-                  className="text-gray-400 hover:text-red-500 font-bold text-xs"
+                  className="text-gray-400 hover:text-red-500 cursor-pointer"
                 >
-                  ✕
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               )}
             </div>
@@ -778,9 +778,10 @@ export default function PendingAedReportScreen() {
                 <button
                   type="button"
                   onClick={() => setSelectedParty(null)}
-                  className="text-white hover:text-red-300 font-bold text-[13px] cursor-pointer"
+                  className="text-white hover:text-red-300 font-bold text-[12px] cursor-pointer flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded transition-colors"
                 >
-                  Close (✕)
+                  <span>Close</span>
+                  <X className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
               </div>
 

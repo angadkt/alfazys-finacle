@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react';
-import { FileSpreadsheet, FileText } from 'lucide-react';
+import { 
+  FileSpreadsheet, 
+  FileText, 
+  AlertTriangle, 
+  X, 
+  Eye, 
+  Search, 
+  CheckCircle2, 
+  Download, 
+  User, 
+  Building2, 
+  Trash2,
+  ExternalLink
+} from 'lucide-react';
 import api from '../services/api';
 import { exportCifsToExcel, exportCifsToPdf } from '../utils/exportCif';
 
@@ -67,10 +80,10 @@ export default function ViewRetailCif() {
   const loadVerifiedCifs = async () => {
     try {
       const res = await api.get('/records/parties');
-      const verified = res.data.records.filter((c: any) => c.status === 'verified');
+      const verified = (res.data?.records || []).filter((c: any) => c.status === 'verified');
       setVerifiedCifs(verified);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load verified CIFs:', err);
     }
   };
 
@@ -90,7 +103,7 @@ export default function ViewRetailCif() {
   const filteredCifs = verifiedCifs.filter((cif) => {
     const term = searchTerm.toLowerCase();
     const cifId = cif.cif_no || cif.id?.toString() || '';
-    const name = `${cif.first_name} ${cif.last_name}`;
+    const name = `${cif.first_name || ''} ${cif.last_name || ''}`;
     const email = cif.email || '';
     const phone = cif.contact_number || '';
     
@@ -131,309 +144,465 @@ export default function ViewRetailCif() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#e4e4e4]" style={{fontFamily: 'Arial, Helvetica, sans-serif'}}>
-      <div className="bg-white px-3 py-2.5 border-b border-[#a0a0a0]">
-        <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide">view retail cif</h4>
-      </div>
-      <div className="flex-1 flex flex-col p-4 relative overflow-hidden">
+    <div className="flex-1 flex flex-col bg-[#f0f4f8] overflow-hidden select-none">
       
-      <div className="flex justify-between items-end mb-4">
-        <h2 className="text-[18px] font-bold text-[#104080] m-0">View Verified Retail CIFs</h2>
-        
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2">
-            <label className="text-[12px] font-semibold text-[#104080]">Search:</label>
+      {/* 1. Finacle Command Bar Header */}
+      <div className="bg-[#104080] text-white px-5 py-2.5 flex items-center justify-between border-b border-[#0a2850] shadow-xs shrink-0">
+        <div className="flex items-center gap-3">
+          <Eye className="w-5 h-5 text-amber-300" />
+          <span className="font-bold tracking-wider text-sm uppercase font-sans">
+            RETAIL CIF INQUIRY DESK (VCIF)
+          </span>
+          <span className="bg-blue-950/80 text-blue-200 border border-blue-600 px-2.5 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
+            INQUIRY: VCIF
+          </span>
+          <span className="bg-emerald-950/80 text-emerald-200 border border-emerald-600 px-2.5 py-0.5 rounded text-xs font-mono font-bold">
+            {filteredCifs.length} {filteredCifs.length === 1 ? 'RECORD' : 'RECORDS'} VERIFIED
+          </span>
+        </div>
+        <div className="text-xs text-blue-100 font-medium">
+          Infosys Finacle Core Banking
+        </div>
+      </div>
+
+      {/* 2. Sub-Ribbon & Toolbar */}
+      <div className="bg-[#e6edf8] border-b border-[#c4d4ec] px-5 py-2.5 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-2 text-[#104080] font-bold text-sm">
+          <Building2 className="w-4 h-4" />
+          <span>Verified Retail Customer Information File Directory (CRM-CIF)</span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
-              placeholder="Search by ID, Name, Phone..."
+              placeholder="Search by CIF ID, Name, Phone, Email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-[#a0a0a0] px-2 py-1 text-[12px] w-64 focus:outline-none focus:border-[#104080]"
+              className="h-10 border border-[#c4d4ec] pl-9 pr-8 py-2 text-sm rounded-md w-72 sm:w-84 focus:outline-none focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 bg-white shadow-2xs placeholder:text-slate-400"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                title="Clear Search"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-1.5 border-l border-[#c4d4ec] pl-2">
+          {/* Export Buttons */}
+          <div className="flex items-center gap-2 border-l border-[#c4d4ec] pl-3">
             <button 
               onClick={handleExportExcel}
               disabled={isExporting !== null || filteredCifs.length === 0}
-              className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2 py-1 text-[11px] font-bold text-[#1e6e38] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              className="bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 px-3.5 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow-2xs"
               title="Export Verified CIFs to Excel"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-[#2e7d32]" />
-              <span>{isExporting === 'excel' ? 'Exporting...' : 'Excel'}</span>
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>{isExporting === 'excel' ? 'Exporting...' : 'Export Excel'}</span>
             </button>
             <button 
               onClick={handleExportPdf}
               disabled={isExporting !== null || filteredCifs.length === 0}
-              className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-2 py-1 text-[11px] font-bold text-[#b91c1c] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              className="bg-white hover:bg-red-50 text-red-800 border border-red-300 px-3.5 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow-2xs"
               title="Export Verified CIFs to PDF"
             >
-              <FileText className="w-3.5 h-3.5 text-[#d32f2f]" />
-              <span>{isExporting === 'pdf' ? 'Generating...' : 'PDF'}</span>
+              <FileText className="w-4 h-4 text-red-600" />
+              <span>{isExporting === 'pdf' ? 'Generating...' : 'Export PDF'}</span>
             </button>
           </div>
         </div>
       </div>
       
-      <div className="bg-white border border-[#a0a0a0] p-1 flex-1 overflow-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-[#d4d0c8] border-b border-[#a0a0a0] text-[12px] text-left">
-              <th className="p-2 border-r border-[#a0a0a0]">CIF ID</th>
-              <th className="p-2 border-r border-[#a0a0a0]">Name</th>
-              <th className="p-2 border-r border-[#a0a0a0]">Email</th>
-              <th className="p-2 border-r border-[#a0a0a0]">Phone</th>
-              <th className="p-2 border-r border-[#a0a0a0]">Issued By</th>
-              <th className="p-2 border-r border-[#a0a0a0]">Verified By</th>
-              <th className="p-2 border-r border-[#a0a0a0]">Status</th>
-              {isAdmin && (
-                <th className="p-2 border-r border-[#a0a0a0] text-center">Action</th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCifs.length === 0 ? (
-              <tr>
-                <td colSpan={isAdmin ? 8 : 7} className="p-4 text-center text-[12px] text-gray-500">
-                  {verifiedCifs.length === 0 ? 'No verified CIFs found.' : 'No CIFs match your search.'}
-                </td>
+      {/* 3. Main Data Grid Container */}
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="bg-white border border-[#c4d4ec] rounded-md shadow-xs overflow-hidden">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="bg-[#104080] text-white text-xs font-bold uppercase tracking-wider">
+                <th className="py-3 px-4 border-r border-[#0a2850]">CIF ID</th>
+                <th className="py-3 px-4 border-r border-[#0a2850]">Customer / Agent Name</th>
+                <th className="py-3 px-4 border-r border-[#0a2850]">Email Address</th>
+                <th className="py-3 px-4 border-r border-[#0a2850]">Phone Number</th>
+                <th className="py-3 px-4 border-r border-[#0a2850]">Issued By</th>
+                <th className="py-3 px-4 border-r border-[#0a2850]">Verified By</th>
+                <th className="py-3 px-4 border-r border-[#0a2850]">Status</th>
+                {isAdmin && (
+                  <th className="py-3 px-4 text-center">Action</th>
+                )}
               </tr>
-            ) : (
-              filteredCifs.map((cif) => (
-                <tr key={cif.id} className="border-b border-[#e4e4e4] text-[12px] hover:bg-[#f0f0f5]">
-                  <td 
-                    className="p-2 border-r border-[#e4e4e4] font-semibold text-[#104080] cursor-pointer hover:underline"
-                    onClick={() => handleCifClick(cif.id)}
+            </thead>
+            <tbody>
+              {filteredCifs.length === 0 ? (
+                <tr>
+                  <td colSpan={isAdmin ? 8 : 7} className="py-12 text-center text-slate-500">
+                    <User className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <div className="font-bold text-sm text-slate-700">
+                      {verifiedCifs.length === 0 ? 'No verified CIF records found.' : 'No customer records match your search criteria.'}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      {searchTerm ? 'Try adjusting your search terms or clearing the filter.' : 'Customers verified via the Maker-Checker workflow will appear here.'}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredCifs.map((cif, idx) => (
+                  <tr 
+                    key={cif.id} 
+                    className={`border-b border-[#e2e8f0] text-sm hover:bg-blue-50/70 transition-colors ${
+                      idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'
+                    }`}
                   >
-                    {loadingDetails ? '...' : (cif.cif_no || cif.id)}
-                  </td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.first_name} {cif.last_name}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.email || '-'}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.contact_number || '-'}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.created_by_name || '-'}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">{cif.verified_by_name || '-'}</td>
-                  <td className="p-2 border-r border-[#e4e4e4]">
-                    <span className="text-green-600 font-semibold uppercase">Verified</span>
-                  </td>
-                  {isAdmin && (
-                    <td className="p-2 border-r border-[#e4e4e4] text-center">
-                      <button
+                    <td className="py-3 px-4 border-r border-[#e2e8f0]">
+                      <button 
                         type="button"
-                        onClick={() => setDeleteCifTarget(cif)}
-                        className="bg-white border border-red-300 text-red-600 hover:bg-red-50 hover:border-red-600 font-bold px-2.5 py-0.5 rounded text-[11px] cursor-pointer shadow-2xs"
-                        title="Delete CIF Record"
+                        onClick={() => handleCifClick(cif.id)}
+                        className="font-mono font-bold text-[#104080] hover:underline cursor-pointer flex items-center gap-1.5"
+                        title="Click to view full CIF details"
                       >
-                        Delete
+                        <span>{loadingDetails ? '...' : (cif.cif_no || cif.id)}</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-[#104080]/60" />
                       </button>
                     </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      </div>
-
-      {/* CIF Details Modal */}
-      {selectedCif && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedCif(null)}></div>
-          <div className="absolute inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
-            <div className="bg-[#e4e4e4] border-2 border-[#a0a0a0] w-[650px] shadow-2xl flex flex-col font-sans max-h-[calc(100%-2rem)] mt-2">
-            <div className="bg-[#104080] text-white px-3 py-2 flex justify-between items-center">
-              <h3 className="text-sm font-bold m-0 tracking-wide">CIF Details - {selectedCif.cif_no || selectedCif.id}</h3>
-              <button onClick={() => setSelectedCif(null)} className="text-white hover:text-gray-300 text-lg leading-none font-bold">&times;</button>
-            </div>
-            
-            <div className="p-4 bg-white m-1.5 border border-[#a0a0a0] overflow-y-auto">
-              <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Basic Information</h4>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[12px] mb-6">
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Title:</span><span>{selectedCif.title || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">First Name:</span><span>{selectedCif.first_name || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Last Name:</span><span>{selectedCif.last_name || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Short Name:</span><span>{selectedCif.short_name || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Gender:</span><span>{selectedCif.gender || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Nationality:</span><span>{selectedCif.nationality || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Branch ID:</span><span>{selectedCif.branch_id || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">CIF Type ID:</span><span>{selectedCif.cif_type_id || '-'}</span></div>
-              </div>
-
-              <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Contact & Address</h4>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[12px] mb-6">
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Contact No:</span><span>{selectedCif.contact_number || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Email:</span><span>{selectedCif.email || '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">CCY:</span><span>{selectedCif.ccy || '-'}</span></div>
-                
-                {selectedCif._profile?.city && (
-                  <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">City:</span><span>{selectedCif._profile.city}</span></div>
-                )}
-                {selectedCif._profile?.country && (
-                  <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Country:</span><span>{selectedCif._profile.country}</span></div>
-                )}
-                {selectedCif._profile?.uaeNo && (
-                  <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">UAE Phone:</span><span>{selectedCif._profile.uaeNo}</span></div>
-                )}
-                {selectedCif._profile?.indianNo && (
-                  <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Indian Phone:</span><span>{selectedCif._profile.indianNo}</span></div>
-                )}
-              </div>
-
-              <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-3 text-[13px] uppercase">Uploaded Documents</h4>
-              {(!selectedCif.documents || selectedCif.documents.length === 0) ? (
-                <div className="text-[12px] text-gray-500 italic p-2 bg-gray-50 text-center border border-dashed border-gray-300">
-                  No documents uploaded for this CIF.
-                </div>
-              ) : (
-                <div className="overflow-x-auto border border-[#e4e4e4]">
-                  <table className="w-full text-[12px]">
-                    <thead>
-                      <tr className="bg-[#f0f0f5] border-b border-[#e4e4e4] text-left text-gray-600">
-                        <th className="p-2 font-bold">Doc Type</th>
-                        <th className="p-2 font-bold">Document Name</th>
-                        <th className="p-2 font-bold">Uploaded At</th>
-                        <th className="p-2 font-bold text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedCif.documents.map((doc: any) => (
-                        <tr key={doc.id} className="border-b border-[#e4e4e4] last:border-0 hover:bg-gray-50">
-                          <td className="p-2 font-semibold text-[#104080] capitalize">
-                            {doc.doc_type ? doc.doc_type.replace(/_/g, ' ') : '-'}
-                          </td>
-                          <td className="p-2 text-gray-700 truncate max-w-[160px]">
-                            {doc.file_name || `${doc.doc_type || 'document'}`}
-                          </td>
-                          <td className="p-2 text-gray-500">
-                            {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : '-'}
-                          </td>
-                          <td className="p-2 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => handlePreviewDoc(selectedCif.id, doc)}
-                                className="bg-[#104080] hover:bg-[#0c3266] text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
-                                title="View Document"
-                              >
-                                View
-                              </button>
-                              <button
-                                onClick={() => handleDownloadDoc(selectedCif.id, doc)}
-                                className="bg-gray-100 border border-gray-300 hover:bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
-                                title="Download Document"
-                              >
-                                Download
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    <td className="py-3 px-4 border-r border-[#e2e8f0] font-bold text-slate-900">
+                      {cif.first_name} {cif.last_name}
+                    </td>
+                    <td className="py-3 px-4 border-r border-[#e2e8f0] text-slate-600">
+                      {cif.email || '-'}
+                    </td>
+                    <td className="py-3 px-4 border-r border-[#e2e8f0] font-mono text-slate-700 font-medium">
+                      {cif.contact_number || '-'}
+                    </td>
+                    <td className="py-3 px-4 border-r border-[#e2e8f0] text-slate-700 font-medium">
+                      {cif.created_by_name || '-'}
+                    </td>
+                    <td className="py-3 px-4 border-r border-[#e2e8f0] text-slate-700 font-medium">
+                      {cif.verified_by_name || '-'}
+                    </td>
+                    <td className="py-3 px-4 border-r border-[#e2e8f0]">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Verified</span>
+                      </span>
+                    </td>
+                    {isAdmin && (
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setDeleteCifTarget(cif)}
+                          className="bg-white border border-red-300 text-red-600 hover:bg-red-50 hover:border-red-600 font-bold px-3 py-1 rounded text-xs cursor-pointer shadow-2xs transition-colors inline-flex items-center gap-1"
+                          title="Delete CIF Record"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
               )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 4. CIF Details Modal (Spacious, High-Contrast max-w-4xl) */}
+      {selectedCif && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs overflow-y-auto">
+          <div className="bg-white border-2 border-[#104080] rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="bg-[#104080] text-white px-5 py-3 flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <User className="w-5 h-5 text-amber-300" />
+                <h3 className="text-sm font-bold m-0 tracking-wide">
+                  CIF Master Profile — {selectedCif.cif_no || selectedCif.id}
+                </h3>
+                <span className="bg-emerald-950/80 text-emerald-200 border border-emerald-600 px-2 py-0.5 rounded text-xs font-mono font-bold">
+                  VERIFIED RECORD
+                </span>
+              </div>
+              <button 
+                onClick={() => setSelectedCif(null)} 
+                className="text-white hover:text-red-300 font-bold p-1 cursor-pointer transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
             
-            <div className="bg-[#d4d0c8] border-t border-[#a0a0a0] p-2 flex justify-end">
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex flex-col gap-5">
+              {/* Profile Summary Banner */}
+              <div className="bg-[#e6edf8] border border-[#c4d4ec] rounded-md p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#104080] text-white flex items-center justify-center text-base font-bold shadow-xs">
+                    {(selectedCif.first_name || 'C')[0]}
+                  </div>
+                  <div>
+                    <div className="text-base font-bold text-slate-900">
+                      {selectedCif.title ? `${selectedCif.title} ` : ''}{selectedCif.first_name} {selectedCif.last_name}
+                    </div>
+                    <div className="text-xs text-slate-600 mt-0.5">
+                      Alias: <b className="text-[#104080]">{selectedCif.short_name || '-'}</b> • Nationality: <b className="text-slate-800">{selectedCif.nationality || '-'}</b>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="bg-white px-2.5 py-1 rounded border border-[#c4d4ec] font-mono font-bold text-[#104080]">
+                    CIF: {selectedCif.cif_no || selectedCif.id}
+                  </span>
+                  <span className="bg-white px-2.5 py-1 rounded border border-[#c4d4ec] font-bold text-slate-700">
+                    CCY: {selectedCif.ccy || 'INR'}
+                  </span>
+                  <span className="bg-white px-2.5 py-1 rounded border border-[#c4d4ec] font-bold text-slate-700">
+                    Branch: {selectedCif.branch_id === 1 ? 'UAE (1)' : 'INDIA (2)'}
+                  </span>
+                </div>
+              </div>
+
+              {/* 2-Column Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Basic Demographics Card */}
+                <div className="bg-[#f8fafc] border border-[#c4d4ec] rounded-md p-4 shadow-2xs">
+                  <div className="font-bold text-[#104080] text-xs uppercase tracking-wide border-b border-[#c4d4ec] pb-2 mb-3">
+                    Basic Demographic Data
+                  </div>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500 font-medium">Gender:</span>
+                      <span className="font-semibold text-slate-900">{selectedCif.gender || '-'}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500 font-medium">Nationality:</span>
+                      <span className="font-semibold text-slate-900">{selectedCif.nationality || '-'}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500 font-medium">CIF Type:</span>
+                      <span className="font-semibold text-[#104080]">{selectedCif.cif_type_name || selectedCif.cif_type_id || 'Customer'}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500 font-medium">Registered Currency:</span>
+                      <span className="font-mono font-bold text-slate-900">{selectedCif.ccy || '-'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact & Address Card */}
+                <div className="bg-[#f8fafc] border border-[#c4d4ec] rounded-md p-4 shadow-2xs">
+                  <div className="font-bold text-[#104080] text-xs uppercase tracking-wide border-b border-[#c4d4ec] pb-2 mb-3">
+                    Contact & Address Profile
+                  </div>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500 font-medium">Primary Contact:</span>
+                      <span className="font-mono font-bold text-slate-900">{selectedCif.contact_number || '-'}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500 font-medium">Email Address:</span>
+                      <span className="font-semibold text-slate-900">{selectedCif.email || '-'}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500 font-medium">City:</span>
+                      <span className="font-semibold text-slate-900">{selectedCif._profile?.city || selectedCif.city || '-'}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500 font-medium">Country:</span>
+                      <span className="font-semibold text-slate-900">{selectedCif._profile?.country || selectedCif.country || '-'}</span>
+                    </div>
+                    {selectedCif._profile?.indianNo && (
+                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span className="text-slate-500 font-medium">Indian Phone:</span>
+                        <span className="font-mono font-semibold text-slate-900">{selectedCif._profile.indianNo}</span>
+                      </div>
+                    )}
+                    {selectedCif._profile?.uaeNo && (
+                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span className="text-slate-500 font-medium">UAE Phone:</span>
+                        <span className="font-mono font-semibold text-slate-900">{selectedCif._profile.uaeNo}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Uploaded KYC Documents Section */}
+              <div className="bg-[#f8fafc] border border-[#c4d4ec] rounded-md p-4 shadow-2xs">
+                <div className="font-bold text-[#104080] text-xs uppercase tracking-wide border-b border-[#c4d4ec] pb-2 mb-3 flex items-center justify-between">
+                  <span>Uploaded KYC Identification Records</span>
+                  <span className="text-xs text-slate-600 font-normal">
+                    {selectedCif.documents?.length || 0} Documents on File
+                  </span>
+                </div>
+
+                {(!selectedCif.documents || selectedCif.documents.length === 0) ? (
+                  <div className="text-sm text-slate-500 italic p-6 bg-white text-center border border-dashed border-[#c4d4ec] rounded-md">
+                    No KYC identification documents uploaded for this CIF record.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-[#c4d4ec] rounded-md bg-white">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-[#e6edf8] text-[#104080] border-b border-[#c4d4ec] text-left text-xs font-bold uppercase">
+                          <th className="py-2.5 px-3 font-bold">Doc Type</th>
+                          <th className="py-2.5 px-3 font-bold">File Name</th>
+                          <th className="py-2.5 px-3 font-bold">Uploaded At</th>
+                          <th className="py-2.5 px-3 font-bold text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedCif.documents.map((doc: any) => (
+                          <tr key={doc.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                            <td className="py-2.5 px-3 font-bold text-[#104080] capitalize">
+                              {doc.doc_type ? doc.doc_type.replace(/_/g, ' ') : '-'}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-700 truncate max-w-[200px]">
+                              {doc.file_name || `${doc.doc_type || 'document'}`}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-500 text-xs">
+                              {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : '-'}
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handlePreviewDoc(selectedCif.id, doc)}
+                                  className="bg-[#104080] hover:bg-[#0a2850] text-white px-3 py-1 rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                                  title="View Document"
+                                >
+                                  View
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadDoc(selectedCif.id, doc)}
+                                  className="bg-white border border-[#c4d4ec] hover:bg-slate-100 text-slate-700 px-3 py-1 rounded text-xs font-semibold cursor-pointer transition-colors shadow-2xs flex items-center gap-1"
+                                  title="Download Document"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  <span>Download</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="bg-[#e6edf8] border-t border-[#c4d4ec] px-5 py-3 flex justify-end shrink-0">
               <button 
+                type="button"
                 onClick={() => setSelectedCif(null)}
-                className="bg-gray-100 border border-gray-400 px-6 py-1 text-[12px] hover:bg-gray-200 font-bold text-[#104080] cursor-pointer"
+                className="bg-[#104080] hover:bg-[#0a2850] text-white px-6 py-2 rounded-md text-sm font-bold cursor-pointer shadow-xs transition-colors"
               >
-                Close
+                Close Profile
               </button>
             </div>
           </div>
         </div>
-      </>
-    )}
+      )}
 
-    {/* Document Preview Modal */}
-    {previewDoc && (
-      <>
-        <div className="fixed inset-0 bg-black/60 z-[90]" onClick={() => setPreviewDoc(null)}></div>
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div className="bg-[#eaf0f8] px-3 py-2 font-bold text-[#104080] border-b border-[#a2b5cd] flex justify-between items-center">
-              <span>Document Preview - {previewDoc.label.replace(/_/g, ' ').toUpperCase()}</span>
+      {/* 5. Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-2xs">
+          <div className="bg-white border-2 border-[#104080] rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-[#104080] text-white px-5 py-3 font-bold text-sm flex justify-between items-center">
+              <span>KYC Document Preview — {previewDoc.label.replace(/_/g, ' ').toUpperCase()}</span>
               <button 
                 onClick={() => setPreviewDoc(null)} 
-                className="text-red-600 font-bold hover:underline cursor-pointer px-2"
+                className="text-white hover:text-red-300 font-bold cursor-pointer p-1"
+                title="Close Modal"
               >
-                Close (X)
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4 min-h-[400px]">
+            <div className="flex-1 overflow-auto bg-[#1a1a1a] flex items-center justify-center p-6 min-h-[460px]">
               {previewDoc.isPdf ? (
-                <iframe src={previewDoc.url} title={previewDoc.label} className="w-full h-[550px] border border-gray-300" />
+                <iframe src={previewDoc.url} title={previewDoc.label} className="w-full h-[580px] border border-slate-600 rounded-md bg-white" />
               ) : (
-                <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-[550px] object-contain shadow-md" />
+                <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-[580px] object-contain rounded-md shadow-lg bg-white" />
               )}
+            </div>
+            <div className="bg-[#e6edf8] px-5 py-2.5 border-t border-[#c4d4ec] flex items-center justify-between text-xs">
+              <span className="text-slate-700">Document: <b>{previewDoc.label}</b></span>
+              <button
+                type="button"
+                onClick={() => setPreviewDoc(null)}
+                className="bg-[#104080] hover:bg-[#0a2850] text-white px-4 py-1.5 rounded-md text-xs font-bold cursor-pointer shadow-xs"
+              >
+                Close Preview
+              </button>
             </div>
           </div>
         </div>
-      </>
-    )}
+      )}
 
-      {/* Confirm Delete CIF Modal (Admin/Super Admin only) */}
+      {/* 6. Confirm Delete CIF Modal (Admin/Super Admin only) */}
       {deleteCifTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
-            onClick={() => !isDeletingCif && setDeleteCifTarget(null)}
-          ></div>
-          <div className="bg-white border-2 border-[#104080] rounded-md shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150 font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs">
+          <div className="bg-white border-2 border-[#104080] rounded-lg shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Title Bar */}
-            <div className="bg-[#104080] text-white px-4 py-2 flex items-center justify-between">
+            <div className="bg-[#104080] text-white px-5 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-sm tracking-wide">
-                <span>⚠️</span>
+                <AlertTriangle className="w-5 h-5 text-amber-300" />
                 <span>Confirm CIF Deletion</span>
               </div>
               <button 
                 type="button"
                 onClick={() => !isDeletingCif && setDeleteCifTarget(null)}
-                className="text-white hover:text-red-300 text-lg font-bold leading-none cursor-pointer"
+                className="text-white hover:text-red-300 p-0.5 leading-none cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-5 text-xs text-gray-700 space-y-4">
-              <p className="text-[13px] text-gray-800">
-                Are you sure you want to permanently delete CIF <strong className="text-[#104080] font-bold">{deleteCifTarget.cif_no || deleteCifTarget.id}</strong>?
+            <div className="p-6 text-sm text-slate-700 space-y-4">
+              <p className="text-sm text-slate-800">
+                Are you sure you want to permanently delete CIF <strong className="text-[#104080] font-bold font-mono">{deleteCifTarget.cif_no || deleteCifTarget.id}</strong>?
               </p>
 
               {/* Summary Card */}
-              <div className="bg-[#f8fafc] border border-[#cbd5e1] rounded p-3 space-y-2">
-                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
-                  <span className="text-gray-500 font-medium">CIF ID:</span>
-                  <span className="font-bold text-[#104080]">{deleteCifTarget.cif_no || deleteCifTarget.id}</span>
+              <div className="bg-[#f8fafc] border border-[#c4d4ec] rounded-md p-4 space-y-2.5 text-sm">
+                <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                  <span className="text-slate-500 font-medium">CIF ID:</span>
+                  <span className="font-mono font-bold text-[#104080]">{deleteCifTarget.cif_no || deleteCifTarget.id}</span>
                 </div>
-                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
-                  <span className="text-gray-500 font-medium">Customer / Agent Name:</span>
-                  <span className="font-bold text-gray-900">{deleteCifTarget.first_name} {deleteCifTarget.last_name}</span>
+                <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                  <span className="text-slate-500 font-medium">Customer / Agent Name:</span>
+                  <span className="font-bold text-slate-900">{deleteCifTarget.first_name} {deleteCifTarget.last_name}</span>
                 </div>
-                <div className="flex justify-between border-b border-[#e2e8f0] pb-1.5">
-                  <span className="text-gray-500 font-medium">Phone:</span>
-                  <span className="font-mono font-bold text-gray-900">{deleteCifTarget.contact_number || '-'}</span>
+                <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                  <span className="text-slate-500 font-medium">Phone:</span>
+                  <span className="font-mono font-bold text-slate-900">{deleteCifTarget.contact_number || '-'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 font-medium">Email:</span>
-                  <span className="font-semibold text-gray-700">{deleteCifTarget.email || '-'}</span>
+                  <span className="text-slate-500 font-medium">Email:</span>
+                  <span className="font-semibold text-slate-700">{deleteCifTarget.email || '-'}</span>
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 rounded text-[11px] leading-relaxed">
-                <strong>Notice:</strong> This action permanently removes this customer/agent profile from the database.
+              <div className="bg-amber-50 border border-amber-300 text-amber-900 px-3.5 py-2.5 rounded-md text-xs leading-relaxed flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Notice: This action permanently removes this customer profile from the repository.</span>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="bg-[#f1f5f9] border-t border-[#cbd5e1] px-4 py-3 flex justify-end gap-2.5">
+            <div className="bg-[#f1f5f9] border-t border-[#c4d4ec] px-5 py-3 flex justify-end gap-3">
               <button
                 type="button"
                 disabled={isDeletingCif}
                 onClick={() => setDeleteCifTarget(null)}
-                className="px-4 py-1.5 bg-white border border-[#cbd5e1] text-gray-700 hover:bg-gray-100 rounded text-xs font-semibold cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 bg-white border border-[#c4d4ec] text-slate-700 hover:bg-slate-100 rounded-md text-xs font-semibold cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -441,7 +610,7 @@ export default function ViewRetailCif() {
                 type="button"
                 disabled={isDeletingCif}
                 onClick={handleConfirmDeleteCif}
-                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
               >
                 {isDeletingCif ? 'Deleting...' : 'Yes, Delete CIF'}
               </button>

@@ -1,5 +1,6 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect, useMemo } from 'react';
+import { X } from 'lucide-react';
 import api from '../services/api';
 import CostRateModal from './CostRateModal';
 
@@ -344,10 +345,10 @@ export default function AedReportsScreen() {
               {filterDate && (
                 <button
                   onClick={() => setFilterDate('')}
-                  className="text-gray-400 hover:text-red-500 font-bold text-xs"
+                  className="text-gray-400 hover:text-red-500 cursor-pointer"
                   title="Clear Date"
                 >
-                  ✕
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               )}
             </div>
@@ -370,10 +371,10 @@ export default function AedReportsScreen() {
               {filterAgent && (
                 <button
                   onClick={() => setFilterAgent('')}
-                  className="text-gray-400 hover:text-red-500 font-bold text-xs"
+                  className="text-gray-400 hover:text-red-500 cursor-pointer"
                   title="Clear Agent"
                 >
-                  ✕
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               )}
             </div>

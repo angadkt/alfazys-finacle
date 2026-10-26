@@ -4,7 +4,7 @@ import { useToast } from '../contexts/ToastContext';
 import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
 import type { StaffPermissions, StaffEmailNotification, FinacleScreen } from '../types/staff';
 import EmailSentModal from './EmailSentModal';
-import { Eye, EyeOff, KeyRound, Mail, ShieldCheck, CheckSquare, Square } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, Mail, ShieldCheck, CheckSquare, Square, Info, AlertTriangle } from 'lucide-react';
 
 import api from '../services/api';
 import { dispatchStaffCredentialsEmail } from '../services/emailDispatch';
@@ -367,7 +367,7 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
               </label>
 
               <div className="flex items-start gap-2 text-[11px] text-gray-700 bg-white p-2 border border-[#d0e0f0]">
-                <span className="text-[#c0392b] font-bold text-sm leading-none">ℹ</span>
+                <Info className="w-4 h-4 text-[#c0392b] shrink-0 mt-0.5" />
                 <div>
                   <strong>Mandatory First-Login Password Enforcement:</strong> When this staff member logs in with this temporary password, the terminal will lock all screens and mandate an immediate password update. Dashboard access will be blocked until the update succeeds.
                 </div>
@@ -447,8 +447,8 @@ export default function AddStaffForm({ onNavigateToManagement }: AddStaffFormPro
                         {item.desc}
                       </p>
                       {item.adminOnlyWarning && (
-                        <span className="text-[10px] text-amber-700 font-semibold block mt-0.5">
-                          ⚠ Supervisory dual-control function (Typically Super Admin only)
+                        <span className="text-[10px] text-amber-700 font-semibold flex items-center gap-1 mt-0.5">
+                          <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" /> Supervisory dual-control function (Typically Super Admin only)
                         </span>
                       )}
                     </div>

@@ -72,7 +72,7 @@ ${errorInfo?.componentStack || "N/A"}`;
             {/* Finacle Error Header */}
             <div className="bg-[#104080] text-white px-3.5 py-2 flex items-center justify-between border-b border-[#0a2850]">
               <div className="flex items-center gap-2">
-                <span className="text-amber-300 font-bold">⚠️</span>
+                <AlertTriangle className="w-4 h-4 text-amber-300" />
                 <span className="font-bold tracking-wider uppercase text-xs">
                   SYSTEM EXCEPTION / TERMINAL RECOVERY
                 </span>

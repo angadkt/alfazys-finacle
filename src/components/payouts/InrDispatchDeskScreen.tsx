@@ -18,7 +18,14 @@ import {
   Copy,
   Trash2,
   Zap,
-  ArrowLeftRight
+  ArrowLeftRight,
+  CreditCard,
+  Folder,
+  X,
+  Info,
+  Lightbulb,
+  ArrowRight,
+  ScrollText
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -1124,7 +1131,7 @@ export default function InrDispatchDeskScreen() {
       {/* Finacle Top Command Header */}
       <div className="bg-[#104080] text-white px-3 py-1.5 flex items-center justify-between border-b border-[#0a2850] shadow-xs select-none">
         <div className="flex items-center gap-2">
-          <span className="text-sm">📁</span>
+          <Folder className="w-4 h-4 text-white" />
           <span className="font-bold tracking-wider text-xs">
             FINCORE UNIVERSAL SETTLEMENT — DIRECT BENEFICIARY PAYOUT (DEBIT ENTRY) DESK
           </span>
@@ -1145,7 +1152,9 @@ export default function InrDispatchDeskScreen() {
             <CheckCircle2 className="w-4 h-4 text-emerald-200" />
             <span>{successToast}</span>
           </div>
-          <button onClick={() => setSuccessToast("")} className="text-white hover:text-emerald-200 font-bold cursor-pointer">✕</button>
+          <button onClick={() => setSuccessToast("")} className="text-white hover:text-emerald-200 p-0.5 cursor-pointer">
+            <X className="w-3.5 h-3.5 stroke-[2.5]" />
+          </button>
         </div>
       )}
 
@@ -1237,10 +1246,10 @@ export default function InrDispatchDeskScreen() {
                     setFromDate("");
                     setToDate("");
                   }}
-                  className="text-gray-400 hover:text-red-500 font-bold px-1 text-xs cursor-pointer"
+                  className="text-gray-400 hover:text-red-500 px-1 cursor-pointer"
                   title="Clear Dates"
                 >
-                  ✕
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               )}
             </div>
@@ -1294,9 +1303,9 @@ export default function InrDispatchDeskScreen() {
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2 top-1 text-gray-400 hover:text-red-500 font-bold text-xs cursor-pointer"
+                className="absolute right-2 top-1.5 text-gray-400 hover:text-red-500 cursor-pointer"
               >
-                ✕
+                <X className="w-3 h-3 stroke-[2.5]" />
               </button>
             )}
           </div>
@@ -1492,9 +1501,15 @@ export default function InrDispatchDeskScreen() {
       <div className="flex-1 overflow-auto custom-scrollbar p-3">
         <div className="mb-2 flex items-center justify-between text-[11px] text-gray-600 font-semibold px-0.5">
           {activeDeskTab === "pending_queue" ? (
-            <span>⚡ Showing <strong>{filteredPendingPayouts.length}</strong> unpaid beneficiaries booked in UAE waiting for dispatch in India</span>
+            <span className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>Showing <strong>{filteredPendingPayouts.length}</strong> unpaid beneficiaries booked in UAE waiting for dispatch in India</span>
+            </span>
           ) : (
-            <span>📜 Showing <strong>{filteredRecords.length}</strong> logged debit payout vouchers</span>
+            <span className="flex items-center gap-1.5">
+              <ScrollText className="w-3.5 h-3.5 text-[#104080] shrink-0" />
+              <span>Showing <strong>{filteredRecords.length}</strong> logged debit payout vouchers</span>
+            </span>
           )}
         </div>
         {activeDeskTab === "pending_queue" ? (
@@ -1745,8 +1760,14 @@ export default function InrDispatchDeskScreen() {
                           <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#eef3f9] text-[#104080] border border-[#c4d4ec] uppercase">
                             {item.payment_mode === "bank_transfer" ? "Bank Transfer" : item.payment_mode.toUpperCase()}
                           </span>
-                          <div className="text-[9px] text-gray-500 mt-0.5 capitalize">
-                            {item.wallet_type === "bank" ? "💳 Bank Float" : item.wallet_type === "cash" ? "💵 Cash Float" : "Direct"}
+                          <div className="text-[9px] text-gray-500 mt-0.5 capitalize flex items-center justify-center gap-1">
+                            {item.wallet_type === "bank" ? (
+                              <><CreditCard className="w-2.5 h-2.5 text-blue-600" /> Bank Float</>
+                            ) : item.wallet_type === "cash" ? (
+                              <><Banknote className="w-2.5 h-2.5 text-emerald-600" /> Cash Float</>
+                            ) : (
+                              "Direct"
+                            )}
                           </div>
                         </td>
 
@@ -1836,10 +1857,12 @@ export default function InrDispatchDeskScreen() {
           <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
               <div className="flex items-center gap-1.5">
-                <span className="text-emerald-400 font-bold">💳</span>
+                <CreditCard className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span className="font-bold text-xs uppercase tracking-wider">Inject Float Credit (Liquidity Inflow)</span>
               </div>
-              <button onClick={() => setIsCreditModalOpen(false)} className="text-white hover:text-red-300 font-bold cursor-pointer">✕</button>
+              <button onClick={() => setIsCreditModalOpen(false)} className="text-white hover:text-red-300 cursor-pointer">
+                <X className="w-4 h-4 stroke-[2.5]" />
+              </button>
             </div>
             <form onSubmit={handleAddCredit} className="p-4 space-y-3">
               {creditError && (
@@ -1868,8 +1891,14 @@ export default function InrDispatchDeskScreen() {
 
                 {activeCreditServicer && (
                   <div className="mt-1 flex items-center justify-between text-[11px] bg-[#f0f4f8] px-2.5 py-1 rounded border border-[#c4d4ec] text-gray-700">
-                    <span>💳 Bank Float: <strong className="text-[#104080]">₹{Number(activeCreditServicer.wallet?.bank_balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
-                    <span>💵 Cash Float: <strong className="text-emerald-700">₹{Number(activeCreditServicer.wallet?.cash_balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+                    <span className="flex items-center gap-1">
+                      <CreditCard className="w-3 h-3 text-[#104080]" />
+                      <span>Bank Float: <strong className="text-[#104080]">₹{Number(activeCreditServicer.wallet?.bank_balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Banknote className="w-3 h-3 text-emerald-700" />
+                      <span>Cash Float: <strong className="text-emerald-700">₹{Number(activeCreditServicer.wallet?.cash_balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+                    </span>
                     <span>Total Float: <strong className="text-gray-900">₹{Number(activeCreditServicer.wallet?.total_float || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
                   </div>
                 )}
@@ -2018,7 +2047,10 @@ export default function InrDispatchDeskScreen() {
                           <Check className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                           Balanced: Tranche sum exactly matches total amount
                         </span>
-                        <span className="font-mono">₹{masterTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ✓</span>
+                        <span className="font-mono flex items-center gap-1">
+                          <span>₹{masterTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          <Check className="w-3.5 h-3.5 text-emerald-700 stroke-[2.5]" />
+                        </span>
                       </div>
                     ) : difference > 0 ? (
                       <div className="flex items-center justify-between text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-2 py-1 rounded">
@@ -2094,16 +2126,16 @@ export default function InrDispatchDeskScreen() {
             {/* Modal Header */}
             <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
               <div className="flex items-center gap-2">
-                <span className="text-sm">⚡</span>
+                <Zap className="w-4 h-4 text-amber-400" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Direct Beneficiary Payout & Debit Entry (India Outflow)
                 </span>
               </div>
               <button
                 onClick={() => setIsEntryModalOpen(false)}
-                className="text-white hover:text-red-300 font-bold text-sm px-1 cursor-pointer"
+                className="text-white hover:text-red-300 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 
@@ -2121,7 +2153,7 @@ export default function InrDispatchDeskScreen() {
                 <div className="bg-amber-50 border border-amber-300 text-amber-900 p-2.5 rounded-xs text-xs space-y-1.5 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">⚡</span>
+                      <Zap className="w-4 h-4 text-amber-500" />
                       <div className="font-bold flex items-center gap-1.5">
                         <span>Pre-filled from Booked UAE Order:</span>
                         <span className="font-mono text-[#104080] font-extrabold bg-blue-100/70 border border-blue-200 px-1.5 py-0.2 rounded">
@@ -2158,7 +2190,7 @@ export default function InrDispatchDeskScreen() {
 
                   {amountNum > 0 && amountNum < actioningPendingItem.inr_amount - 0.01 && (
                     <div className="bg-purple-50 border border-purple-200 text-purple-900 p-1.5 rounded text-[10.5px] font-bold flex items-center gap-1.5">
-                      <span>⚠️</span>
+                      <AlertTriangle className="w-3.5 h-3.5 text-purple-700 shrink-0" />
                       <span>
                         Daily Limit / Partial Shortfall: Entering ₹{amountNum.toLocaleString("en-IN")} will leave <strong>₹{(actioningPendingItem.inr_amount - amountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} Due</strong>. The order will be saved as <em>Partial</em> and stay in the Pending Queue for subsequent dispatch.
                       </span>
@@ -2233,7 +2265,10 @@ export default function InrDispatchDeskScreen() {
                               onChange={() => setWalletType("bank")}
                               className="accent-[#104080]"
                             />
-                            <span>💳 Bank (₹ {activeServicer?.wallet.bank_balance.toLocaleString("en-IN") || 0})</span>
+                            <span className="flex items-center gap-1">
+                              <CreditCard className="w-3 h-3 text-blue-600" />
+                              <span>Bank (₹ {activeServicer?.wallet.bank_balance.toLocaleString("en-IN") || 0})</span>
+                            </span>
                           </label>
                           <label className="flex items-center gap-1 text-xs cursor-pointer">
                             <input
@@ -2244,7 +2279,10 @@ export default function InrDispatchDeskScreen() {
                               onChange={() => setWalletType("cash")}
                               className="accent-[#104080]"
                             />
-                            <span>💵 Cash (₹ {activeServicer?.wallet.cash_balance.toLocaleString("en-IN") || 0})</span>
+                            <span className="flex items-center gap-1">
+                              <Banknote className="w-3 h-3 text-emerald-600" />
+                              <span>Cash (₹ {activeServicer?.wallet.cash_balance.toLocaleString("en-IN") || 0})</span>
+                            </span>
                           </label>
                         </div>
                       </div>
@@ -2269,8 +2307,9 @@ export default function InrDispatchDeskScreen() {
                     </div>
                   </div>
                 ) : (
-                  <div className="pt-2 border-t border-[#e2e8f0] text-xs text-gray-600 bg-emerald-50 border border-emerald-200 p-2 rounded">
-                    ℹ️ Direct Settlement: 0% servicer commission. Funds disbursed directly by company treasury in India.
+                  <div className="pt-2 border-t border-[#e2e8f0] text-xs text-gray-600 bg-emerald-50 border border-emerald-200 p-2 rounded flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                    <span>Direct Settlement: 0% servicer commission. Funds disbursed directly by company treasury in India.</span>
                   </div>
                 )}
               </div>
@@ -2293,8 +2332,9 @@ export default function InrDispatchDeskScreen() {
                     </span>
                   )}
                   {ifscStatus === "error" && (
-                    <span className="text-[10px] text-rose-600 font-semibold">
-                      ⚠️ {ifscError || "Invalid IFSC"}
+                    <span className="text-[10px] text-rose-600 font-semibold flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-600" />
+                      <span>{ifscError || "Invalid IFSC"}</span>
                     </span>
                   )}
                 </div>
@@ -2307,8 +2347,9 @@ export default function InrDispatchDeskScreen() {
                         Beneficiary Full Name <span className="text-red-500">*</span>:
                       </label>
                       {savedBeneficiaries.length > 0 && (
-                        <span className="text-[10px] text-blue-700 font-semibold">
-                          💡 Suggesting from {savedBeneficiaries.length} Order Entry Accounts
+                        <span className="text-[10px] text-blue-700 font-semibold flex items-center gap-1">
+                          <Lightbulb className="w-3 h-3 text-amber-500" />
+                          <span>Suggesting from {savedBeneficiaries.length} Order Entry Accounts</span>
                         </span>
                       )}
                     </div>
@@ -2369,7 +2410,10 @@ export default function InrDispatchDeskScreen() {
                           IFSC Code:
                         </label>
                         {ifscStatus === "success" && (
-                          <span className="text-[10px] text-emerald-700 font-bold">✓ Autofetched</span>
+                          <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                            <Check className="w-3 h-3 stroke-[2.5]" />
+                            <span>Autofetched</span>
+                          </span>
                         )}
                       </div>
                       <input
@@ -2529,16 +2573,16 @@ export default function InrDispatchDeskScreen() {
           <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
               <div className="flex items-center gap-2">
-                <span className="text-sm">📄</span>
+                <FileText className="w-4 h-4 text-white" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Beneficiary Payout Voucher — {viewDetailsItem.txn_no}
                 </span>
               </div>
               <button
                 onClick={() => setViewDetailsItem(null)}
-                className="text-white hover:text-red-300 font-bold text-sm px-1 cursor-pointer"
+                className="text-white hover:text-red-300 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 
@@ -2629,9 +2673,10 @@ export default function InrDispatchDeskScreen() {
               </div>
               <button
                 onClick={() => setBounceItem(null)}
-                className="text-white hover:text-rose-200 font-bold text-sm px-1 cursor-pointer"
+                className="text-white hover:text-rose-200 p-1 cursor-pointer transition-colors"
+                title="Close"
               >
-                ✕
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 
@@ -2648,9 +2693,12 @@ export default function InrDispatchDeskScreen() {
                 <strong>{bounceItem.beneficiary_name}</strong> (UTR: {bounceItem.utr_number}) as bounced/reversed?
               </p>
 
-              <div className="bg-amber-50 border border-amber-200 p-2 rounded text-[11px] text-amber-900">
-                ⚠️ Reversing this payout will restore ₹ {bounceItem.amount.toLocaleString("en-IN")} back to{" "}
-                <strong>{bounceItem.servicer_name}</strong>'s available float.
+              <div className="bg-amber-50 border border-amber-200 p-2 rounded text-[11px] text-amber-900 flex items-start gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  Reversing this payout will restore ₹ {bounceItem.amount.toLocaleString("en-IN")} back to{" "}
+                  <strong>{bounceItem.servicer_name}</strong>'s available float.
+                </span>
               </div>
 
               <div>
@@ -2699,16 +2747,17 @@ export default function InrDispatchDeskScreen() {
             {/* Header */}
             <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
               <div className="flex items-center gap-2">
-                <span className="text-base">⇄</span>
+                <ArrowLeftRight className="w-4 h-4 text-white" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Inter-Servicer Working Float Transfer (Direct Rebalancing)
                 </span>
               </div>
               <button
                 onClick={() => setIsInterTransferOpen(false)}
-                className="text-white hover:text-red-300 font-bold text-sm px-1 cursor-pointer"
+                className="text-white hover:text-red-300 p-1 cursor-pointer transition-colors"
+                title="Close"
               >
-                ✕
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 
@@ -2721,8 +2770,11 @@ export default function InrDispatchDeskScreen() {
                 </div>
               )}
 
-              <div className="bg-blue-50/70 border border-blue-200 text-[#104080] p-2.5 rounded text-[11px] leading-relaxed">
-                ℹ️ <strong>Direct Float Rebalancing:</strong> Moves liquid working float directly from an excess servicer to a deficit servicer in a single atomic entry. No external withdrawal or deposit required.
+              <div className="bg-blue-50/70 border border-blue-200 text-[#104080] p-2.5 rounded text-[11px] leading-relaxed flex items-start gap-1.5">
+                <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Direct Float Rebalancing:</strong> Moves liquid working float directly from an excess servicer to a deficit servicer in a single atomic entry. No external withdrawal or deposit required.
+                </span>
               </div>
 
               {/* Source & Destination Servicers */}
@@ -2758,7 +2810,9 @@ export default function InrDispatchDeskScreen() {
                           onChange={() => setTransferFromWallet("bank")}
                           className="accent-[#104080]"
                         />
-                        <span>💳 Bank Float</span>
+                        <span className="flex items-center gap-1">
+                          <CreditCard className="w-3.5 h-3.5 text-[#104080]" /> Bank Float
+                        </span>
                       </label>
                       <label className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold text-gray-800">
                         <input
@@ -2769,7 +2823,9 @@ export default function InrDispatchDeskScreen() {
                           onChange={() => setTransferFromWallet("cash")}
                           className="accent-[#104080]"
                         />
-                        <span>💵 Cash Float</span>
+                        <span className="flex items-center gap-1">
+                          <Banknote className="w-3.5 h-3.5 text-emerald-700" /> Cash Float
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -2816,7 +2872,9 @@ export default function InrDispatchDeskScreen() {
                           onChange={() => setTransferToWallet("bank")}
                           className="accent-[#104080]"
                         />
-                        <span>💳 Bank Float</span>
+                        <span className="flex items-center gap-1">
+                          <CreditCard className="w-3.5 h-3.5 text-[#104080]" /> Bank Float
+                        </span>
                       </label>
                       <label className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold text-gray-800">
                         <input
@@ -2827,7 +2885,9 @@ export default function InrDispatchDeskScreen() {
                           onChange={() => setTransferToWallet("cash")}
                           className="accent-[#104080]"
                         />
-                        <span>💵 Cash Float</span>
+                        <span className="flex items-center gap-1">
+                          <Banknote className="w-3.5 h-3.5 text-emerald-700" /> Cash Float
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -2901,25 +2961,25 @@ export default function InrDispatchDeskScreen() {
                 {/* Real-time Float Impact Preview */}
                 {transferAmountNum > 0 && (
                   <div className="bg-white border border-[#c4d4ec] p-2.5 rounded text-[11px] space-y-1.5 mt-1">
-                    <div className="font-bold text-[#104080] text-[10.5px] uppercase tracking-wider flex items-center gap-1">
-                      <span>⚡</span>
+                    <div className="font-bold text-[#104080] text-[10.5px] uppercase tracking-wider flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                       <span>Live Rebalance Impact Preview:</span>
                     </div>
                     <div className="flex items-center justify-between text-rose-700 font-semibold bg-rose-50/50 p-1 rounded">
                       <span>{fromServicerObj?.name || "Source"}:</span>
-                      <span className="font-mono">
-                        ₹ {sourceAvailable.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ➔ ₹ {Math.max(0, sourceAvailable - transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (-₹{transferAmountNum.toLocaleString("en-IN")})
+                      <span className="font-mono flex items-center gap-1">
+                        ₹ {sourceAvailable.toLocaleString("en-IN", { minimumFractionDigits: 2 })} <ArrowRight className="w-3 h-3 text-rose-400" /> ₹ {Math.max(0, sourceAvailable - transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (-₹{transferAmountNum.toLocaleString("en-IN")})
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-emerald-700 font-semibold bg-emerald-50/50 p-1 rounded">
                       <span>{toServicerObj?.name || "Target"}:</span>
-                      <span className="font-mono">
-                        ₹ {targetCurrent.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ➔ ₹ {(targetCurrent + transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (+₹{transferAmountNum.toLocaleString("en-IN")})
+                      <span className="font-mono flex items-center gap-1">
+                        ₹ {targetCurrent.toLocaleString("en-IN", { minimumFractionDigits: 2 })} <ArrowRight className="w-3 h-3 text-emerald-400" /> ₹ {(targetCurrent + transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (+₹{transferAmountNum.toLocaleString("en-IN")})
                       </span>
                     </div>
                     <div className="pt-1 border-t border-gray-100 flex items-center justify-between text-gray-600 font-bold text-[10px]">
                       <span>Net Company Float Variance:</span>
-                      <span className="text-emerald-700 font-mono">₹ 0.00 (Balanced ✓)</span>
+                      <span className="inline-flex items-center gap-1 font-mono text-emerald-700">₹ 0.00 (Balanced <Check className="w-3 h-3 stroke-[2.5]" />)</span>
                     </div>
                   </div>
                 )}

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Check, X, Info } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -59,16 +60,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             {/* Info Icon */}
             <div className="mt-1">
               {toast.type === 'error' ? (
-                <div className="w-[18px] h-[18px] rounded-full bg-red-600 flex items-center justify-center text-white text-xs font-bold font-sans shadow-inner">
-                  x
+                <div className="w-[18px] h-[18px] rounded-full bg-red-600 flex items-center justify-center text-white shadow-inner">
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </div>
               ) : toast.type === 'success' ? (
-                <div className="w-[18px] h-[18px] rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold font-sans shadow-inner">
-                  ✓
+                <div className="w-[18px] h-[18px] rounded-full bg-green-600 flex items-center justify-center text-white shadow-inner">
+                  <Check className="w-3 h-3 stroke-[2.5]" />
                 </div>
               ) : (
-                <div className="w-[18px] h-[18px] rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold font-sans shadow-inner">
-                  i
+                <div className="w-[18px] h-[18px] rounded-full bg-blue-600 flex items-center justify-center text-white shadow-inner">
+                  <Info className="w-3 h-3 stroke-[2.5]" />
                 </div>
               )}
             </div>

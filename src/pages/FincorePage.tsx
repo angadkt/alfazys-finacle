@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Folder, FolderOpen, X } from 'lucide-react';
 import Header from '../components/Header';
 import FinacleErrorBoundary from '../components/FinacleErrorBoundary';
 import FinacleScreenLoader from '../components/FinacleScreenLoader';
@@ -181,13 +182,13 @@ export default function FincorePage() {
             {/* Sidebar Header */}
             <div className="bg-[#e4e4e4] flex items-center justify-between px-2 py-0.5 border-b border-[#a0a0a0] text-[11px] font-bold text-black">
               <span className="flex items-center gap-1.5">
-                <span className="text-[#104080]">📁</span> Finacle Function Tree
+                <Folder className="w-3.5 h-3.5 text-[#104080]" /> Finacle Function Tree
               </span>
               <button 
                 className="font-sans text-xs border border-gray-400 px-1 bg-[#d4d0c8] hover:bg-[#e4e4e4] leading-none h-4 flex items-center justify-center cursor-pointer"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                x
+                <X className="w-3 h-3 text-black stroke-[2.5]" />
               </button>
             </div>
             
@@ -222,7 +223,7 @@ export default function FincorePage() {
                         {isPayoutExpanded ? "−" : "+"}
                       </span>
                       <span className="text-[#104080] font-extrabold text-[13px] tracking-wide flex items-center gap-1.5">
-                        <span className="text-[14px]">📂</span> INR PAYOUT
+                        <FolderOpen className="w-3.5 h-3.5 text-[#104080]" /> INR PAYOUT
                       </span>
                     </div>
                     <span className="text-[10px] text-gray-500 font-normal">
@@ -267,7 +268,7 @@ export default function FincorePage() {
                         {isAedExpanded ? '−' : '+'}
                       </span>
                       <span className="text-[#104080] font-extrabold text-[13px] tracking-wide flex items-center gap-1.5">
-                        <span className="text-[14px]">📂</span> AED COLLECTION
+                        <FolderOpen className="w-3.5 h-3.5 text-[#104080]" /> AED COLLECTION
                       </span>
                     </div>
                     <span className="text-[10px] text-gray-500 font-normal">

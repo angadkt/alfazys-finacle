@@ -1,7 +1,7 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
-import { FileSpreadsheet, FileText } from 'lucide-react';
+import { FileSpreadsheet, FileText, ExternalLink, X, AlertTriangle } from 'lucide-react';
 import { exportOrdersToExcel, exportOrdersToPdf } from '../utils/exportOrders';
 import CostRateModal from './CostRateModal';
 
@@ -986,7 +986,7 @@ export default function OrderEntryForm() {
         
         {/* Navigator Bar */}
         <div className="flex items-center gap-2 px-2 py-1 bg-[#f8f9fa] border-y border-[#a0a0a0] text-[#104080] font-bold text-[11px] w-fit">
-          <span className="cursor-pointer text-[14px] leading-none hover:text-[#0a244d]">↗</span>
+          <ExternalLink className="w-3.5 h-3.5 text-[#104080] hover:text-[#0a244d] cursor-pointer" />
           <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
           <span 
             className="cursor-pointer hover:underline tracking-wide"
@@ -2294,7 +2294,9 @@ export default function OrderEntryForm() {
                     className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
                   />
                   {viewDateFilter && (
-                    <button onClick={() => { setViewDateFilter(''); fetchReceivedAed(1, '', viewModeFilter); }} className="text-gray-400 hover:text-red-500 font-bold text-xs">✕</button>
+                    <button onClick={() => { setViewDateFilter(''); fetchReceivedAed(1, '', viewModeFilter); }} className="text-gray-400 hover:text-red-500 cursor-pointer">
+                      <X className="w-3 h-3 stroke-[2.5]" />
+                    </button>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
@@ -2314,7 +2316,9 @@ export default function OrderEntryForm() {
                     <option value="COR NET">COR NET</option>
                   </select>
                   {viewModeFilter && (
-                    <button onClick={() => { setViewModeFilter(''); fetchReceivedAed(1, viewDateFilter, ''); }} className="text-gray-400 hover:text-red-500 font-bold text-xs">✕</button>
+                    <button onClick={() => { setViewModeFilter(''); fetchReceivedAed(1, viewDateFilter, ''); }} className="text-gray-400 hover:text-red-500 cursor-pointer">
+                      <X className="w-3 h-3 stroke-[2.5]" />
+                    </button>
                   )}
                 </div>
                 <button
@@ -2450,15 +2454,15 @@ export default function OrderEntryForm() {
             {/* Modal Title Bar */}
             <div className="bg-[#104080] text-white px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-sm tracking-wide">
-                <span>⚠️</span>
+                <AlertTriangle className="w-4 h-4 text-amber-300" />
                 <span>Confirm Beneficiary Deletion</span>
               </div>
               <button 
                 type="button"
                 onClick={() => !isDeletingReceiver && setDeleteReceiverTarget(null)}
-                className="text-white hover:text-red-300 text-lg font-bold leading-none cursor-pointer"
+                className="text-white hover:text-red-300 p-0.5 leading-none cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 

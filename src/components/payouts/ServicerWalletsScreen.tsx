@@ -21,7 +21,15 @@ import {
   Pencil,
   Phone,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  Folder,
+  Globe,
+  Star,
+  X,
+  Clock,
+  Check,
+  Info,
+  Zap
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -764,7 +772,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
       {/* Finacle Command Header */}
       <div className="bg-[#104080] text-white px-3 py-1.5 flex items-center justify-between border-b border-[#0a2850] shadow-xs select-none">
         <div className="flex items-center gap-2">
-          <span className="text-sm">📁</span>
+          <Folder className="w-4 h-4 text-white" />
           <span className="font-bold tracking-wider text-xs">FINCORE SERVICER ACCOUNTS & DIGITAL WALLETS</span>
         </div>
       </div>
@@ -809,7 +817,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             onClick={() => { setModalError(""); setIsConvertOpen(true); }}
             className="flex items-center gap-1 bg-white hover:bg-gray-100 border border-[#c4d4ec] text-[#104080] px-3 py-1.5 rounded text-xs font-bold shadow-2xs cursor-pointer"
           >
-            <ArrowLeftRight className="w-3.5 h-3.5" /> Bank ⇄ Cash Transfer
+            <ArrowLeftRight className="w-3.5 h-3.5" /> Bank / Cash Transfer
           </button>
           <button
             onClick={() => setIsSettleOpen(true)}
@@ -874,8 +882,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 <span className="font-mono font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 text-xs">
                   {activeServicer.ifsc_code || (activeServicer.branch === 'UAE' ? 'FNCL0000971' : 'FNCL0000091')}
                 </span>
-                <span className="text-[10px] font-bold text-gray-600 uppercase">
-                  {activeServicer.branch === 'UAE' ? '🇦🇪 UAE' : '🇮🇳 INDIA'}
+                <span className="text-[10px] font-bold text-gray-600 uppercase flex items-center gap-1">
+                  <Globe className="w-3 h-3 text-gray-500" />
+                  {activeServicer.branch === 'UAE' ? 'UAE' : 'INDIA'}
                 </span>
               </div>
             </div>
@@ -901,7 +910,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                       }`}
                       title={`${b.account_holder ? b.account_holder + ' • ' : ''}${b.bank_name} - ${b.account_number} (${b.ifsc_code})`}
                     >
-                      {b.is_primary && <span className="text-emerald-700 font-extrabold">★</span>}
+                      {b.is_primary && <Star className="w-2.5 h-2.5 fill-emerald-600 text-emerald-600 inline" />}
                       <span>{b.bank_name}</span>
                       <span className="font-mono text-gray-500">({b.account_number.slice(-4)})</span>
                     </span>
@@ -1027,7 +1036,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
               }}
               className="bg-transparent text-xs font-semibold text-gray-800 focus:outline-none cursor-pointer max-w-[170px] truncate"
             >
-              <option value="all">📁 All Servicers (Consolidated)</option>
+              <option value="all">All Servicers (Consolidated)</option>
               {servicers.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} ({s.servicer_code})
@@ -1108,10 +1117,10 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                     setStatementFromDate("");
                     setStatementToDate("");
                   }}
-                  className="text-gray-400 hover:text-red-500 font-bold px-1 text-xs cursor-pointer"
+                  className="text-gray-400 hover:text-red-500 p-0.5 text-xs cursor-pointer"
                   title="Clear Dates"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
@@ -1131,7 +1140,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
               <option value="all">All Types</option>
               <option value="float_credit">Float Top-up (Credit)</option>
               <option value="payout_debit">Payout Debit</option>
-              <option value="conversion">Bank ⇄ Cash Transfer</option>
+              <option value="conversion">Bank / Cash Transfer</option>
               <option value="reimbursement">Pocket Reimbursement</option>
               <option value="commission_settle">Commission Paid</option>
             </select>
@@ -1151,9 +1160,10 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
               <button
                 type="button"
                 onClick={() => setStatementSearchQuery("")}
-                className="absolute right-2 top-1.5 text-gray-400 hover:text-red-500 text-xs font-bold cursor-pointer"
+                className="absolute right-2 top-1.5 text-gray-400 hover:text-red-500 p-0.5 cursor-pointer"
+                title="Clear Search"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -1269,7 +1279,15 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
 
                       {/* Wallet */}
                       <td className="py-2 px-2.5 border-r border-[#e2e8f0] font-bold text-gray-700 capitalize">
-                        {t.wallet_type === "bank" ? "💳 Bank" : t.wallet_type === "cash" ? "💵 Cash" : "Direct"}
+                        {t.wallet_type === "bank" ? (
+                          <span className="inline-flex items-center gap-1">
+                            <CreditCard className="w-3 h-3 text-[#104080]" /> Bank
+                          </span>
+                        ) : t.wallet_type === "cash" ? (
+                          <span className="inline-flex items-center gap-1">
+                            <Banknote className="w-3 h-3 text-emerald-700" /> Cash
+                          </span>
+                        ) : "Direct"}
                       </td>
 
                       {/* Details / Beneficiary */}
@@ -1301,7 +1319,15 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                           <div>
                             +₹ {t.commission_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                             <div className="text-[9px] font-normal text-gray-500">
-                              {t.commission_settled ? "✓ Settled" : "⏳ Unpaid"}
+                              {t.commission_settled ? (
+                                <span className="inline-flex items-center gap-0.5 text-emerald-700 font-bold">
+                                  <Check className="w-3 h-3" /> Settled
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-0.5 text-amber-700 font-bold">
+                                  <Clock className="w-3 h-3" /> Unpaid
+                                </span>
+                              )}
                             </div>
                           </div>
                         ) : "—"}
@@ -1340,13 +1366,14 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             {/* Modal Title Bar */}
             <div className="bg-[#104080] text-white px-3.5 py-2 flex items-center justify-between">
               <span className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <span>📁</span> Open Servicer Wallet Account (Link Retail CIF)
+                <Folder className="w-4 h-4 text-white" /> Open Servicer Wallet Account (Link Retail CIF)
               </span>
               <button 
                 onClick={() => setIsAddServicerOpen(false)} 
-                className="text-white hover:text-red-300 font-bold text-sm leading-none cursor-pointer"
+                className="text-white hover:text-red-300 p-0.5 cursor-pointer transition-colors"
+                title="Close"
               >
-                ✕
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 
@@ -1401,7 +1428,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
               {modalError && (
                 <div className="bg-rose-50 border border-rose-300 text-rose-700 px-3 py-1.5 rounded text-xs flex items-center justify-between">
                   <span>{modalError}</span>
-                  <button onClick={() => setModalError("")} className="text-rose-600 hover:text-rose-900 font-bold ml-2">✕</button>
+                  <button onClick={() => setModalError("")} className="text-rose-600 hover:text-rose-900 p-0.5 ml-2 cursor-pointer" title="Dismiss">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               )}
 
@@ -1437,8 +1466,8 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                         </div>
                         {selectedPartyId ? (
                           photoSrc ? (
-                            <span className="mt-1 text-[9px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-1.5 py-0.5 rounded text-center leading-tight">
-                              ✓ Verified Photo
+                            <span className="mt-1 text-[9px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-1.5 py-0.5 rounded text-center leading-tight flex items-center gap-1 justify-center">
+                              <Check className="w-2.5 h-2.5 stroke-[2.5]" /> Verified Photo
                             </span>
                           ) : (
                             <span className="mt-1 text-[9px] bg-gray-100 text-gray-600 border border-gray-300 font-semibold px-1.5 py-0.5 rounded text-center leading-tight">
@@ -1471,12 +1500,13 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                           </select>
                           {selectedPartyId && (
                             <div className="text-[10px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
-                              ✓ Linked to Master CIF Profile. Name & contact auto-inherited below.
+                              <Check className="w-3 h-3 stroke-[2.5]" /> Linked to Master CIF Profile. Name & contact auto-inherited below.
                             </div>
                           )}
                           {eligibleCifs.filter((c) => !c.existing_servicer_id).length === 0 && (
-                            <div className="text-[10px] text-amber-700 mt-1">
-                              ℹ️ All verified servicer CIFs already have wallets, or none exist. You can onboard a new CIF under <strong>[ CREATE RETAIL CIF ]</strong> (CIF Type: SERVICER) or enter details manually below.
+                            <div className="text-[10px] text-amber-700 mt-1 flex items-start gap-1">
+                              <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                              <span>All verified servicer CIFs already have wallets, or none exist. You can onboard a new CIF under <strong>[ CREATE RETAIL CIF ]</strong> (CIF Type: SERVICER) or enter details manually below.</span>
                             </div>
                           )}
                         </div>
@@ -1526,7 +1556,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                               : "bg-white text-gray-700 border-[#c4d4ec] hover:bg-gray-50"
                           }`}
                         >
-                          <span>🇮🇳</span> India Branch
+                          <Globe className="w-3.5 h-3.5" /> India Branch
                         </button>
                         <button
                           type="button"
@@ -1537,7 +1567,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                               : "bg-white text-gray-700 border-[#c4d4ec] hover:bg-gray-50"
                           }`}
                         >
-                          <span>🇦🇪</span> UAE Branch
+                          <Globe className="w-3.5 h-3.5" /> UAE Branch
                         </button>
                       </div>
                     </div>
@@ -1566,11 +1596,20 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                       </div>
                     </div>
 
-                    <p className="text-[10px] text-gray-500 leading-relaxed pt-0.5">
-                      ✓ Finacle operating account <strong>{newBranch === "UAE" ? "00971 1010 XXXXX" : "0091 1010 XXXXXX"}</strong> will be auto-generated sequentially on activation.<br />
-                      ✓ Auto-assigned IFSC <strong>{newBranch === "UAE" ? "FNCL0000971" : "FNCL0000091"}</strong> routes to the {newBranch === "UAE" ? "UAE" : "India"} clearing branch.<br />
-                      ✓ External banks & payout accounts will be registered in Step 2.
-                    </p>
+                    <div className="text-[10px] text-gray-500 leading-relaxed pt-0.5 space-y-0.5">
+                      <div className="flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span>Finacle operating account <strong>{newBranch === "UAE" ? "00971 1010 XXXXX" : "0091 1010 XXXXXX"}</strong> will be auto-generated sequentially on activation.</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span>Auto-assigned IFSC <strong>{newBranch === "UAE" ? "FNCL0000971" : "FNCL0000091"}</strong> routes to the {newBranch === "UAE" ? "UAE" : "India"} clearing branch.</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span>External banks & payout accounts will be registered in Step 2.</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-3 border-t border-gray-200">
@@ -1632,8 +1671,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                     </div>
 
                     {entryError && (
-                      <div className="text-rose-700 bg-rose-50 border border-rose-300 px-2 py-1 rounded text-[11px] flex items-center gap-1 font-semibold">
-                        ⚠️ <span>{entryError}</span>
+                      <div className="text-rose-700 bg-rose-50 border border-rose-300 px-2 py-1 rounded text-[11px] flex items-center gap-1.5 font-semibold">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        <span>{entryError}</span>
                       </div>
                     )}
 
@@ -1799,8 +1839,8 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                                       className="accent-[#104080] cursor-pointer"
                                     />
                                     {acc.is_primary ? (
-                                      <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                                        ★ Primary
+                                      <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 inline-flex items-center gap-0.5">
+                                        <Star className="w-2.5 h-2.5 fill-emerald-600 text-emerald-600 inline" /> Primary
                                       </span>
                                     ) : (
                                       <span className="text-[10px] text-gray-500 hover:text-gray-800">Set</span>
@@ -1898,8 +1938,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                       </div>
                       <div>
                         <span className="text-gray-500 font-semibold">Operating Branch:</span>{" "}
-                        <strong className="text-[#104080]">
-                          {newBranch === "UAE" ? "🇦🇪 UAE Branch" : "🇮🇳 India Branch"}
+                        <strong className="text-[#104080] inline-flex items-center gap-1">
+                          <Globe className="w-3 h-3 text-gray-500" />
+                          {newBranch === "UAE" ? "UAE Branch" : "India Branch"}
                         </strong>
                       </div>
                       <div>
@@ -1924,9 +1965,10 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                       <button
                         type="button"
                         onClick={() => setModalStep(2)}
-                        className="text-[10px] text-[#104080] hover:underline font-bold"
+                        className="text-[10px] text-[#104080] hover:underline font-bold inline-flex items-center gap-1"
                       >
-                        Edit Accounts ✎
+                        <span>Edit Accounts</span>
+                        <Pencil className="w-2.5 h-2.5" />
                       </button>
                     </div>
 
@@ -1973,7 +2015,7 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                       className="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2 font-extrabold text-xs rounded cursor-pointer shadow-xs flex items-center gap-1.5"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>{submitting ? "Activating Finacle Wallet..." : "🚀 Activate Finacle Wallet"}</span>
+                      <span>{submitting ? "Activating Finacle Wallet..." : "Activate Finacle Wallet"}</span>
                     </button>
                   </div>
                 </div>
@@ -1985,13 +2027,15 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
 
 
 
-      {/* MODAL 3: Bank ⇄ Cash Transfer (Internal Wallet Transfer) */}
+      {/* MODAL 3: Bank / Cash Transfer (Internal Wallet Transfer) */}
       {isConvertOpen && activeServicer && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
           <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-md overflow-hidden">
             <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between">
-              <span className="font-bold text-xs uppercase tracking-wider">Internal Wallet Transfer (Bank ⇄ Cash)</span>
-              <button onClick={() => setIsConvertOpen(false)} className="text-white hover:text-red-300 font-bold">✕</button>
+              <span className="font-bold text-xs uppercase tracking-wider">Internal Wallet Transfer (Bank / Cash)</span>
+              <button onClick={() => setIsConvertOpen(false)} className="text-white hover:text-red-300 p-0.5 cursor-pointer" title="Close">
+                <X className="w-4 h-4 stroke-[2.5]" />
+              </button>
             </div>
             <form onSubmit={handleConvert} className="p-4 space-y-3">
               {modalError && (
@@ -2052,7 +2096,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
           <div className="bg-white border-2 border-amber-500 shadow-2xl rounded-xs w-full max-w-sm overflow-hidden">
             <div className="bg-amber-600 text-white px-3 py-2 flex items-center justify-between">
               <span className="font-bold text-xs uppercase tracking-wider">Settle Commission Payout</span>
-              <button onClick={() => setIsSettleOpen(false)} className="text-white hover:text-red-300 font-bold">✕</button>
+              <button onClick={() => setIsSettleOpen(false)} className="text-white hover:text-red-300 p-0.5 cursor-pointer" title="Close">
+                <X className="w-4 h-4 stroke-[2.5]" />
+              </button>
             </div>
             <div className="p-4 space-y-3">
               <p className="text-xs text-gray-700">
@@ -2086,7 +2132,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
           <div className="bg-white border-2 border-rose-600 shadow-2xl rounded-xs w-full max-w-sm overflow-hidden">
             <div className="bg-rose-700 text-white px-3 py-2 flex items-center justify-between">
               <span className="font-bold text-xs uppercase tracking-wider">Mark Transaction as Bounced</span>
-              <button onClick={() => setIsBounceOpen(false)} className="text-white hover:text-red-300 font-bold">✕</button>
+              <button onClick={() => setIsBounceOpen(false)} className="text-white hover:text-red-300 p-0.5 cursor-pointer" title="Close">
+                <X className="w-4 h-4 stroke-[2.5]" />
+              </button>
             </div>
             <div className="p-4 space-y-3">
               <p className="text-xs text-gray-700">
@@ -2129,16 +2177,17 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             {/* Header */}
             <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
               <div className="flex items-center gap-2">
-                <span className="text-base">⇄</span>
+                <ArrowLeftRight className="w-4 h-4 text-white" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Inter-Servicer Working Float Transfer (Direct Rebalancing)
                 </span>
               </div>
               <button
                 onClick={() => setIsInterTransferOpen(false)}
-                className="text-white hover:text-red-300 font-bold text-sm px-1 cursor-pointer"
+                className="text-white hover:text-red-300 p-0.5 cursor-pointer transition-colors"
+                title="Close"
               >
-                ✕
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 
@@ -2151,8 +2200,11 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 </div>
               )}
 
-              <div className="bg-blue-50/70 border border-blue-200 text-[#104080] p-2.5 rounded text-[11px] leading-relaxed">
-                ℹ️ <strong>Direct Float Rebalancing:</strong> Moves liquid working float directly from an excess servicer to a deficit servicer in a single atomic entry. No external withdrawal or deposit required.
+              <div className="bg-blue-50/70 border border-blue-200 text-[#104080] p-2.5 rounded text-[11px] leading-relaxed flex items-start gap-1.5">
+                <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Direct Float Rebalancing:</strong> Moves liquid working float directly from an excess servicer to a deficit servicer in a single atomic entry. No external withdrawal or deposit required.
+                </span>
               </div>
 
               {/* Source & Destination Servicers */}
@@ -2188,7 +2240,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                           onChange={() => setTransferFromWallet("bank")}
                           className="accent-[#104080]"
                         />
-                        <span>💳 Bank Float</span>
+                        <span className="flex items-center gap-1">
+                          <CreditCard className="w-3.5 h-3.5 text-[#104080]" /> Bank Float
+                        </span>
                       </label>
                       <label className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold text-gray-800">
                         <input
@@ -2199,7 +2253,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                           onChange={() => setTransferFromWallet("cash")}
                           className="accent-[#104080]"
                         />
-                        <span>💵 Cash Float</span>
+                        <span className="flex items-center gap-1">
+                          <Banknote className="w-3.5 h-3.5 text-emerald-700" /> Cash Float
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -2246,7 +2302,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                           onChange={() => setTransferToWallet("bank")}
                           className="accent-[#104080]"
                         />
-                        <span>💳 Bank Float</span>
+                        <span className="flex items-center gap-1">
+                          <CreditCard className="w-3.5 h-3.5 text-[#104080]" /> Bank Float
+                        </span>
                       </label>
                       <label className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold text-gray-800">
                         <input
@@ -2257,7 +2315,9 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                           onChange={() => setTransferToWallet("cash")}
                           className="accent-[#104080]"
                         />
-                        <span>💵 Cash Float</span>
+                        <span className="flex items-center gap-1">
+                          <Banknote className="w-3.5 h-3.5 text-emerald-700" /> Cash Float
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -2331,25 +2391,25 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 {/* Real-time Float Impact Preview */}
                 {transferAmountNum > 0 && (
                   <div className="bg-white border border-[#c4d4ec] p-2.5 rounded text-[11px] space-y-1.5 mt-1">
-                    <div className="font-bold text-[#104080] text-[10.5px] uppercase tracking-wider flex items-center gap-1">
-                      <span>⚡</span>
+                    <div className="font-bold text-[#104080] text-[10.5px] uppercase tracking-wider flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                       <span>Live Rebalance Impact Preview:</span>
                     </div>
                     <div className="flex items-center justify-between text-rose-700 font-semibold bg-rose-50/50 p-1 rounded">
                       <span>{fromServicerObj?.name || "Source"}:</span>
-                      <span className="font-mono">
-                        ₹ {sourceAvailable.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ➔ ₹ {Math.max(0, sourceAvailable - transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (-₹{transferAmountNum.toLocaleString("en-IN")})
+                      <span className="font-mono flex items-center gap-1">
+                        ₹ {sourceAvailable.toLocaleString("en-IN", { minimumFractionDigits: 2 })} <ArrowRight className="w-3 h-3 text-rose-400" /> ₹ {Math.max(0, sourceAvailable - transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (-₹{transferAmountNum.toLocaleString("en-IN")})
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-emerald-700 font-semibold bg-emerald-50/50 p-1 rounded">
                       <span>{toServicerObj?.name || "Target"}:</span>
-                      <span className="font-mono">
-                        ₹ {targetCurrent.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ➔ ₹ {(targetCurrent + transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (+₹{transferAmountNum.toLocaleString("en-IN")})
+                      <span className="font-mono flex items-center gap-1">
+                        ₹ {targetCurrent.toLocaleString("en-IN", { minimumFractionDigits: 2 })} <ArrowRight className="w-3 h-3 text-emerald-400" /> ₹ {(targetCurrent + transferAmountNum).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (+₹{transferAmountNum.toLocaleString("en-IN")})
                       </span>
                     </div>
                     <div className="pt-1 border-t border-gray-100 flex items-center justify-between text-gray-600 font-bold text-[10px]">
                       <span>Net Company Float Variance:</span>
-                      <span className="text-emerald-700 font-mono">₹ 0.00 (Balanced ✓)</span>
+                      <span className="inline-flex items-center gap-1 font-mono text-emerald-700">₹ 0.00 (Balanced <Check className="w-3 h-3 stroke-[2.5]" />)</span>
                     </div>
                   </div>
                 )}

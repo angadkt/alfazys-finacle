@@ -14,7 +14,9 @@ import {
   AlertTriangle, 
   Trash2, 
   RotateCw, 
-  SlidersHorizontal 
+  SlidersHorizontal,
+  Check,
+  X
 } from 'lucide-react';
 import api from '../services/api';
 import { dispatchStaffCredentialsEmail } from '../services/emailDispatch';
@@ -398,12 +400,12 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
 
                       <td className="py-2 px-3 border-r border-[#e5e5e5]">
                         {staff.mustChangePassword ? (
-                          <span className="text-[11px] font-bold text-red-600 bg-red-50 px-1 py-0.5 border border-red-200">
-                            ⚠ Mandatory Change
+                          <span className="text-[11px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 border border-red-200 inline-flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3 text-red-600" /> Mandatory Change
                           </span>
                         ) : (
-                          <span className="text-[11px] text-gray-500 font-semibold">
-                            ✓ Completed
+                          <span className="text-[11px] text-gray-500 font-semibold inline-flex items-center gap-1">
+                            <Check className="w-3 h-3 text-emerald-600 stroke-[2.5]" /> Completed
                           </span>
                         )}
                       </td>
@@ -512,9 +514,9 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
               </div>
               <button 
                 onClick={() => setEditingStaff(null)}
-                className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] text-[11px] font-bold"
+                className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] cursor-pointer"
               >
-                ✕
+                <X className="w-3 h-3 stroke-[2.5]" />
               </button>
             </div>
 

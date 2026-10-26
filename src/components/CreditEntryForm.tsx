@@ -1,6 +1,6 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect } from 'react';
-import { RefreshCw, FileSpreadsheet, FileText } from 'lucide-react';
+import { RefreshCw, FileSpreadsheet, FileText, Landmark, X, Check, AlertTriangle, Info, Printer } from 'lucide-react';
 import api from '../services/api';
 import type { CreditEntry, UtrItem } from '../services/db';
 import { exportCreditToExcel, exportCreditToPdf } from '../utils/exportCredit';
@@ -622,10 +622,10 @@ Generated on: ${new Date().toLocaleString()}`;
                   {filterDate && (
                     <button
                       onClick={() => setFilterDate('')}
-                      className="text-gray-500 hover:text-red-600 font-bold px-1 text-[11px]"
+                      className="text-gray-500 hover:text-red-600 px-1 cursor-pointer"
                       title="Clear Date Filter"
                     >
-                      ✕
+                      <X className="w-3 h-3 stroke-[2.5]" />
                     </button>
                   )}
                 </div>
@@ -930,15 +930,15 @@ Generated on: ${new Date().toLocaleString()}`;
               {/* Windows 2000/XP Titlebar */}
               <div className="bg-gradient-to-r from-[#0055ea] via-[#0860f6] to-[#3a90f8] px-3 py-1.5 flex items-center justify-between text-white font-bold text-[12px] select-none">
                 <div className="flex items-center gap-2">
-                  <span className="w-4 h-4 bg-[#d4d0c8] border border-black/50 inline-flex items-center justify-center text-[10px] text-black">🏛️</span>
+                  <Landmark className="w-4 h-4 text-white" />
                   <span>FINCORE Credit Entry System • {editingId ? `Modify Entry (${editingId})` : 'New Credit Entry Workflow'}</span>
                 </div>
                 <button 
                   onClick={() => setIsFormModalOpen(false)}
-                  className="w-5 h-5 bg-[#d4d0c8] border-t border-l border-white border-b border-r border-[#404040] text-black text-[11px] font-bold flex items-center justify-center hover:bg-[#eaeaea] leading-none cursor-pointer"
+                  className="w-5 h-5 bg-[#d4d0c8] border-t border-l border-white border-b border-r border-[#404040] text-black flex items-center justify-center hover:bg-[#eaeaea] leading-none cursor-pointer"
                   title="Close (Esc)"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
               </div>
 
@@ -991,7 +991,7 @@ Generated on: ${new Date().toLocaleString()}`;
                                   ? 'bg-[#276a3c] text-white' 
                                   : 'bg-gray-300 text-gray-700'
                               }`}>
-                                {isDone ? '✓' : step.num}
+                                {isDone ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : step.num}
                               </span>
                               <span className="truncate">{step.label}</span>
                             </div>
@@ -1006,8 +1006,9 @@ Generated on: ${new Date().toLocaleString()}`;
                   {/* Error banner if any */}
                   {Object.keys(stepErrors).length > 0 && (
                     <div className="bg-[#fff0f0] border-2 border-red-500 p-2 mb-3 text-[11px] text-red-700">
-                      <div className="font-bold flex items-center gap-1">
-                        <span>⚠ Validation Required:</span>
+                      <div className="font-bold flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                        <span>Validation Required:</span>
                       </div>
                       <ul className="list-disc list-inside mt-0.5">
                         {Object.values(stepErrors).map((err, i) => (
@@ -1118,7 +1119,10 @@ Generated on: ${new Date().toLocaleString()}`;
 
                       {/* Info Note */}
                       <div className="mt-4 p-2 bg-[#f4f7f9] border border-[#a0a0a0] text-[11px] text-gray-700 w-full">
-                        <div className="font-bold text-[#104080] mb-0.5">ℹ Banking Validation Note:</div>
+                        <div className="font-bold text-[#104080] mb-0.5 flex items-center gap-1">
+                          <Info className="w-3.5 h-3.5 text-[#104080]" />
+                          <span>Banking Validation Note:</span>
+                        </div>
                         Beneficiary details are validated against standard Indian Banking IFSC clearing formats.
                         Once verified, the payout amount will be scheduled in Step 2.
                       </div>
@@ -1233,11 +1237,11 @@ Generated on: ${new Date().toLocaleString()}`;
                         <div className="font-bold flex items-center gap-1">
                           {Math.abs(remainingUtrBalance) < 0.01 ? (
                             <span className="flex items-center gap-1 bg-[#276a3c] text-white px-3 py-0.5 text-[11px]">
-                              ✓ 100% BALANCED & READY (Completed)
+                              <Check className="w-3.5 h-3.5 stroke-[2.5]" /> 100% BALANCED &amp; READY (Completed)
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 bg-red-600 text-white px-3 py-0.5 text-[11px]">
-                              ⚠ Discrepancy of ₹ {remainingUtrBalance.toLocaleString()}
+                              <AlertTriangle className="w-3.5 h-3.5" /> Discrepancy of ₹ {remainingUtrBalance.toLocaleString()}
                             </span>
                           )}
                         </div>
@@ -1362,7 +1366,7 @@ Generated on: ${new Date().toLocaleString()}`;
                       <div className="bg-[#eaf0f8] px-2 py-1 font-bold text-[#104080] border-y border-[#a2b5cd] mb-3 text-[12px] flex items-center justify-between">
                         <span>Step 3: Review Payment Voucher & FINCORE Accounting Posting</span>
                         <span className="text-green-700 font-bold text-[11px] flex items-center gap-1">
-                          ✓ All Validation Checks Passed
+                          <Check className="w-3.5 h-3.5 stroke-[2.5]" /> All Validation Checks Passed
                         </span>
                       </div>
 
@@ -1511,11 +1515,18 @@ Generated on: ${new Date().toLocaleString()}`;
                         <button
                           onClick={handleSubmit}
                           disabled={isSubmitting}
-                          className={`bg-[#1e7e34] text-white border-t-2 border-l-2 border-[#5cb85c] border-b-2 border-r-2 border-b-[#145523] border-r-[#145523] hover:bg-[#218838] px-6 py-1.5 text-xs font-extrabold flex items-center gap-1 shadow-sm transition-opacity ${
+                          className={`bg-[#1e7e34] text-white border-t-2 border-l-2 border-[#5cb85c] border-b-2 border-r-2 border-b-[#145523] border-r-[#145523] hover:bg-[#218838] px-6 py-1.5 text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-opacity ${
                             isSubmitting ? 'opacity-60 cursor-not-allowed' : ''
                           }`}
                         >
-                          {isSubmitting ? 'Posting Entry...' : '✓ POST & COMPLETE CREDIT ENTRY (ENTER)'}
+                          {isSubmitting ? (
+                            'Posting Entry...'
+                          ) : (
+                            <span className="flex items-center gap-1.5">
+                              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                              <span>POST &amp; COMPLETE CREDIT ENTRY (ENTER)</span>
+                            </span>
+                          )}
                         </button>
                       )}
                     </div>
@@ -1539,9 +1550,9 @@ Generated on: ${new Date().toLocaleString()}`;
               <span>Finacle Core Banking System - Transaction Confirmation</span>
               <button 
                 onClick={() => setSubmittedEntry(null)}
-                className="w-4 h-4 bg-[#d4d0c8] border border-gray-500 text-black text-[10px] flex items-center justify-center hover:bg-white leading-none"
+                className="w-4 h-4 bg-[#d4d0c8] border border-gray-500 text-black flex items-center justify-center hover:bg-white leading-none cursor-pointer"
               >
-                ✕
+                <X className="w-3 h-3 stroke-[2.5]" />
               </button>
             </div>
 
@@ -1614,9 +1625,9 @@ Generated on: ${new Date().toLocaleString()}`;
               <span>Credit Payment Voucher Advice — {selectedVoucher.id}</span>
               <button 
                 onClick={() => setSelectedVoucher(null)}
-                className="w-4 h-4 bg-[#d4d0c8] border border-gray-500 text-black text-[10px] flex items-center justify-center hover:bg-white"
+                className="w-4 h-4 bg-[#d4d0c8] border border-gray-500 text-black flex items-center justify-center hover:bg-white cursor-pointer"
               >
-                ✕
+                <X className="w-3 h-3 stroke-[2.5]" />
               </button>
             </div>
 
@@ -1682,7 +1693,11 @@ Generated on: ${new Date().toLocaleString()}`;
               {/* Bank Stamp / Signature */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-300 text-[11px] text-gray-700">
                 <div className="border border-green-600 p-1.5 text-center text-green-700 font-bold text-[10px] w-36">
-                  ✓ VERIFIED & PAID<br/>FINACLE CORE UBS
+                  <div className="flex items-center justify-center gap-1">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                    <span>VERIFIED &amp; PAID</span>
+                  </div>
+                  <div>FINACLE CORE UBS</div>
                 </div>
                 <div className="text-right">
                   <div>Authorized Signatory / Checker</div>
@@ -1694,9 +1709,10 @@ Generated on: ${new Date().toLocaleString()}`;
               <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-200">
                 <button
                   onClick={() => window.print()}
-                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-xs text-black font-bold"
+                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-xs text-black font-bold flex items-center gap-1.5 cursor-pointer"
                 >
-                  🖨 Print Advice
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Advice</span>
                 </button>
                 <button
                   onClick={() => setSelectedVoucher(null)}
