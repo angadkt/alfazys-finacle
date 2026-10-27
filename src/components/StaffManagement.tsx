@@ -4,6 +4,7 @@ import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
 import type { StaffMember, StaffPermissions, FinacleScreen, StaffEmailNotification } from '../types/staff';
 import { useToast } from '../contexts/ToastContext';
 import EmailSentModal from './EmailSentModal';
+import FinacleSelect from './FinacleSelect';
 import { 
   ShieldCheck, 
   UserPlus, 
@@ -294,17 +295,21 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="font-bold text-gray-700">Filter Status:</span>
-          <select 
-            value={statusFilter}
-            onChange={(e: any) => setStatusFilter(e.target.value)}
-            className="h-[26px] border border-[#a5a5a5] bg-white px-2 text-[12px] focus:outline-none"
-          >
-            <option value="all">All Statuses ({staffList.length})</option>
-            <option value="active">Active Accounts</option>
-            <option value="pending_first_login">Pending First Login</option>
-            <option value="suspended">Suspended Accounts</option>
-          </select>
+          <span className="font-bold text-gray-700 text-xs">Filter Status:</span>
+          <div className="w-[190px]">
+            <FinacleSelect
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full"
+              triggerClassName="h-[28px] text-[11px] font-semibold border-[#a5a5a5] py-0.5"
+              options={[
+                { value: "all", label: `All Statuses (${staffList.length})` },
+                { value: "active", label: "Active Accounts" },
+                { value: "pending_first_login", label: "Pending First Login" },
+                { value: "suspended", label: "Suspended Accounts" }
+              ]}
+            />
+          </div>
 
           <button
             type="button"

@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import { dbService } from '../services/db';
 import api from '../services/api';
 import { ShieldAlert } from 'lucide-react';
+import FinacleSelect from '../components/FinacleSelect';
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
@@ -106,9 +107,14 @@ export default function ChangePasswordPage() {
             <span className="font-bold text-[14px] w-56 pl-2">
               Change <span className="text-red-500 font-bold">*</span>
             </span>
-            <select className="border border-[#a5a5a5] w-[260px] h-7 text-[13px] px-1 focus:outline-none bg-white font-sans">
-              <option>Password</option>
-            </select>
+            <div className="w-[260px]">
+              <FinacleSelect
+                value="Password"
+                onChange={() => {}}
+                options={[{ value: 'Password', label: 'Password' }]}
+                triggerClassName="w-full h-7 text-[13px] border-[#a5a5a5] rounded-none"
+              />
+            </div>
           </div>
         </div>
 

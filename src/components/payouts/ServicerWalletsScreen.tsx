@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import FinacleDatePicker from "../FinacleDatePicker";
+import FinacleSelect from "../FinacleSelect";
 import api from "../../services/api";
 import { 
   User,
@@ -793,28 +794,23 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
       {/* Servicer Selector Bar */}
       <div className="bg-[#f0f4f8] border-b border-[#c4d4ec] px-3 py-2 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-[#104080] font-extrabold text-[12px] flex items-center gap-1">
+          <span className="text-[#104080] font-extrabold text-[12px] flex items-center gap-1 shrink-0">
             <Building2 className="w-4 h-4" /> Servicer Profile:
           </span>
-          <select
+          <FinacleSelect
             value={selectedId}
             onChange={(e) => {
               const val = e.target.value;
               setSelectedId(val);
               setStatementServicerId(val);
             }}
-            className="bg-white border-2 border-[#104080] rounded px-2.5 py-1 text-xs font-bold text-gray-900 focus:outline-none min-w-[280px] cursor-pointer"
-          >
-            {servicers.length === 0 ? (
-              <option value="">No Servicer Accounts Available</option>
-            ) : (
-              servicers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} {s.cif_no ? `(${s.cif_no})` : `(${s.servicer_code})`} {s.account_no ? `• A/C: ${s.account_no}` : ""}
-                </option>
-              ))
-            )}
-          </select>
+            placeholder={servicers.length === 0 ? "No Servicer Accounts Available" : "Select Servicer"}
+            options={servicers.map((s) => ({
+              value: String(s.id),
+              label: `${s.name} ${s.cif_no ? `(${s.cif_no})` : `(${s.servicer_code})`} ${s.account_no ? `• A/C: ${s.account_no}` : ""}`,
+            }))}
+            triggerClassName="bg-white border-2 border-[#104080] rounded px-2.5 py-1 text-xs font-bold text-gray-900 min-w-[280px]"
+          />
         </div>
 
         {/* Action Buttons for Selected Servicer */}
@@ -1035,10 +1031,10 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
         {/* Left Wing: Servicer & Period Presets & Custom Dates */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Servicer Filter */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded shadow-2xs">
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded shadow-2xs">
             <Building2 className="w-3.5 h-3.5 text-[#104080] shrink-0" />
-            <span className="text-[#104080] font-bold text-[11px] shrink-0">Servicer:</span>
-            <select
+            <span className="text-[#104080] font-bold text-[11px] shrink-0 whitespace-nowrap">Servicer:</span>
+            <FinacleSelect
               value={statementServicerId}
               onChange={(e) => {
                 const val = e.target.value;
@@ -1047,15 +1043,15 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                   setSelectedId(val);
                 }
               }}
-              className="bg-transparent text-xs font-semibold text-gray-800 focus:outline-none cursor-pointer max-w-[170px] truncate"
-            >
-              <option value="all">All Servicers (Consolidated)</option>
-              {servicers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} ({s.servicer_code})
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "all", label: "All Servicers (Consolidated)" },
+                ...servicers.map((s) => ({
+                  value: String(s.id),
+                  label: `${s.name} (${s.servicer_code})`,
+                })),
+              ]}
+              triggerClassName="bg-transparent text-xs font-semibold text-gray-800 border-0 h-[26px] min-w-[150px] max-w-[200px] px-1"
+            />
           </div>
 
           {/* Unified Time Controls: Segmented Presets + Date Range */}
@@ -1145,20 +1141,21 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
         {/* Right Wing: Txn Type, Search Query & Reset Action */}
         <div className="flex items-center gap-2">
           {/* Txn Type Filter */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded shadow-2xs">
-            <span className="text-[#104080] font-bold text-[11px]">Type:</span>
-            <select
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded shadow-2xs">
+            <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Type:</span>
+            <FinacleSelect
               value={statementTxnType}
               onChange={(e) => setStatementTxnType(e.target.value)}
-              className="bg-transparent text-xs text-gray-800 focus:outline-none cursor-pointer max-w-[130px] truncate"
-            >
-              <option value="all">All Types</option>
-              <option value="float_credit">Float Top-up (Credit)</option>
-              <option value="payout_debit">Payout Debit</option>
-              <option value="conversion">Bank / Cash Transfer</option>
-              <option value="reimbursement">Pocket Reimbursement</option>
-              <option value="commission_settle">Commission Paid</option>
-            </select>
+              options={[
+                { value: "all", label: "All Types" },
+                { value: "float_credit", label: "Float Top-up (Credit)" },
+                { value: "payout_debit", label: "Payout Debit" },
+                { value: "conversion", label: "Bank / Cash Transfer" },
+                { value: "reimbursement", label: "Pocket Reimbursement" },
+                { value: "commission_settle", label: "Commission Paid" },
+              ]}
+              triggerClassName="bg-transparent text-xs text-gray-800 border-0 h-[26px] min-w-[130px] max-w-[170px] px-1"
+            />
           </div>
 
           {/* Search Input */}
@@ -1499,20 +1496,23 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                       {/* Dropdown and Contact Details */}
                       <div className="flex-1 w-full space-y-2">
                         <div>
-                          <select
+                          <FinacleSelect
                             value={selectedPartyId}
                             onChange={(e) => handleSelectCif(e.target.value)}
-                            className="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1.5 text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#104080]"
-                          >
-                            <option value="">-- Choose Verified Servicer CIF or Enter Manually --</option>
-                            {eligibleCifs
-                              .filter((c) => !c.existing_servicer_id)
-                              .map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.cif_no} — {c.first_name} {c.last_name} {c.contact_number ? `(${c.contact_number})` : ""}
-                                </option>
-                            ))}
-                          </select>
+                            searchable={true}
+                            searchPlaceholder="Type servicer CIF #, name, contact..."
+                            placeholder="-- Choose Verified Servicer CIF or Enter Manually --"
+                            options={[
+                              { value: "", label: "-- Choose Verified Servicer CIF or Enter Manually --" },
+                              ...eligibleCifs
+                                .filter((c) => !c.existing_servicer_id)
+                                .map((c) => ({
+                                  value: String(c.id),
+                                  label: `${c.cif_no} — ${c.first_name} ${c.last_name} ${c.contact_number ? `(${c.contact_number})` : ""}`,
+                                })),
+                            ]}
+                            triggerClassName="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1.5 text-xs font-semibold text-gray-800 h-[34px]"
+                          />
                           {selectedPartyId && (
                             <div className="text-[10px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
                               <Check className="w-3 h-3 stroke-[2.5]" /> Linked to Master CIF Profile. Name & contact auto-inherited below.
@@ -1760,14 +1760,15 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                         <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
                           Account Type:
                         </label>
-                        <select
+                        <FinacleSelect
                           value={entryAccountType}
                           onChange={(e) => setEntryAccountType(e.target.value as any)}
-                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none bg-white font-semibold"
-                        >
-                          <option value="Current">Current Account</option>
-                          <option value="Savings">Savings Account</option>
-                        </select>
+                          options={[
+                            { value: "Current", label: "Current Account" },
+                            { value: "Savings", label: "Savings Account" },
+                          ]}
+                          triggerClassName="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs bg-white font-semibold h-[28px]"
+                        />
                       </div>
 
                       <div className="sm:col-span-2 flex items-center justify-end gap-2 pb-0.5">
@@ -2073,25 +2074,27 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">From Wallet:</label>
-                  <select
+                  <FinacleSelect
                     value={convertFrom}
                     onChange={(e: any) => setConvertFrom(e.target.value)}
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs"
-                  >
-                    <option value="bank">Bank Wallet (Withdraw)</option>
-                    <option value="cash">Cash Wallet (Deposit)</option>
-                  </select>
+                    options={[
+                      { value: "bank", label: "Bank Wallet (Withdraw)" },
+                      { value: "cash", label: "Cash Wallet (Deposit)" },
+                    ]}
+                    triggerClassName="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs h-[30px]"
+                  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">To Wallet:</label>
-                  <select
+                  <FinacleSelect
                     value={convertTo}
                     onChange={(e: any) => setConvertTo(e.target.value)}
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs"
-                  >
-                    <option value="cash">Cash Wallet</option>
-                    <option value="bank">Bank Wallet</option>
-                  </select>
+                    options={[
+                      { value: "cash", label: "Cash Wallet" },
+                      { value: "bank", label: "Bank Wallet" },
+                    ]}
+                    triggerClassName="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs h-[30px]"
+                  />
                 </div>
               </div>
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
@@ -2229,18 +2232,15 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                   <label className="block text-[11px] font-bold text-rose-800 uppercase tracking-wider">
                     From Servicer (Source / Debit):
                   </label>
-                  <select
+                  <FinacleSelect
                     value={transferFromId}
                     onChange={(e) => setTransferFromId(e.target.value)}
-                    className="w-full border border-rose-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold focus:outline-none cursor-pointer"
-                    required
-                  >
-                    {servicers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        [{s.servicer_code}] {s.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={servicers.map((s) => ({
+                      value: String(s.id),
+                      label: `[${s.servicer_code}] ${s.name}`,
+                    }))}
+                    triggerClassName="w-full border border-rose-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold h-[30px]"
+                  />
 
                   {/* From Wallet Bucket */}
                   <div>
@@ -2289,20 +2289,17 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                   <label className="block text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
                     To Servicer (Target / Credit):
                   </label>
-                  <select
+                  <FinacleSelect
                     value={transferToId}
                     onChange={(e) => setTransferToId(e.target.value)}
-                    className="w-full border border-emerald-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold focus:outline-none cursor-pointer"
-                    required
-                  >
-                    {servicers
+                    options={servicers
                       .filter((s) => String(s.id) !== String(transferFromId))
-                      .map((s) => (
-                        <option key={s.id} value={s.id}>
-                          [{s.servicer_code}] {s.name}
-                        </option>
-                      ))}
-                  </select>
+                      .map((s) => ({
+                        value: String(s.id),
+                        label: `[${s.servicer_code}] ${s.name}`,
+                      }))}
+                    triggerClassName="w-full border border-emerald-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold h-[30px]"
+                  />
 
                   {/* To Wallet Bucket */}
                   <div>

@@ -4,6 +4,7 @@ import api from '../services/api';
 import { FileSpreadsheet, FileText, ExternalLink, X, AlertTriangle } from 'lucide-react';
 import { exportOrdersToExcel, exportOrdersToPdf } from '../utils/exportOrders';
 import CostRateModal from './CostRateModal';
+import FinacleSelect from './FinacleSelect';
 
 export default function OrderEntryForm() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -965,17 +966,18 @@ export default function OrderEntryForm() {
         </div>
 
         <div className="flex items-center gap-2 text-[11px]">
-          <span className="font-bold text-[#104080]">Function:</span>
-          <select 
+          <span className="font-bold text-[#104080] shrink-0">Function:</span>
+          <FinacleSelect 
             value={selectedFunction} 
             onChange={(e) => setSelectedFunction(e.target.value)}
-            className="border border-[#7f9db9] bg-white text-black px-1 pr-6 h-[22px] text-[11px]"
-          >
-            <option value="A-ADD">A-ADD (Create New Order)</option>
-            <option value="V-VIEW">V-VIEW (Inquire Orders)</option>
-            <option value="M-MODIFY">M-MODIFY (Update Order)</option>
-            <option value="X-CANCEL">X-CANCEL (Void Order)</option>
-          </select>
+            options={[
+              { value: "A-ADD", label: "A-ADD (Create New Order)" },
+              { value: "V-VIEW", label: "V-VIEW (Inquire Orders)" },
+              { value: "M-MODIFY", label: "M-MODIFY (Update Order)" },
+              { value: "X-CANCEL", label: "X-CANCEL (Void Order)" },
+            ]}
+            triggerClassName="border border-[#7f9db9] bg-white text-black px-1.5 h-[22px] text-[11px] min-w-[170px]"
+          />
         </div>
       </div>
 
@@ -1067,23 +1069,23 @@ export default function OrderEntryForm() {
                 </div>
 
                 {/* Agent / Customer Filter */}
-                <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-                  <span className="text-[#104080] font-bold text-[11px]">Agent:</span>
-                  <select
+                <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+                  <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Agent:</span>
+                  <FinacleSelect
                     value={filterAgent}
                     onChange={(e) => {
                       setFilterAgent(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] max-w-[180px]"
-                  >
-                    <option value="">All Agents / Customers</option>
-                    {customers.map((c) => (
-                      <option key={c.internal_id} value={c.internal_id}>
-                        {c.name} ({c.id})
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: "All Agents / Customers" },
+                      ...customers.map((c) => ({
+                        value: String(c.internal_id),
+                        label: `${c.name} (${c.id})`,
+                      })),
+                    ]}
+                    triggerClassName="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[150px] max-w-[200px] h-[26px]"
+                  />
                   {filterAgent && (
                     <button 
                       onClick={() => { setFilterAgent(''); setCurrentPage(1); }}
@@ -1516,20 +1518,21 @@ export default function OrderEntryForm() {
                                             <td className="p-1.5 border border-[#c4d4ec] font-bold text-emerald-700">AED {recAed}</td>
                                             <td className="p-1.5 border border-[#c4d4ec] font-bold text-gray-800">{rec.servicer || '-'}</td>
                                             <td className="p-1.5 border border-[#c4d4ec]">
-                                              <select
-                                                value={recStatus}
-                                                onChange={async (e) => {
-                                                  e.stopPropagation();
-                                                  await handleReceiverPaymentStatus(o.id, idx, e.target.value);
-                                                }}
-                                                className={`text-[11px] font-bold rounded px-2 py-0.5 border cursor-pointer focus:outline-none w-full ${recColor}`}
-                                                onClick={e => e.stopPropagation()}
-                                              >
-                                                <option value="Pending">Pending</option>
-                                                <option value="Paid">Paid</option>
-                                                <option value="Partial">Partial</option>
-                                                <option value="Cancelled">Cancelled</option>
-                                              </select>
+                                              <div onClick={(e) => e.stopPropagation()}>
+                                                <FinacleSelect
+                                                  value={recStatus}
+                                                  onChange={async (e) => {
+                                                    await handleReceiverPaymentStatus(o.id, idx, e.target.value);
+                                                  }}
+                                                  options={[
+                                                    { value: "Pending", label: "Pending" },
+                                                    { value: "Paid", label: "Paid" },
+                                                    { value: "Partial", label: "Partial" },
+                                                    { value: "Cancelled", label: "Cancelled" },
+                                                  ]}
+                                                  triggerClassName={`text-[11px] font-bold rounded px-1.5 py-0.5 border h-[24px] w-full ${recColor}`}
+                                                />
+                                              </div>
                                               {recStatus.toLowerCase() === 'partial' && (
                                                 <button
                                                   type="button"
@@ -1629,16 +1632,17 @@ export default function OrderEntryForm() {
                       Function Code <span className="text-red-600">*</span>
                     </div>
                     <div className="col-span-3">
-                      <select 
+                      <FinacleSelect 
                         value={selectedFunction}
                         onChange={(e) => setSelectedFunction(e.target.value)}
-                        className="w-[240px] border border-[#c4d4ec] bg-white text-black rounded-md focus:outline-none h-[36px] px-2 pr-8"
-                      >
-                        <option value="A-ADD">A-ADD (New Order Booking)</option>
-                        <option value="V-VIEW">V-VIEW (Order Inquiry)</option>
-                        <option value="M-MODIFY">M-MODIFY (Amend Order)</option>
-                        <option value="X-CANCEL">X-CANCEL (Cancel Order)</option>
-                      </select>
+                        options={[
+                          { value: "A-ADD", label: "A-ADD (New Order Booking)" },
+                          { value: "V-VIEW", label: "V-VIEW (Order Inquiry)" },
+                          { value: "M-MODIFY", label: "M-MODIFY (Amend Order)" },
+                          { value: "X-CANCEL", label: "X-CANCEL (Cancel Order)" },
+                        ]}
+                        triggerClassName="w-[240px] border border-[#c4d4ec] bg-white text-black rounded-md h-[36px] px-2 text-xs"
+                      />
                     </div>
 
                     <div className="font-medium text-black whitespace-nowrap">
@@ -1675,20 +1679,22 @@ export default function OrderEntryForm() {
                       Transaction Through
                     </div>
                     <div>
-                      <select 
+                      <FinacleSelect 
                         value={transactionThrough}
                         onChange={(e) => setTransactionThrough(e.target.value)}
-                        className="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none"
-                      >
-                        <option value=""></option>
-                        <option value="CDM">CDM</option>
-                        <option value="BNK SLP">BNK SLP</option>
-                        <option value="FINAC">FINAC</option>
-                        <option value="BY CASH">BY CASH</option>
-                        <option value="MOB TRF">MOB TRF</option>
-                        <option value="UPI">UPI</option>
-                        <option value="COR NET">COR NET</option>
-                      </select>
+                        placeholder="Select Mode..."
+                        options={[
+                          { value: "", label: "-- None --" },
+                          { value: "CDM", label: "CDM" },
+                          { value: "BNK SLP", label: "BNK SLP" },
+                          { value: "FINAC", label: "FINAC" },
+                          { value: "BY CASH", label: "BY CASH" },
+                          { value: "MOB TRF", label: "MOB TRF" },
+                          { value: "UPI", label: "UPI" },
+                          { value: "COR NET", label: "COR NET" },
+                        ]}
+                        triggerClassName="w-[240px] border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase text-xs"
+                      />
                     </div>
                   </div>
 
@@ -2107,23 +2113,24 @@ export default function OrderEntryForm() {
                   <label className="font-medium text-black whitespace-nowrap">
                     Mode of Transaction <span className="text-red-600">*</span>
                   </label>
-                  <select
+                  <FinacleSelect
                     value={modeOfTransaction}
                     onChange={(e) => {
                       setModeOfTransaction(e.target.value);
                       if (e.target.value !== 'BY CASH') setCollectionStaff('');
                     }}
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none focus:border-[#104080] w-full"
-                  >
-                    <option value=""></option>
-                    <option value="CDM">CDM</option>
-                    <option value="BNK SLP">BNK SLP</option>
-                    <option value="FINAC">FINAC</option>
-                    <option value="BY CASH">BY CASH</option>
-                    <option value="MOB TRF">MOB TRF</option>
-                    <option value="UPI">UPI</option>
-                    <option value="COR NET">COR NET</option>
-                  </select>
+                    placeholder="Select Mode..."
+                    options={[
+                      { value: "CDM", label: "CDM" },
+                      { value: "BNK SLP", label: "BNK SLP" },
+                      { value: "FINAC", label: "FINAC" },
+                      { value: "BY CASH", label: "BY CASH" },
+                      { value: "MOB TRF", label: "MOB TRF" },
+                      { value: "UPI", label: "UPI" },
+                      { value: "COR NET", label: "COR NET" },
+                    ]}
+                    triggerClassName="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase w-full"
+                  />
 
                   {/* UTR / Reference No */}
                   <label className="font-medium text-black whitespace-nowrap">
@@ -2299,22 +2306,23 @@ export default function OrderEntryForm() {
                     </button>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
-                  <span className="text-[#104080] font-bold text-[11px]">Mode:</span>
-                  <select
+                <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded">
+                  <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Mode:</span>
+                  <FinacleSelect
                     value={viewModeFilter}
                     onChange={(e) => { setViewModeFilter(e.target.value); fetchReceivedAed(1, viewDateFilter, e.target.value); }}
-                    className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080]"
-                  >
-                    <option value="">All Modes</option>
-                    <option value="CDM">CDM</option>
-                    <option value="BNK SLP">BNK SLP</option>
-                    <option value="FINAC">FINAC</option>
-                    <option value="BY CASH">BY CASH</option>
-                    <option value="MOB TRF">MOB TRF</option>
-                    <option value="UPI">UPI</option>
-                    <option value="COR NET">COR NET</option>
-                  </select>
+                    options={[
+                      { value: "", label: "All Modes" },
+                      { value: "CDM", label: "CDM" },
+                      { value: "BNK SLP", label: "BNK SLP" },
+                      { value: "FINAC", label: "FINAC" },
+                      { value: "BY CASH", label: "BY CASH" },
+                      { value: "MOB TRF", label: "MOB TRF" },
+                      { value: "UPI", label: "UPI" },
+                      { value: "COR NET", label: "COR NET" },
+                    ]}
+                    triggerClassName="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[120px] h-[26px]"
+                  />
                   {viewModeFilter && (
                     <button onClick={() => { setViewModeFilter(''); fetchReceivedAed(1, viewDateFilter, ''); }} className="text-gray-400 hover:text-red-500 cursor-pointer">
                       <X className="w-3 h-3 stroke-[2.5]" />

@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
 import api from '../services/api';
 import CostRateModal from './CostRateModal';
+import FinacleSelect from './FinacleSelect';
 
 interface Customer {
   id: string;
@@ -354,20 +355,20 @@ export default function AedReportsScreen() {
             </div>
 
             {/* Agent / Customer Filter */}
-            <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#104080] font-bold text-[11px]">Agent/Customer:</span>
-              <select
+            <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded">
+              <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Agent/Customer:</span>
+              <FinacleSelect
                 value={filterAgent}
                 onChange={(e) => setFilterAgent(e.target.value)}
-                className="bg-transparent text-xs text-gray-700 focus:outline-none max-w-[200px]"
-              >
-                <option value="">All Parties</option>
-                {customers.map((c) => (
-                  <option key={c.internal_id || c.id} value={c.internal_id || c.id}>
-                    {c.name} ({c.id})
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: 'All Parties' },
+                  ...customers.map((c) => ({
+                    value: c.internal_id || c.id,
+                    label: `${c.name} (${c.id})`,
+                  })),
+                ]}
+                triggerClassName="min-w-[170px] max-w-[220px] h-[26px] text-xs border-0 bg-transparent px-1"
+              />
               {filterAgent && (
                 <button
                   onClick={() => setFilterAgent('')}

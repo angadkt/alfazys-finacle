@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import FinacleDatePicker from "../FinacleDatePicker";
+import FinacleSelect from "../FinacleSelect";
 import api from "../../services/api";
 import { 
   FileSpreadsheet, 
@@ -1169,21 +1170,21 @@ export default function InrDispatchDeskScreen() {
         {/* Left Wing: Servicer & Unified Time Controls */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Servicer Filter */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded shadow-2xs">
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded shadow-2xs">
             <Building2 className="w-3.5 h-3.5 text-[#104080] shrink-0" />
-            <span className="text-[#104080] font-bold text-[11px] shrink-0">Servicer:</span>
-            <select
+            <span className="text-[#104080] font-bold text-[11px] shrink-0 whitespace-nowrap">Servicer:</span>
+            <FinacleSelect
               value={selectedServicerFilter}
               onChange={(e) => setSelectedServicerFilter(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-gray-800 focus:outline-none cursor-pointer max-w-[160px] truncate"
-            >
-              <option value="all">All Servicers</option>
-              {servicers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  [{s.servicer_code}] {s.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "all", label: "All Servicers" },
+                ...servicers.map((s) => ({
+                  value: String(s.id),
+                  label: `[${s.servicer_code}] ${s.name}`,
+                })),
+              ]}
+              triggerClassName="bg-transparent text-xs font-semibold text-gray-800 border-0 h-[26px] min-w-[140px] max-w-[180px] px-1"
+            />
           </div>
 
           {/* Unified Time Controls: Segmented Presets + Date Range */}
@@ -1273,34 +1274,36 @@ export default function InrDispatchDeskScreen() {
         {/* Right Wing: Mode, Status, Search & Reset */}
         <div className="flex items-center gap-2">
           {/* Payment Mode Filter */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded shadow-2xs">
-            <span className="text-[#104080] font-bold text-[11px]">Mode:</span>
-            <select
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded shadow-2xs">
+            <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Mode:</span>
+            <FinacleSelect
               value={paymentModeFilter}
               onChange={(e) => setPaymentModeFilter(e.target.value)}
-              className="bg-transparent text-xs text-gray-800 focus:outline-none cursor-pointer max-w-[120px] truncate"
-            >
-              <option value="all">All Modes</option>
-              <option value="bank_transfer">Bank Transfer (IMPS/NEFT)</option>
-              <option value="cdm">CDM Cash Deposit</option>
-              <option value="upi">UPI / QR Transfer</option>
-              <option value="cash">Direct Cash Handover</option>
-              <option value="cheque">Cheque Deposit</option>
-            </select>
+              options={[
+                { value: "all", label: "All Modes" },
+                { value: "bank_transfer", label: "Bank Transfer (IMPS/NEFT)" },
+                { value: "cdm", label: "CDM Cash Deposit" },
+                { value: "upi", label: "UPI / QR Transfer" },
+                { value: "cash", label: "Direct Cash Handover" },
+                { value: "cheque", label: "Cheque Deposit" },
+              ]}
+              triggerClassName="bg-transparent text-xs text-gray-800 border-0 h-[26px] min-w-[120px] max-w-[160px] px-1"
+            />
           </div>
 
           {/* Status Filter */}
-          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-1 rounded shadow-2xs">
-            <span className="text-[#104080] font-bold text-[11px]">Status:</span>
-            <select
+          <div className="flex items-center gap-1.5 bg-white border border-[#c4d4ec] px-2 py-0.5 rounded shadow-2xs">
+            <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Status:</span>
+            <FinacleSelect
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="bg-transparent text-xs text-gray-800 focus:outline-none cursor-pointer max-w-[110px] truncate"
-            >
-              <option value="all">All Debits</option>
-              <option value="active">Active (Success)</option>
-              <option value="bounced">Bounced / Reversed</option>
-            </select>
+              options={[
+                { value: "all", label: "All Debits" },
+                { value: "active", label: "Active (Success)" },
+                { value: "bounced", label: "Bounced / Reversed" },
+              ]}
+              triggerClassName="bg-transparent text-xs text-gray-800 border-0 h-[26px] min-w-[110px] max-w-[150px] px-1"
+            />
           </div>
 
           {/* Search Input */}
@@ -1889,19 +1892,19 @@ export default function InrDispatchDeskScreen() {
               {/* Servicer Selector & Balance preview */}
               <div>
                 <label className="block text-[11px] font-bold text-gray-700 mb-0.5">Select Servicer <span className="text-red-500">*</span>:</label>
-                <select
+                <FinacleSelect
                   value={creditServicerId}
                   onChange={(e) => setCreditServicerId(e.target.value)}
-                  className="w-full border-2 border-[#104080] rounded px-2.5 py-1.5 text-xs font-bold text-gray-900 bg-white focus:outline-none cursor-pointer"
-                  required
-                >
-                  <option value="">-- Choose Servicer --</option>
-                  {servicers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.cif_no || s.servicer_code}) {s.account_no ? `• A/C: ${s.account_no}` : ""}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="-- Choose Servicer --"
+                  options={[
+                    { value: "", label: "-- Choose Servicer --" },
+                    ...servicers.map((s) => ({
+                      value: String(s.id),
+                      label: `${s.name} (${s.cif_no || s.servicer_code}) ${s.account_no ? `• A/C: ${s.account_no}` : ""}`,
+                    })),
+                  ]}
+                  triggerClassName="w-full border-2 border-[#104080] rounded px-2.5 py-1 text-xs font-bold text-gray-900 bg-white h-[34px]"
+                />
 
                 {activeCreditServicer && (
                   <div className="mt-1 flex items-center justify-between text-[11px] bg-[#f0f4f8] px-2.5 py-1 rounded border border-[#c4d4ec] text-gray-700">
@@ -1945,48 +1948,45 @@ export default function InrDispatchDeskScreen() {
                 <label className="block text-[11px] font-bold text-gray-700 mb-0.5">
                   Target Saved Bank Account of Servicer:
                 </label>
-                <select
+                <FinacleSelect
                   value={selectedBankAccountId}
                   onChange={(e) => setSelectedBankAccountId(e.target.value)}
-                  className="w-full border border-[#c4d4ec] rounded px-2.5 py-1.5 text-xs bg-white text-gray-800 font-semibold focus:outline-none focus:border-[#104080] cursor-pointer"
-                >
-                  {availableBankAccounts.length > 0 ? (
-                    availableBankAccounts.map((acc, idx) => (
-                      <option key={idx} value={acc.value}>
-                        {acc.label}
-                      </option>
-                    ))
-                  ) : (
-                    <option value="other">Other Account / Physical Cash Deposit</option>
-                  )}
-                </select>
+                  options={
+                    availableBankAccounts.length > 0
+                      ? availableBankAccounts.map((acc) => ({ value: acc.value, label: acc.label }))
+                      : [{ value: "other", label: "Other Account / Physical Cash Deposit" }]
+                  }
+                  triggerClassName="w-full border border-[#c4d4ec] rounded px-2.5 py-1 text-xs bg-white text-gray-800 font-semibold h-[32px]"
+                />
               </div>
 
               {/* Target Wallet & Transfer Mode */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Target Wallet:</label>
-                  <select
+                  <FinacleSelect
                     value={creditWallet}
                     onChange={(e: any) => setCreditWallet(e.target.value)}
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none bg-white font-medium cursor-pointer"
-                  >
-                    <option value="bank">Bank Wallet (IMPS/RTGS)</option>
-                    <option value="cash">Cash / Hand Wallet (CDM)</option>
-                  </select>
+                    options={[
+                      { value: "bank", label: "Bank Wallet (IMPS/RTGS)" },
+                      { value: "cash", label: "Cash / Hand Wallet (CDM)" },
+                    ]}
+                    triggerClassName="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs bg-white font-medium h-[30px]"
+                  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Transfer Mode:</label>
-                  <select
+                  <FinacleSelect
                     value={creditMode}
                     onChange={(e) => setCreditMode(e.target.value)}
-                    className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none bg-white font-medium cursor-pointer"
-                  >
-                    <option value="bank_transfer">Bank Transfer (NEFT/RTGS/IMPS)</option>
-                    <option value="cdm">CDM Deposit</option>
-                    <option value="cash">Cash Handover</option>
-                    <option value="cheque">Cheque</option>
-                  </select>
+                    options={[
+                      { value: "bank_transfer", label: "Bank Transfer (NEFT/RTGS/IMPS)" },
+                      { value: "cdm", label: "CDM Deposit" },
+                      { value: "cash", label: "Cash Handover" },
+                      { value: "cheque", label: "Cheque" },
+                    ]}
+                    triggerClassName="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs bg-white font-medium h-[30px]"
+                  />
                 </div>
               </div>
 
@@ -2256,17 +2256,15 @@ export default function InrDispatchDeskScreen() {
                         <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
                           Select Servicer:
                         </label>
-                        <select
+                        <FinacleSelect
                           value={selectedServicerId}
                           onChange={(e) => setSelectedServicerId(e.target.value)}
-                          className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
-                        >
-                          {servicers.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              [{s.servicer_code}] {s.name} (Float: ₹ {s.wallet.total_float.toLocaleString("en-IN")})
-                            </option>
-                          ))}
-                        </select>
+                          options={servicers.map((s) => ({
+                            value: String(s.id),
+                            label: `[${s.servicer_code}] ${s.name} (Float: ₹ ${s.wallet.total_float.toLocaleString("en-IN")})`,
+                          }))}
+                          triggerClassName="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs h-[30px]"
+                        />
                       </div>
 
                       <div>
@@ -2311,17 +2309,15 @@ export default function InrDispatchDeskScreen() {
                       <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
                         From Account (Servicer Funding Source A/C):
                       </label>
-                      <select
+                      <FinacleSelect
                         value={debitFromAccountId}
                         onChange={(e) => setDebitFromAccountId(e.target.value)}
-                        className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080] bg-white font-medium cursor-pointer"
-                      >
-                        {availableDebitBankAccounts.map((acc, idx) => (
-                          <option key={idx} value={acc.value}>
-                            {acc.label}
-                          </option>
-                        ))}
-                      </select>
+                        options={availableDebitBankAccounts.map((acc) => ({
+                          value: acc.value,
+                          label: acc.label,
+                        }))}
+                        triggerClassName="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs bg-white font-medium h-[30px]"
+                      />
                     </div>
                   </div>
                 ) : (
@@ -2517,17 +2513,18 @@ export default function InrDispatchDeskScreen() {
                     <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
                       Payment Mode:
                     </label>
-                    <select
+                    <FinacleSelect
                       value={paymentMode}
                       onChange={(e) => setPaymentMode(e.target.value)}
-                      className="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#104080]"
-                    >
-                      <option value="bank_transfer">Bank Transfer (IMPS / NEFT / RTGS)</option>
-                      <option value="cdm">CDM Cash Deposit Machine</option>
-                      <option value="upi">UPI / QR Transfer</option>
-                      <option value="cash">Direct Cash Handover</option>
-                      <option value="cheque">Cheque Deposit</option>
-                    </select>
+                      options={[
+                        { value: "bank_transfer", label: "Bank Transfer (IMPS / NEFT / RTGS)" },
+                        { value: "cdm", label: "CDM Cash Deposit Machine" },
+                        { value: "upi", label: "UPI / QR Transfer" },
+                        { value: "cash", label: "Direct Cash Handover" },
+                        { value: "cheque", label: "Cheque Deposit" },
+                      ]}
+                      triggerClassName="w-full border border-[#c4d4ec] rounded px-2 py-1 text-xs h-[30px]"
+                    />
                   </div>
 
                   <div>
@@ -2727,17 +2724,18 @@ export default function InrDispatchDeskScreen() {
                 <label className="block text-[11px] font-bold text-gray-700 mb-1">
                   Reason for Reversal / Bounce:
                 </label>
-                <select
+                <FinacleSelect
                   value={bounceReason}
                   onChange={(e) => setBounceReason(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-rose-700"
-                >
-                  <option value="Account Closed / Invalid IFSC">Account Closed / Invalid IFSC</option>
-                  <option value="UTR Rejected by Beneficiary Bank">UTR Rejected by Beneficiary Bank</option>
-                  <option value="Duplicate or Erroneous Entry">Duplicate or Erroneous Entry</option>
-                  <option value="Customer Cancelled Payout">Customer Cancelled Payout</option>
-                  <option value="Other Bank Rejection">Other Bank Rejection</option>
-                </select>
+                  options={[
+                    { value: "Account Closed / Invalid IFSC", label: "Account Closed / Invalid IFSC" },
+                    { value: "UTR Rejected by Beneficiary Bank", label: "UTR Rejected by Beneficiary Bank" },
+                    { value: "Duplicate or Erroneous Entry", label: "Duplicate or Erroneous Entry" },
+                    { value: "Customer Cancelled Payout", label: "Customer Cancelled Payout" },
+                    { value: "Other Bank Rejection", label: "Other Bank Rejection" },
+                  ]}
+                  triggerClassName="w-full border border-gray-300 rounded px-2 py-1 text-xs h-[30px]"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
@@ -2806,18 +2804,15 @@ export default function InrDispatchDeskScreen() {
                   <label className="block text-[11px] font-bold text-rose-800 uppercase tracking-wider">
                     From Servicer (Source / Debit):
                   </label>
-                  <select
+                  <FinacleSelect
                     value={transferFromId}
                     onChange={(e) => setTransferFromId(e.target.value)}
-                    className="w-full border border-rose-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold focus:outline-none cursor-pointer"
-                    required
-                  >
-                    {servicers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        [{s.servicer_code}] {s.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={servicers.map((s) => ({
+                      value: String(s.id),
+                      label: `[${s.servicer_code}] ${s.name}`,
+                    }))}
+                    triggerClassName="w-full border border-rose-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold h-[30px]"
+                  />
 
                   {/* From Wallet Bucket */}
                   <div>
@@ -2866,20 +2861,17 @@ export default function InrDispatchDeskScreen() {
                   <label className="block text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
                     To Servicer (Target / Credit):
                   </label>
-                  <select
+                  <FinacleSelect
                     value={transferToId}
                     onChange={(e) => setTransferToId(e.target.value)}
-                    className="w-full border border-emerald-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold focus:outline-none cursor-pointer"
-                    required
-                  >
-                    {servicers
+                    options={servicers
                       .filter((s) => String(s.id) !== String(transferFromId))
-                      .map((s) => (
-                        <option key={s.id} value={s.id}>
-                          [{s.servicer_code}] {s.name}
-                        </option>
-                      ))}
-                  </select>
+                      .map((s) => ({
+                        value: String(s.id),
+                        label: `[${s.servicer_code}] ${s.name}`,
+                      }))}
+                    triggerClassName="w-full border border-emerald-300 rounded px-2 py-1 text-xs bg-white text-gray-800 font-semibold h-[30px]"
+                  />
 
                   {/* To Wallet Bucket */}
                   <div>

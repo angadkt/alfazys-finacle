@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService, type Customer } from '../services/db';
 import { useToast } from '../contexts/ToastContext';
+import FinacleSelect from './FinacleSelect';
 
 interface AddCustomerModalProps {
   isOpen: boolean;
@@ -344,21 +345,21 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[13px] font-semibold text-slate-700 tracking-wide">Emirates (Select)</label>
-                    <select
-                      required
+                    <FinacleSelect
                       value={emirates}
                       onChange={(e) => setEmirates(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-[13px] text-slate-800 font-medium rounded-md transition bg-white cursor-pointer"
-                    >
-                      <option value="" disabled>Please Select</option>
-                      <option value="Abu Dhabi">Abu Dhabi</option>
-                      <option value="Dubai">Dubai</option>
-                      <option value="Sharjah">Sharjah</option>
-                      <option value="Ajman">Ajman</option>
-                      <option value="Umm Al Quwain">Umm Al Quwain</option>
-                      <option value="Ras Al Khaimah">Ras Al Khaimah</option>
-                      <option value="Fujairah">Fujairah</option>
-                    </select>
+                      placeholder="Please Select"
+                      options={[
+                        { value: 'Abu Dhabi', label: 'Abu Dhabi' },
+                        { value: 'Dubai', label: 'Dubai' },
+                        { value: 'Sharjah', label: 'Sharjah' },
+                        { value: 'Ajman', label: 'Ajman' },
+                        { value: 'Umm Al Quwain', label: 'Umm Al Quwain' },
+                        { value: 'Ras Al Khaimah', label: 'Ras Al Khaimah' },
+                        { value: 'Fujairah', label: 'Fujairah' },
+                      ]}
+                      triggerClassName="w-full border border-slate-200 px-3 py-2 text-[13px] text-slate-800 font-medium rounded-md h-[38px]"
+                    />
                   </div>
                 </div>
 

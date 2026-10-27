@@ -4,6 +4,7 @@ import { dbService } from '../services/db';
 import type { Customer } from '../services/db';
 import { useToast } from '../contexts/ToastContext';
 import Header from '../components/Header';
+import FinacleSelect from '../components/FinacleSelect';
 
 const getInitials = (name: string) => {
   const val = name || 'Anonymous';
@@ -390,19 +391,20 @@ export default function CustomerViewPage() {
                 Emirates
               </label>
               {isAdmin && isPending ? (
-                <select
+                <FinacleSelect
                   value={emirates}
                   onChange={(e) => setEmirates(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none focus:border-[#9e0248] transition"
-                >
-                  <option value="Abu Dhabi">Abu Dhabi</option>
-                  <option value="Dubai">Dubai</option>
-                  <option value="Sharjah">Sharjah</option>
-                  <option value="Ajman">Ajman</option>
-                  <option value="Umm Al Quwain">Umm Al Quwain</option>
-                  <option value="Ras Al Khaimah">Ras Al Khaimah</option>
-                  <option value="Fujairah">Fujairah</option>
-                </select>
+                  options={[
+                    { value: 'Abu Dhabi', label: 'Abu Dhabi' },
+                    { value: 'Dubai', label: 'Dubai' },
+                    { value: 'Sharjah', label: 'Sharjah' },
+                    { value: 'Ajman', label: 'Ajman' },
+                    { value: 'Umm Al Quwain', label: 'Umm Al Quwain' },
+                    { value: 'Ras Al Khaimah', label: 'Ras Al Khaimah' },
+                    { value: 'Fujairah', label: 'Fujairah' },
+                  ]}
+                  triggerClassName="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] h-[46px]"
+                />
               ) : (
                 <input
                   type="text"

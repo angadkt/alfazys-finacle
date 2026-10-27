@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import FinacleDatePicker from './FinacleDatePicker';
 import FinacleBadge from './FinacleBadge';
+import FinacleSelect from './FinacleSelect';
 import api from '../services/api';
 import { FileSpreadsheet, FileText, RefreshCw, Eye, ArrowUpDown, ExternalLink, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -555,33 +556,35 @@ export default function PendingAedReportScreen() {
 
             {/* Status Filter */}
             <div className="flex items-center gap-1 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <span className="text-[#104080] font-bold text-[11px]">Status:</span>
-              <select
+              <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Status:</span>
+              <FinacleSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] h-[26px]"
-              >
-                <option value="pending_only">Pending Collection Only</option>
-                <option value="all">All Statuses</option>
-                <option value="uncollected">Uncollected (0%)</option>
-                <option value="partial">Partially Collected</option>
-                <option value="settled">Fully Settled / 100%</option>
-              </select>
+                options={[
+                  { value: 'pending_only', label: 'Pending Collection Only' },
+                  { value: 'all', label: 'All Statuses' },
+                  { value: 'uncollected', label: 'Uncollected (0%)' },
+                  { value: 'partial', label: 'Partially Collected' },
+                  { value: 'settled', label: 'Fully Settled / 100%' },
+                ]}
+                triggerClassName="min-w-[170px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+              />
             </div>
 
             {/* Sort Filter */}
             <div className="flex items-center gap-1 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <ArrowUpDown className="w-3 h-3 text-[#104080]" />
-              <select
+              <ArrowUpDown className="w-3 h-3 text-[#104080] shrink-0" />
+              <FinacleSelect
                 value={sortBy}
                 onChange={(e: any) => setSortBy(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] h-[26px]"
-              >
-                <option value="pending_desc">Pending AED: Highest First</option>
-                <option value="pending_asc">Pending AED: Lowest First</option>
-                <option value="booked_desc">Booked AED: Highest First</option>
-                <option value="name_asc">Agent Name: A to Z</option>
-              </select>
+                options={[
+                  { value: 'pending_desc', label: 'Pending AED: Highest First' },
+                  { value: 'pending_asc', label: 'Pending AED: Lowest First' },
+                  { value: 'booked_desc', label: 'Booked AED: Highest First' },
+                  { value: 'name_asc', label: 'Agent Name: A to Z' },
+                ]}
+                triggerClassName="min-w-[190px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+              />
             </div>
           </div>
 

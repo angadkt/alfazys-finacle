@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import api from "../services/api";
 import FinacleDatePicker from "./FinacleDatePicker";
 import FinacleSelect from "./FinacleSelect";
@@ -102,6 +102,13 @@ export interface ServicerBankAccount {
   is_primary: boolean;
 }
 
+export interface JointHolder {
+  partyId?: string;
+  cifNo?: string;
+  name: string;
+  designation?: string;
+}
+
 export interface EligibleCif {
   id: string | number;
   cif_no: string;
@@ -114,6 +121,8 @@ export interface EligibleCif {
   photo_url?: string;
   branch_id?: string | number;
   existing_servicer_id?: string | number;
+  cif_type_name?: string;
+  cif_type_id?: number | string;
 }
 
 interface OpenAccountScreenProps {
@@ -127,10 +136,19 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
   // Scheme Selection
   const [accountType, setAccountType] = useState<AccountType>("SAVINGS");
 
-  // CIF Selection
-  const [eligibleCifs, setEligibleCifs] = useState<EligibleCif[]>([]);
+  // CIF Selection (Servicer-only vs All CIFs)
+  const [servicerCifs, setServicerCifs] = useState<EligibleCif[]>([]);
+  const [allCifs, setAllCifs] = useState<EligibleCif[]>([]);
   const [loadingCifs, setLoadingCifs] = useState(false);
   const [selectedPartyId, setSelectedPartyId] = useState<string>("");
+
+  // Context-aware dynamic CIF list: Servicer scheme shows only servicers; all other schemes show all verified CIFs
+  const activeCifList: EligibleCif[] = useMemo(() => {
+    if (accountType === "SERVICER") {
+      return servicerCifs;
+    }
+    return allCifs.length > 0 ? allCifs : servicerCifs;
+  }, [accountType, servicerCifs, allCifs]);
 
   // Base Identity Fields
   const [name, setName] = useState("");
@@ -141,7 +159,58 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
   // Scheme Financial Parameters
   const [initialDeposit, setInitialDeposit] = useState<number | "">("");
   const [sanctionedLimit, setSanctionedLimit] = useState<number | "">("");
-  const [jointHolderName, setJointHolderName] = useState("");
+  const [jointHolders, setJointHolders] = useState<JointHolder[]>([
+    { partyId: "", cifNo: "", name: "", designation: "Co-Signatory / Partner" }
+  ]);
+
+  const handleAddJointHolder = () => {
+    setJointHolders((prev) => [
+      ...prev,
+      { partyId: "", cifNo: "", name: "", designation: "Co-Signatory / Partner" }
+    ]);
+  };
+
+  const handleRemoveJointHolder = (index: number) => {
+    setJointHolders((prev) =>
+      prev.length > 1
+        ? prev.filter((_, i) => i !== index)
+        : [{ partyId: "", cifNo: "", name: "", designation: "Co-Signatory / Partner" }]
+    );
+  };
+
+  const handleUpdateJointHolder = (index: number, field: keyof JointHolder, val: string) => {
+    setJointHolders((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: val };
+      return updated;
+    });
+  };
+
+  const handleSelectJointCif = (index: number, partyId: string) => {
+    setJointHolders((prev) => {
+      const updated = [...prev];
+      if (!partyId) {
+        updated[index] = {
+          ...updated[index],
+          partyId: "",
+          cifNo: "",
+          name: ""
+        };
+        return updated;
+      }
+      const cif = allCifs.find((c) => String(c.id) === String(partyId));
+      if (cif) {
+        const fullName = `${cif.first_name} ${cif.last_name}`.trim();
+        updated[index] = {
+          ...updated[index],
+          partyId: String(cif.id),
+          cifNo: cif.cif_no,
+          name: fullName
+        };
+      }
+      return updated;
+    });
+  };
 
   // Scheme D: Servicer (SRV) Settlement Accounts
   const [bankAccounts, setBankAccounts] = useState<ServicerBankAccount[]>([]);
@@ -299,21 +368,78 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
   const clearingIfsc = branch === "UAE" ? "FNCL0000971" : "FNCL0000091";
   const currencySymbol = branch === "UAE" ? "AED" : "₹";
 
-  const fetchEligibleCifs = async () => {
+  const fetchAllCifsData = async () => {
     try {
       setLoadingCifs(true);
-      const res = await api.get("/payouts/eligible-cifs");
-      const list = Array.isArray(res.data) ? res.data : (res.data?.cifs || []);
-      setEligibleCifs(list);
-    } catch {
-      setEligibleCifs([]);
+      const [servicerRes, partiesRes, mastersRes] = await Promise.allSettled([
+        api.get("/payouts/eligible-cifs"),
+        api.get("/records/parties"),
+        api.get("/masters/cif_types")
+      ]);
+
+      const cifTypeLookup: Record<string, string> = {
+        "1": "Agent",
+        "2": "Customer",
+        "3": "Employee",
+        "4": "Other",
+        "5": "General",
+        "6": "Servicer",
+        "7": "Supplier"
+      };
+
+      if (mastersRes.status === "fulfilled" && Array.isArray(mastersRes.value.data)) {
+        mastersRes.value.data.forEach((m: any) => {
+          if (m?.id && m?.name) {
+            cifTypeLookup[String(m.id)] = m.name.charAt(0).toUpperCase() + m.name.slice(1).toLowerCase();
+          }
+        });
+      }
+
+      // 1. Process Servicer CIFs (Filtered strictly for float wallets)
+      if (servicerRes.status === "fulfilled") {
+        const rawServicers = Array.isArray(servicerRes.value.data)
+          ? servicerRes.value.data
+          : servicerRes.value.data?.cifs || [];
+        const formattedServicers: EligibleCif[] = rawServicers.map((s: any) => ({
+          ...s,
+          cif_type_name: "Servicer"
+        }));
+        setServicerCifs(formattedServicers);
+      }
+
+      // 2. Process All Verified Parties (For Savings, Salary, Corporate, Profit, Expense, Overdraft)
+      if (partiesRes.status === "fulfilled") {
+        const rawParties = partiesRes.value.data?.records || [];
+        const verifiedParties = rawParties.filter((p: any) => p.status === "verified");
+        const formattedAll: EligibleCif[] = verifiedParties.map((p: any) => {
+          const permAddr = p.addresses?.find((a: any) => a.address_type === "PERMANENT") || p.addresses?.[0];
+          const rawTypeId = String(p.cif_type_id || "");
+          const typeName = cifTypeLookup[rawTypeId] || p.cif_type_name || "Customer";
+          return {
+            id: p.id,
+            cif_no: p.cif_no || String(p.id),
+            first_name: p.first_name || "",
+            last_name: p.last_name || "",
+            contact_number: p.contact_number,
+            indian_number: p.indian_number,
+            city: permAddr?.city || p.city || "",
+            country: permAddr?.country || p.country || "",
+            branch_id: p.branch_id,
+            cif_type_name: typeName,
+            cif_type_id: p.cif_type_id
+          };
+        });
+        setAllCifs(formattedAll);
+      }
+    } catch (err) {
+      console.error("Error loading CIF lists:", err);
     } finally {
       setLoadingCifs(false);
     }
   };
 
   useEffect(() => {
-    fetchEligibleCifs();
+    fetchAllCifsData();
   }, []);
 
   const handleSelectCif = (partyId: string) => {
@@ -325,7 +451,10 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
       setEntryAccountHolder("");
       return;
     }
-    const cif = eligibleCifs.find((c) => String(c.id) === String(partyId));
+    const cif =
+      activeCifList.find((c) => String(c.id) === String(partyId)) ||
+      allCifs.find((c) => String(c.id) === String(partyId)) ||
+      servicerCifs.find((c) => String(c.id) === String(partyId));
     if (cif) {
       const fullName = [cif.first_name, cif.last_name].filter(Boolean).join(" ");
       setName(fullName);
@@ -444,7 +573,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
     setBranch("INDIA");
     setInitialDeposit("");
     setSanctionedLimit("");
-    setJointHolderName("");
+    setJointHolders([{ partyId: "", cifNo: "", name: "", designation: "Co-Signatory / Partner" }]);
     setBankAccounts([]);
     setEditingBankIndex(null);
     setEntryAccountNumber("");
@@ -468,6 +597,14 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
       return;
     }
 
+    if (accountType === "CORPORATE_JOINT") {
+      const validJoints = jointHolders.filter((j) => j.name.trim());
+      if (validJoints.length === 0) {
+        setFormError("At least one Secondary Joint Signatory / Co-Applicant Legal Title is required.");
+        return;
+      }
+    }
+
     setSubmitting(true);
     setFormError("");
 
@@ -476,9 +613,10 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
     );
 
     const primaryName = name.trim();
+    const validJointNames = jointHolders.map((j) => j.name.trim()).filter(Boolean);
     const finalLegalTitle =
-      accountType === "CORPORATE_JOINT" && jointHolderName.trim()
-        ? `${primaryName} & ${jointHolderName.trim()}`
+      accountType === "CORPORATE_JOINT" && validJointNames.length > 0
+        ? `${primaryName} & ${validJointNames.join(" & ")}`
         : primaryName;
 
     try {
@@ -509,7 +647,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
         opening_date: openingDate
       });
       setShowSuccessModal(true);
-      fetchEligibleCifs();
+      fetchAllCifsData();
     } catch (err: any) {
       setFormError(err.response?.data?.error || err.message || "Failed to provision account");
     } finally {
@@ -517,7 +655,10 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
     }
   };
 
-  const selectedCifObj = eligibleCifs.find((c) => String(c.id) === String(selectedPartyId));
+  const selectedCifObj =
+    activeCifList.find((c) => String(c.id) === String(selectedPartyId)) ||
+    allCifs.find((c) => String(c.id) === String(selectedPartyId)) ||
+    servicerCifs.find((c) => String(c.id) === String(selectedPartyId));
 
   return (
     <div className="flex-1 flex flex-col bg-white overflow-hidden text-xs select-none">
@@ -529,13 +670,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
             <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
               Open Account Onboarding Desk (OAAC)
             </h1>
-            <span className="bg-blue-50 text-[#104080] border border-blue-200 px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
-              SCHEME: {schemeDetails[accountType].codeBadge} ({schemeCode})
-            </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5 ml-7">
-            Core Banking Universal Account Opening • Scheme Provisioning & CIF Linkage
-          </p>
         </div>
         <div className="flex items-center gap-2.5">
           {accountType === "SERVICER" && onNavigate && (
@@ -581,9 +716,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                     Account Classification &amp; Operating Branch
                   </span>
                 </div>
-                <span className="text-xs bg-blue-50 text-[#104080] border border-blue-100 font-bold px-2.5 py-1 rounded font-mono">
-                  SCHEME CODE: {schemeCode} • CURRENCY: {currencySymbol}
-                </span>
               </div>
 
               <div className="p-5 md:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -608,8 +740,22 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                   <FinacleSelect<AccountType>
                     value={accountType}
                     onChange={(e) => {
-                      setAccountType(e.target.value as AccountType);
+                      const newType = e.target.value as AccountType;
+                      setAccountType(newType);
                       setFormError("");
+                      // If switching to SERVICER, ensure currently selected party is an eligible servicer
+                      if (newType === "SERVICER" && selectedPartyId) {
+                        const isServicer = servicerCifs.some(
+                          (s) => String(s.id) === String(selectedPartyId)
+                        );
+                        if (!isServicer) {
+                          setSelectedPartyId("");
+                          setName("");
+                          setPhone("");
+                          setCity("");
+                          setEntryAccountHolder("");
+                        }
+                      }
                     }}
                     accentClass="text-[#104080]"
                     options={[
@@ -669,38 +815,63 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                       1. Master CIF Linkage
                     </span>
                   </div>
-                  <span className="text-xs bg-blue-50 text-[#104080] border border-blue-100 font-bold px-2.5 py-1 rounded flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> KYC Master
+                  <span className="text-xs bg-blue-50 text-[#104080] border border-blue-100 font-bold px-2.5 py-1 rounded flex items-center gap-1.5 font-mono">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    {accountType === "SERVICER" ? "SERVICER MASTER" : "ALL CIF MASTER"}
                   </span>
                 </div>
 
                 <div className="p-5 md:p-6 space-y-5">
                   <div>
-                    <label className="block text-[13px] font-bold text-[#104080] mb-1.5">
-                      Select Verified CIF (Retail Customer / Servicer):
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      {accountType === "SERVICER"
+                        ? "Select Verified Servicer CIF: *"
+                        : "Select Verified CIF:"}
                     </label>
                     <FinacleSelect
                       value={selectedPartyId}
                       onChange={(e) => handleSelectCif(e.target.value)}
                       disabled={loadingCifs}
-                      placeholder={loadingCifs ? "Loading Verified CIFs..." : "-- Choose Verified CIF or Enter Profile Manually --"}
+                      searchable={true}
+                      searchPlaceholder="Type CIF #, customer name, contact..."
+                      placeholder={
+                        loadingCifs
+                          ? "Loading Verified CIFs..."
+                          : accountType === "SERVICER"
+                          ? "-- Choose Verified Servicer CIF --"
+                          : "-- Choose Verified CIF or Enter Manually --"
+                      }
                       options={[
-                        { value: "", label: "-- Choose Verified CIF or Enter Profile Manually --" },
-                        ...eligibleCifs.map((c) => ({
-                          value: String(c.id),
-                          label: `${c.cif_no} — ${c.first_name} ${c.last_name}`,
-                          subLabel: c.contact_number ? `Contact: ${c.contact_number}` : undefined
-                        }))
+                        {
+                          value: "",
+                          label:
+                            accountType === "SERVICER"
+                              ? "-- Choose Verified Servicer CIF --"
+                              : "-- Choose Verified CIF or Enter Manually --"
+                        },
+                        ...activeCifList.map((c) => {
+                          const fullName = `${c.first_name} ${c.last_name}`.trim();
+                          const badge = c.cif_type_name || (accountType === "SERVICER" ? "Servicer" : "CIF");
+                          return {
+                            value: String(c.id),
+                            label: `${c.cif_no} — ${fullName} [${badge}]`,
+                            subLabel: c.contact_number ? `Contact: ${c.contact_number}` : undefined
+                          };
+                        })
                       ]}
                     />
                     {selectedPartyId ? (
                       <div className="text-xs text-emerald-700 font-semibold mt-1.5 flex items-center gap-1.5">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Linked to Retail CIF {selectedCifObj?.cif_no}. Full profile inherited.</span>
+                        <span>
+                          Linked to {selectedCifObj?.cif_type_name || "CIF"} {selectedCifObj?.cif_no}. Full profile inherited.
+                        </span>
                       </div>
                     ) : (
                       <div className="text-xs text-gray-500 mt-1.5">
-                        Select an onboarding CIF or type primary account holder details below.
+                        {accountType === "SERVICER"
+                          ? "Select an approved Servicer CIF or enter payout operating details below."
+                          : "Select any verified CIF record or type primary account holder details manually below."}
                       </div>
                     )}
                   </div>
@@ -715,7 +886,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Enter full legal name or commercial entity title"
                         className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
                         required
                       />
@@ -729,7 +899,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                         type="text"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="e.g. +91 98765 43210 / +971 50 123 4567"
                         className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
                       />
                     </div>
@@ -746,9 +915,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                       2. {schemeDetails[accountType].title}
                     </span>
                   </div>
-                  <span className="text-xs bg-blue-50 text-[#104080] border border-blue-100 font-bold px-2.5 py-1 rounded font-mono">
-                    SCHEME CODE: {schemeCode}
-                  </span>
                 </div>
 
                 <div className="p-5 md:p-6 space-y-5">
@@ -778,7 +944,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                             type="number"
                             value={initialDeposit}
                             onChange={(e) => setInitialDeposit(e.target.value === "" ? "" : Number(e.target.value))}
-                            placeholder="0.00"
                             className="w-full bg-white border border-gray-300 rounded-md pl-8 pr-3 py-2 text-xs font-bold text-[#104080] focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
                           />
                         </div>
@@ -807,7 +972,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                             type="number"
                             value={initialDeposit}
                             onChange={(e) => setInitialDeposit(e.target.value === "" ? "" : Number(e.target.value))}
-                            placeholder="0.00"
                             className="w-full bg-white border border-gray-300 rounded-md pl-8 pr-3 py-2 text-xs font-bold text-[#104080] focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
                           />
                         </div>
@@ -819,20 +983,133 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                         )}
                       </div>
 
-                      <div>
-                        <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                          Secondary Joint Signatory / Co-Applicant Legal Title: *
-                        </label>
-                        <input
-                          type="text"
-                          value={jointHolderName}
-                          onChange={(e) => setJointHolderName(e.target.value)}
-                          placeholder="Enter second authorized signatory name"
-                          className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
-                          required
-                        />
-                        <div className="text-xs text-gray-500 mt-1">
-                          Account will be registered jointly as: <span className="font-bold text-gray-800">{name.trim() || "[Primary Name]"} &amp; {jointHolderName.trim() || "[Secondary Signatory]"}</span>
+                      {/* Authorized Joint Holders / Signatories Dynamic List */}
+                      <div className="space-y-3 pt-2 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-[13px] font-bold text-[#104080] flex items-center gap-1.5">
+                            <Users className="w-4 h-4 text-[#104080]" />
+                            <span>Authorized Joint Signatories / Co-Applicants: *</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleAddJointHolder}
+                            className="flex items-center gap-1 text-[11px] font-bold text-[#104080] hover:text-[#0b2b57] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded cursor-pointer transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                            <span>Add Joint Signatory</span>
+                          </button>
+                        </div>
+
+                        <div className="space-y-3">
+                          {jointHolders.map((holder, idx) => (
+                            <div
+                              key={idx}
+                              className="bg-gray-50 border border-gray-200 rounded-md p-3 space-y-2.5 transition-all"
+                            >
+                              <div className="flex items-center justify-between text-[11px] font-bold text-gray-700">
+                                <span className="flex items-center gap-1.5">
+                                  <span className="w-4 h-4 rounded-full bg-[#104080] text-white flex items-center justify-center text-[10px] font-mono">
+                                    {idx + 1}
+                                  </span>
+                                  <span>Joint Signatory #{idx + 1}</span>
+                                </span>
+                                {jointHolders.length > 1 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveJointHolder(idx)}
+                                    className="text-gray-400 hover:text-red-600 p-0.5 rounded hover:bg-red-50 cursor-pointer flex items-center gap-1 text-[10px]"
+                                    title="Remove Signatory"
+                                  >
+                                    <Trash2 className="w-3 h-3 text-red-500" />
+                                    <span>Remove</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                    Primary Co-Signatory
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Choose CIF for this joint signatory */}
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                  Select Verified CIF for Signatory #{idx + 1}: *
+                                </label>
+                                <FinacleSelect
+                                  value={holder.partyId || ""}
+                                  onChange={(e) => handleSelectJointCif(idx, e.target.value)}
+                                  disabled={loadingCifs}
+                                  searchable={true}
+                                  searchPlaceholder="Type CIF #, signatory name, contact..."
+                                  placeholder={loadingCifs ? "Loading Verified CIFs..." : "-- Select Verified CIF --"}
+                                  options={[
+                                    { value: "", label: "-- Select Verified CIF or Enter Below --" },
+                                    ...allCifs.map((c) => {
+                                      const fullName = `${c.first_name} ${c.last_name}`.trim();
+                                      const badge = c.cif_type_name || "CIF";
+                                      return {
+                                        value: String(c.id),
+                                        label: `${c.cif_no} — ${fullName} [${badge}]`,
+                                        subLabel: c.contact_number ? `Contact: ${c.contact_number}` : undefined
+                                      };
+                                    })
+                                  ]}
+                                />
+                                {holder.cifNo && (
+                                  <div className="text-[10.5px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                    <span>Linked to CIF {holder.cifNo}. Profile details inherited.</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Legal Name & Designation */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                                <div>
+                                  <label className="block text-[10.5px] font-semibold text-gray-600 mb-0.5">
+                                    Legal Name / Co-Applicant Title: *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={holder.name}
+                                    onChange={(e) => handleUpdateJointHolder(idx, "name", e.target.value)}
+                                    placeholder="Signatory legal name *"
+                                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
+                                    required={idx === 0}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10.5px] font-semibold text-gray-600 mb-0.5">
+                                    Designation / Role:
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={holder.designation || ""}
+                                    onChange={(e) => handleUpdateJointHolder(idx, "designation", e.target.value)}
+                                    placeholder="e.g. Director, Partner, Signatory"
+                                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Joint Registration Preview */}
+                        <div className="text-xs bg-[#f8fafc] border border-slate-200 rounded p-2.5 space-y-0.5">
+                          <span className="font-semibold text-gray-600 block">Account will be registered jointly as:</span>
+                          <div className="font-bold text-[#104080] text-sm break-words">
+                            {name.trim() || "[Primary Name]"}
+                            {jointHolders
+                              .map((j) => j.name.trim())
+                              .filter(Boolean)
+                              .map((jName, i) => (
+                                <span key={i}> &amp; {jName}</span>
+                              ))}
+                            {jointHolders.filter((j) => j.name.trim()).length === 0 && (
+                              <span className="text-gray-400 font-normal"> &amp; [Secondary Signatories]</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -853,7 +1130,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                             type="number"
                             value={sanctionedLimit}
                             onChange={(e) => setSanctionedLimit(e.target.value === "" ? "" : Number(e.target.value))}
-                            placeholder="Enter credit limit"
                             className="w-full bg-white border border-gray-300 rounded-md pl-8 pr-3 py-2 text-xs font-extrabold text-[#104080] focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
                             required
                           />

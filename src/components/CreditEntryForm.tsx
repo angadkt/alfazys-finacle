@@ -1,4 +1,5 @@
 import FinacleDatePicker from './FinacleDatePicker';
+import FinacleSelect from './FinacleSelect';
 import { useState, useEffect } from 'react';
 import { RefreshCw, FileSpreadsheet, FileText, Landmark, X, Check, AlertTriangle, Info, Printer } from 'lucide-react';
 import api from '../services/api';
@@ -522,25 +523,29 @@ Generated on: ${new Date().toLocaleString()}`;
         {/* Function selection & shortcuts */}
         <div className="flex items-center gap-2 text-[11px]">
           <span className="font-bold text-[#104080]">Function:</span>
-          <select 
-            value={isFormModalOpen ? (editingId ? 'M-MODIFY' : 'A-ADD') : selectedFunction} 
-            onChange={(e) => {
-              setSelectedFunction(e.target.value);
-              if (e.target.value === 'I-INQUIRE') {
-                setIsFormModalOpen(false);
-                setActiveMainTab('inquiry');
-              } else if (e.target.value === 'A-ADD') {
-                handleClearForm();
-                setIsFormModalOpen(true);
-              }
-            }}
-            className="border border-[#7f9db9] bg-white text-black px-1 h-[22px] text-[11px]"
-          >
-            <option value="A-ADD">A-ADD (New Credit Entry)</option>
-            <option value="I-INQUIRE">I-INQUIRE (View & Search List)</option>
-            <option value="M-MODIFY">M-MODIFY (Edit Draft)</option>
-            <option value="X-CANCEL">X-CANCEL / VOID (Audit Log)</option>
-          </select>
+          <div className="w-64">
+            <FinacleSelect
+              value={isFormModalOpen ? (editingId ? 'M-MODIFY' : 'A-ADD') : selectedFunction}
+              onChange={(e) => {
+                setSelectedFunction(e.target.value);
+                if (e.target.value === 'I-INQUIRE') {
+                  setIsFormModalOpen(false);
+                  setActiveMainTab('inquiry');
+                } else if (e.target.value === 'A-ADD') {
+                  handleClearForm();
+                  setIsFormModalOpen(true);
+                }
+              }}
+              className="w-full"
+              triggerClassName="h-[28px] text-[11px] font-semibold border-[#7f9db9] py-0.5"
+              options={[
+                { value: "A-ADD", label: "A-ADD (New Credit Entry)" },
+                { value: "I-INQUIRE", label: "I-INQUIRE (View & Search List)" },
+                { value: "M-MODIFY", label: "M-MODIFY (Edit Draft)" },
+                { value: "X-CANCEL", label: "X-CANCEL / VOID (Audit Log)" }
+              ]}
+            />
+          </div>
         </div>
       </div>
 
@@ -630,34 +635,42 @@ Generated on: ${new Date().toLocaleString()}`;
                   )}
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <span className="font-semibold text-black">Payment Mode:</span>
-                  <select 
-                    value={filterMode} 
-                    onChange={(e) => setFilterMode(e.target.value)}
-                    className="border border-[#7f9db9] bg-white px-1 h-[24px] text-[11px]"
-                  >
-                    <option value="ALL">All Modes</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="RTGS">RTGS</option>
-                    <option value="NEFT">NEFT</option>
-                    <option value="IMPS">IMPS</option>
-                    <option value="Cash">Cash</option>
-                  </select>
+                  <div className="w-36">
+                    <FinacleSelect
+                      value={filterMode}
+                      onChange={(e) => setFilterMode(e.target.value)}
+                      className="w-full"
+                      triggerClassName="h-[28px] text-[11px] font-semibold border-[#7f9db9] py-0.5"
+                      options={[
+                        { value: "ALL", label: "All Modes" },
+                        { value: "Bank Transfer", label: "Bank Transfer" },
+                        { value: "RTGS", label: "RTGS" },
+                        { value: "NEFT", label: "NEFT" },
+                        { value: "IMPS", label: "IMPS" },
+                        { value: "Cash", label: "Cash" }
+                      ]}
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <span className="font-semibold text-black">Status:</span>
-                  <select 
-                    value={filterStatus} 
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="border border-[#7f9db9] bg-white px-1 h-[24px] text-[11px]"
-                  >
-                    <option value="ALL">All Status</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
+                  <div className="w-32">
+                    <FinacleSelect
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full"
+                      triggerClassName="h-[28px] text-[11px] font-semibold border-[#7f9db9] py-0.5"
+                      options={[
+                        { value: "ALL", label: "All Status" },
+                        { value: "Completed", label: "Completed" },
+                        { value: "Pending", label: "Pending" },
+                        { value: "Cancelled", label: "Cancelled" }
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 {/* Refresh Icon Button inside the Filter Box */}
@@ -1288,15 +1301,18 @@ Generated on: ${new Date().toLocaleString()}`;
                                   />
                                 </td>
                                 <td className="py-1 px-2 border-r border-[#e4e4e4]">
-                                  <select 
+                                  <FinacleSelect
                                     value={item.status}
                                     onChange={(e) => handleUtrChange(index, 'status', e.target.value)}
-                                    className="w-full border border-[#7f9db9] bg-white px-1 h-[30px] focus:outline-none text-[11px] font-semibold text-green-700"
-                                  >
-                                    <option value="Completed">Completed</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Failed">Failed</option>
-                                  </select>
+                                    className="w-full"
+                                    triggerClassName="h-[28px] text-[11px] font-semibold border-[#7f9db9] py-0.5"
+                                    accentClass="text-green-700 font-bold"
+                                    options={[
+                                      { value: "Completed", label: "Completed" },
+                                      { value: "Pending", label: "Pending" },
+                                      { value: "Failed", label: "Failed" }
+                                    ]}
+                                  />
                                 </td>
                                 <td className="py-1 px-2 border-r border-[#e4e4e4] text-gray-600 text-[10px]">
                                   {item.timestamp || 'Auto on save'}

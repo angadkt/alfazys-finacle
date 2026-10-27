@@ -2,6 +2,7 @@ import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect } from 'react';
 import { ExternalLink, X } from 'lucide-react';
 import api from '../services/api';
+import FinacleSelect from './FinacleSelect';
 
 interface Customer {
   id: string;
@@ -285,20 +286,20 @@ export default function ReceivedAedScreen() {
             </div>
 
             {/* Agent Filter */}
-            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#104080] font-bold text-[11px]">Agent:</span>
-              <select
+            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+              <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Agent:</span>
+              <FinacleSelect
                 value={agentFilter}
                 onChange={(e) => setAgentFilter(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] max-w-[180px] truncate"
-              >
-                <option value="">All Agents</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: 'All Agents' },
+                  ...customers.map((c) => ({
+                    value: c.name,
+                    label: c.name,
+                  })),
+                ]}
+                triggerClassName="min-w-[150px] max-w-[200px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+              />
               {agentFilter && (
                 <button
                   onClick={() => setAgentFilter('')}
@@ -311,22 +312,23 @@ export default function ReceivedAedScreen() {
             </div>
 
             {/* Mode Filter */}
-            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#104080] font-bold text-[11px]">Mode:</span>
-              <select
+            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+              <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Mode:</span>
+              <FinacleSelect
                 value={modeFilter}
                 onChange={(e) => setModeFilter(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080]"
-              >
-                <option value="">All Modes</option>
-                <option value="CDM">CDM</option>
-                <option value="BNK SLP">BNK SLP</option>
-                <option value="FINAC">FINAC</option>
-                <option value="BY CASH">BY CASH</option>
-                <option value="MOB TRF">MOB TRF</option>
-                <option value="UPI">UPI</option>
-                <option value="COR NET">COR NET</option>
-              </select>
+                options={[
+                  { value: '', label: 'All Modes' },
+                  { value: 'CDM', label: 'CDM' },
+                  { value: 'BNK SLP', label: 'BNK SLP' },
+                  { value: 'FINAC', label: 'FINAC' },
+                  { value: 'BY CASH', label: 'BY CASH' },
+                  { value: 'MOB TRF', label: 'MOB TRF' },
+                  { value: 'UPI', label: 'UPI' },
+                  { value: 'COR NET', label: 'COR NET' },
+                ]}
+                triggerClassName="min-w-[120px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+              />
               {modeFilter && (
                 <button
                   onClick={() => setModeFilter('')}
@@ -603,23 +605,24 @@ export default function ReceivedAedScreen() {
                   <label className="font-medium text-black whitespace-nowrap">
                     Mode of Transaction <span className="text-red-600">*</span>
                   </label>
-                  <select
+                  <FinacleSelect
                     value={modeOfTxn}
                     onChange={(e) => {
                       setModeOfTxn(e.target.value);
                       if (e.target.value !== 'BY CASH') setCashStaff('');
                     }}
-                    className="border border-[#c4d4ec] rounded-md h-[36px] px-2 pr-8 bg-white uppercase focus:outline-none focus:border-[#104080] w-full"
-                  >
-                    <option value="">Select Mode...</option>
-                    <option value="CDM">CDM</option>
-                    <option value="BNK SLP">BNK SLP</option>
-                    <option value="FINAC">FINAC</option>
-                    <option value="BY CASH">BY CASH</option>
-                    <option value="MOB TRF">MOB TRF</option>
-                    <option value="UPI">UPI</option>
-                    <option value="COR NET">COR NET</option>
-                  </select>
+                    placeholder="Select Mode..."
+                    options={[
+                      { value: 'CDM', label: 'CDM' },
+                      { value: 'BNK SLP', label: 'BNK SLP' },
+                      { value: 'FINAC', label: 'FINAC' },
+                      { value: 'BY CASH', label: 'BY CASH' },
+                      { value: 'MOB TRF', label: 'MOB TRF' },
+                      { value: 'UPI', label: 'UPI' },
+                      { value: 'COR NET', label: 'COR NET' },
+                    ]}
+                    triggerClassName="border border-[#c4d4ec] rounded-md h-[36px] px-2 bg-white uppercase w-full"
+                  />
 
                   {/* UTR / Reference No */}
                   <label className="font-medium text-black whitespace-nowrap">

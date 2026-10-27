@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FinacleDatePicker from './FinacleDatePicker';
+import FinacleSelect from './FinacleSelect';
 import { 
   Check, 
   X, 
@@ -7,7 +8,6 @@ import {
   User, 
   Phone, 
   MapPin, 
-  Building2, 
   ShieldCheck, 
   CheckCircle2, 
   AlertTriangle, 
@@ -286,20 +286,6 @@ export default function CreateRetailCifForm() {
               Retail Customer Information File Maintenance (CRM-CIF) • Direct Scheme Provisioning
             </p>
           </div>
-          <div className="text-xs text-gray-500 font-medium">
-            Infosys Finacle Core Banking
-          </div>
-        </div>
-
-        {/* Sub-bar / Ribbon */}
-        <div className="bg-[#e6edf8] border-b border-[#c4d4ec] px-5 py-2.5 flex items-center justify-between shadow-2xs">
-          <div className="flex items-center gap-2 text-[#104080] font-bold text-sm">
-            <Building2 className="w-4 h-4" />
-            <span>Retail Customer Information File Maintenance (CRM-CIF)</span>
-          </div>
-          <span className="text-xs text-slate-700 bg-white px-3 py-1 rounded border border-[#c4d4ec] font-semibold">
-            Direct Scheme Provisioning
-          </span>
         </div>
 
         {/* Content Panel */}
@@ -307,7 +293,6 @@ export default function CreateRetailCifForm() {
           <div className="w-full max-w-3xl bg-white border border-[#c4d4ec] rounded-md shadow-xs overflow-hidden mt-2">
             <div className="bg-[#104080] text-white px-6 py-3 font-bold text-sm flex items-center justify-between">
               <span>Customer Onboarding Initiation Criteria</span>
-              <span className="text-xs font-mono text-amber-300 font-normal">FORM: CRM_RETAIL_CIF_01</span>
             </div>
 
             <div className="p-8 flex flex-col gap-6">
@@ -323,21 +308,23 @@ export default function CreateRetailCifForm() {
                   <span>Function</span>
                   <span className="text-red-600 font-bold">*</span>
                 </div>
-                <div>
-                  <select 
+                <div className="w-full max-w-md">
+                  <FinacleSelect
                     value={selectedFunction}
                     onChange={(e) => {
                       setSelectedFunction(e.target.value);
                       setValidationError('');
                     }}
-                    className="w-full max-w-md h-10 border border-[#a2b5cd] bg-white text-slate-900 rounded-md px-3 text-sm font-semibold focus:outline-none focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 shadow-2xs"
-                  >
-                    <option value="A-ADD">A - ADD (Create New Retail Customer)</option>
-                    <option value="M-MODIFY">M - MODIFY (Update Existing CIF)</option>
-                    <option value="V-VERIFY">V - VERIFY (Authorization Desk)</option>
-                    <option value="X-CANCEL">X - CANCEL (Discard Pending CIF)</option>
-                    <option value="R-REJECT">R - REJECT (Compliance Rejection)</option>
-                  </select>
+                    className="w-full"
+                    triggerClassName="h-10 text-sm font-semibold border-[#a2b5cd]"
+                    options={[
+                      { value: "A-ADD", label: "A - ADD (Create New Retail Customer)" },
+                      { value: "M-MODIFY", label: "M - MODIFY (Update Existing CIF)" },
+                      { value: "V-VERIFY", label: "V - VERIFY (Authorization Desk)" },
+                      { value: "X-CANCEL", label: "X - CANCEL (Discard Pending CIF)" },
+                      { value: "R-REJECT", label: "R - REJECT (Compliance Rejection)" }
+                    ]}
+                  />
                 </div>
 
                 <div className="font-bold text-slate-800">
@@ -519,17 +506,22 @@ export default function CreateRetailCifForm() {
                   <span className="w-44 font-bold text-slate-700 text-sm shrink-0">
                     Title <span className="text-red-600 font-bold">*</span>
                   </span>
-                  <select 
-                    value={formData.title} 
-                    onChange={(e) => setFormData({...formData, title: e.target.value})} 
-                    className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none"
-                  >
-                    <option value="">-- Select Title --</option>
-                    <option value="Mr">Mr.</option>
-                    <option value="Mrs">Mrs.</option>
-                    <option value="Ms">Ms.</option>
-                    <option value="Dr">Dr.</option>
-                  </select>
+                  <div className="flex-1">
+                    <FinacleSelect
+                      value={formData.title}
+                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      className="w-full"
+                      triggerClassName="h-10 text-sm border-[#c4d4ec]"
+                      placeholder="-- Select Title --"
+                      options={[
+                        { value: "", label: "-- Select Title --" },
+                        { value: "Mr", label: "Mr." },
+                        { value: "Mrs", label: "Mrs." },
+                        { value: "Ms", label: "Ms." },
+                        { value: "Dr", label: "Dr." }
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center">
@@ -575,33 +567,42 @@ export default function CreateRetailCifForm() {
                   <span className="w-44 font-bold text-slate-700 text-sm shrink-0">
                     Gender <span className="text-red-600 font-bold">*</span>
                   </span>
-                  <select 
-                    value={formData.gender} 
-                    onChange={(e) => setFormData({...formData, gender: e.target.value})} 
-                    className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none"
-                  >
-                    <option value="">-- Select Gender --</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <div className="flex-1">
+                    <FinacleSelect
+                      value={formData.gender}
+                      onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                      className="w-full"
+                      triggerClassName="h-10 text-sm border-[#c4d4ec]"
+                      placeholder="-- Select Gender --"
+                      options={[
+                        { value: "", label: "-- Select Gender --" },
+                        { value: "Male", label: "Male" },
+                        { value: "Female", label: "Female" },
+                        { value: "Other", label: "Other" }
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center">
                   <span className="w-44 font-bold text-slate-700 text-sm shrink-0">
                     Nationality <span className="text-red-600 font-bold">*</span>
                   </span>
-                  <select 
-                    value={formData.nationality} 
-                    onChange={(e) => setFormData({...formData, nationality: e.target.value})} 
-                    className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none"
-                  >
-                    <option value="India">India</option>
-                    <option value="UAE">United Arab Emirates</option>
-                    <option value="United States">United States</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <div className="flex-1">
+                    <FinacleSelect
+                      value={formData.nationality}
+                      onChange={(e) => setFormData({...formData, nationality: e.target.value})}
+                      className="w-full"
+                      triggerClassName="h-10 text-sm border-[#c4d4ec]"
+                      options={[
+                        { value: "India", label: "India" },
+                        { value: "UAE", label: "United Arab Emirates" },
+                        { value: "United States", label: "United States" },
+                        { value: "United Kingdom", label: "United Kingdom" },
+                        { value: "Other", label: "Other" }
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center">
@@ -621,58 +622,67 @@ export default function CreateRetailCifForm() {
                   <span className="w-44 font-bold text-slate-700 text-sm shrink-0">
                     CCY (Currency) <span className="text-red-600 font-bold">*</span>
                   </span>
-                  <select 
-                    value={formData.ccy} 
-                    onChange={(e) => setFormData({...formData, ccy: e.target.value})} 
-                    className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none font-bold text-[#104080]"
-                  >
-                    <option value="INR">INR - Indian Rupee</option>
-                    <option value="AED">AED - UAE Dirham</option>
-                    <option value="USD">USD - US Dollar</option>
-                  </select>
+                  <div className="flex-1">
+                    <FinacleSelect
+                      value={formData.ccy}
+                      onChange={(e) => setFormData({...formData, ccy: e.target.value})}
+                      className="w-full"
+                      triggerClassName="h-10 text-sm font-bold text-[#104080] border-[#c4d4ec]"
+                      options={[
+                        { value: "INR", label: "INR - Indian Rupee" },
+                        { value: "AED", label: "AED - UAE Dirham" },
+                        { value: "USD", label: "USD - US Dollar" }
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center">
                   <span className="w-44 font-bold text-slate-700 text-sm shrink-0">
                     Branch Office <span className="text-red-600 font-bold">*</span>
                   </span>
-                  <select 
-                    value={formData.branchOffice} 
-                    onChange={(e) => setFormData({...formData, branchOffice: e.target.value})} 
-                    className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none font-medium"
-                  >
-                    <option value="INDIA">INDIA - Clearing Division (Branch 2)</option>
-                    <option value="UAE">UAE - Dubai Hub (Branch 1)</option>
-                  </select>
+                  <div className="flex-1">
+                    <FinacleSelect
+                      value={formData.branchOffice}
+                      onChange={(e) => setFormData({...formData, branchOffice: e.target.value})}
+                      className="w-full"
+                      triggerClassName="h-10 text-sm font-medium border-[#c4d4ec]"
+                      options={[
+                        { value: "INDIA", label: "INDIA - Clearing Division (Branch 2)" },
+                        { value: "UAE", label: "UAE - Dubai Hub (Branch 1)" }
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center">
                   <span className="w-44 font-bold text-slate-700 text-sm shrink-0">
                     CIF Type <span className="text-red-600 font-bold">*</span>
                   </span>
-                  <select 
-                    value={formData.cifType} 
-                    onChange={(e) => setFormData({...formData, cifType: e.target.value})} 
-                    className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm font-semibold focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none"
-                  >
-                    {cifTypesList.length > 0 ? (
-                      cifTypesList.map(t => (
-                        <option key={t.id} value={t.name.charAt(0).toUpperCase() + t.name.slice(1).toLowerCase()}>
-                          {t.name.charAt(0).toUpperCase() + t.name.slice(1).toLowerCase()}
-                        </option>
-                      ))
-                    ) : (
-                      <>
-                        <option value="Customer">Customer</option>
-                        <option value="Agent">Agent</option>
-                        <option value="Servicer">Servicer</option>
-                        <option value="Payment Distributer">Payment Distributer</option>
-                        <option value="Employee">Employee</option>
-                        <option value="Supplier">Supplier</option>
-                        <option value="Other">Other</option>
-                      </>
-                    )}
-                  </select>
+                  <div className="flex-1">
+                    <FinacleSelect
+                      value={formData.cifType}
+                      onChange={(e) => setFormData({...formData, cifType: e.target.value})}
+                      className="w-full"
+                      triggerClassName="h-10 text-sm font-semibold border-[#c4d4ec]"
+                      options={
+                        cifTypesList.length > 0
+                          ? cifTypesList.map(t => ({
+                              value: t.name.charAt(0).toUpperCase() + t.name.slice(1).toLowerCase(),
+                              label: t.name.charAt(0).toUpperCase() + t.name.slice(1).toLowerCase()
+                            }))
+                          : [
+                              { value: "Customer", label: "Customer" },
+                              { value: "Agent", label: "Agent" },
+                              { value: "Servicer", label: "Servicer" },
+                              { value: "Payment Distributer", label: "Payment Distributer" },
+                              { value: "Employee", label: "Employee" },
+                              { value: "Supplier", label: "Supplier" },
+                              { value: "Other", label: "Other" }
+                            ]
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -745,19 +755,24 @@ export default function CreateRetailCifForm() {
 
                 <div className="flex items-center">
                   <span className="w-44 font-bold text-slate-700 text-sm shrink-0">Relationship 1</span>
-                  <select 
-                    value={formData.relationship1}
-                    onChange={(e) => setFormData({...formData, relationship1: e.target.value})}
-                    className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none"
-                  >
-                    <option value="">-- Select Relationship --</option>
-                    <option value="Spouse">Spouse</option>
-                    <option value="Parent">Parent</option>
-                    <option value="Child">Child</option>
-                    <option value="Sibling">Sibling</option>
-                    <option value="Associate">Business Associate</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <div className="flex-1">
+                    <FinacleSelect
+                      value={formData.relationship1}
+                      onChange={(e) => setFormData({...formData, relationship1: e.target.value})}
+                      className="w-full"
+                      triggerClassName="h-10 text-sm border-[#c4d4ec]"
+                      placeholder="-- Select Relationship --"
+                      options={[
+                        { value: "", label: "-- Select Relationship --" },
+                        { value: "Spouse", label: "Spouse" },
+                        { value: "Parent", label: "Parent" },
+                        { value: "Child", label: "Child" },
+                        { value: "Sibling", label: "Sibling" },
+                        { value: "Associate", label: "Business Associate" },
+                        { value: "Other", label: "Other" }
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center">
@@ -773,19 +788,24 @@ export default function CreateRetailCifForm() {
 
                 <div className="flex items-center">
                   <span className="w-44 font-bold text-slate-700 text-sm shrink-0">Relationship 2</span>
-                  <select 
-                    value={formData.relationship2}
-                    onChange={(e) => setFormData({...formData, relationship2: e.target.value})}
-                    className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none"
-                  >
-                    <option value="">-- Select Relationship --</option>
-                    <option value="Spouse">Spouse</option>
-                    <option value="Parent">Parent</option>
-                    <option value="Child">Child</option>
-                    <option value="Sibling">Sibling</option>
-                    <option value="Associate">Business Associate</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <div className="flex-1">
+                    <FinacleSelect
+                      value={formData.relationship2}
+                      onChange={(e) => setFormData({...formData, relationship2: e.target.value})}
+                      className="w-full"
+                      triggerClassName="h-10 text-sm border-[#c4d4ec]"
+                      placeholder="-- Select Relationship --"
+                      options={[
+                        { value: "", label: "-- Select Relationship --" },
+                        { value: "Spouse", label: "Spouse" },
+                        { value: "Parent", label: "Parent" },
+                        { value: "Child", label: "Child" },
+                        { value: "Sibling", label: "Sibling" },
+                        { value: "Associate", label: "Business Associate" },
+                        { value: "Other", label: "Other" }
+                      ]}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1101,27 +1121,35 @@ export default function CreateRetailCifForm() {
                 <div className="grid grid-cols-2 gap-x-12 gap-y-4">
                   <div className="flex items-center">
                     <span className="w-44 font-bold text-slate-700 text-sm shrink-0">Address Format</span>
-                    <select 
-                      value={formData.addressFormat}
-                      onChange={(e) => setFormData({...formData, addressFormat: e.target.value})}
-                      className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none"
-                    >
-                      <option value="Structured">Structured</option>
-                      <option value="Free Text">Free Text</option>
-                    </select>
+                    <div className="flex-1">
+                      <FinacleSelect
+                        value={formData.addressFormat}
+                        onChange={(e) => setFormData({...formData, addressFormat: e.target.value})}
+                        className="w-full"
+                        triggerClassName="h-10 text-sm border-[#c4d4ec]"
+                        options={[
+                          { value: "Structured", label: "Structured" },
+                          { value: "Free Text", label: "Free Text" }
+                        ]}
+                      />
+                    </div>
                   </div>
 
                   <div className="flex items-center">
                     <span className="w-44 font-bold text-slate-700 text-sm shrink-0">Address Type</span>
-                    <select 
-                      value={formData.addressType}
-                      onChange={(e) => setFormData({...formData, addressType: e.target.value})}
-                      className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none"
-                    >
-                      <option value="PERMANENT">PERMANENT</option>
-                      <option value="MAILING">MAILING</option>
-                      <option value="BUSINESS">BUSINESS</option>
-                    </select>
+                    <div className="flex-1">
+                      <FinacleSelect
+                        value={formData.addressType}
+                        onChange={(e) => setFormData({...formData, addressType: e.target.value})}
+                        className="w-full"
+                        triggerClassName="h-10 text-sm border-[#c4d4ec]"
+                        options={[
+                          { value: "PERMANENT", label: "PERMANENT" },
+                          { value: "MAILING", label: "MAILING" },
+                          { value: "BUSINESS", label: "BUSINESS" }
+                        ]}
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex items-center">
@@ -1280,26 +1308,34 @@ export default function CreateRetailCifForm() {
 
                   <div className="flex items-center">
                     <span className="w-44 font-bold text-slate-700 text-sm shrink-0">Address Proof Verified</span>
-                    <select 
-                      value={formData.addressProofReceived}
-                      onChange={(e) => setFormData({...formData, addressProofReceived: e.target.value})}
-                      className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none font-medium"
-                    >
-                      <option value="Yes">Yes - Valid KYC Attached</option>
-                      <option value="No">No - Pending Documentation</option>
-                    </select>
+                    <div className="flex-1">
+                      <FinacleSelect
+                        value={formData.addressProofReceived}
+                        onChange={(e) => setFormData({...formData, addressProofReceived: e.target.value})}
+                        className="w-full"
+                        triggerClassName="h-10 text-sm font-medium border-[#c4d4ec]"
+                        options={[
+                          { value: "Yes", label: "Yes - Valid KYC Attached" },
+                          { value: "No", label: "No - Pending Documentation" }
+                        ]}
+                      />
+                    </div>
                   </div>
 
                   <div className="flex items-center">
                     <span className="w-44 font-bold text-slate-700 text-sm shrink-0">Hold Mail Indicator</span>
-                    <select 
-                      value={formData.holdMail}
-                      onChange={(e) => setFormData({...formData, holdMail: e.target.value})}
-                      className="flex-1 h-10 border border-[#c4d4ec] bg-white rounded-md px-3 text-sm focus:border-[#104080] focus:ring-2 focus:ring-[#104080]/20 focus:outline-none font-medium"
-                    >
-                      <option value="N">N - Deliver Mail to Address</option>
-                      <option value="Y">Y - Hold Mail at Branch</option>
-                    </select>
+                    <div className="flex-1">
+                      <FinacleSelect
+                        value={formData.holdMail}
+                        onChange={(e) => setFormData({...formData, holdMail: e.target.value})}
+                        className="w-full"
+                        triggerClassName="h-10 text-sm font-medium border-[#c4d4ec]"
+                        options={[
+                          { value: "N", label: "N - Deliver Mail to Address" },
+                          { value: "Y", label: "Y - Hold Mail at Branch" }
+                        ]}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

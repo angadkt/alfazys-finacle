@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import finacleLogo from '../assets/finacle-logo.png';
 import CostRateModal from './CostRateModal';
+import FinacleSelect from './FinacleSelect';
 import api from '../services/api';
 
 export default function Header({ 
@@ -91,20 +92,24 @@ export default function Header({
 
         {/* Right Side Controls */}
         <div className="flex items-center">
-          <div className="flex items-center gap-3">
-            <span className="text-[#104080] font-semibold">Solution:</span>
-            <select 
-              className="border border-gray-300 rounded-md bg-white text-gray-700 text-xs w-[180px] py-1 px-2 focus:outline-none focus:ring-1 focus:ring-[#104080] focus:border-[#104080] transition-colors" 
-              value={isFincoreActive ? 'FINCORE' : 'Select'}
-              onChange={(e) => {
-                if (e.target.value === 'FINCORE') {
-                  navigate('/fincore');
-                }
-              }}
-            >
-              <option value="Select">---Select---</option>
-              <option value="FINCORE">FINCORE</option>
-            </select>
+          <div className="flex items-center gap-2">
+            <span className="text-[#104080] font-semibold text-xs">Solution:</span>
+            <div className="w-[170px]">
+              <FinacleSelect
+                value={isFincoreActive ? 'FINCORE' : 'Select'}
+                onChange={(e) => {
+                  if (e.target.value === 'FINCORE') {
+                    navigate('/fincore');
+                  }
+                }}
+                className="w-full"
+                triggerClassName="py-1 px-2 text-xs font-semibold"
+                options={[
+                  { value: "Select", label: "---Select---" },
+                  { value: "FINCORE", label: "FINCORE" }
+                ]}
+              />
+            </div>
           </div>
           <div className="w-[1px] h-5 bg-gray-300 mx-5"></div>
           
