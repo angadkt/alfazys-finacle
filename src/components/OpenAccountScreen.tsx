@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import api from "../services/api";
 import FinacleDatePicker from "./FinacleDatePicker";
 import FinacleSelect from "./FinacleSelect";
+import Loader from "./Loader";
 import {
   Building2,
   User,
@@ -20,6 +21,7 @@ import {
   ChevronRight,
   Check,
   ArrowRight,
+  ArrowLeft,
   Globe,
   X,
   Copy,
@@ -135,6 +137,10 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
 
   // Scheme Selection
   const [accountType, setAccountType] = useState<AccountType>("SAVINGS");
+
+  // Multi-Step Wizard Flow (1: Scheme & Date, 2: Branch & CIF, 3: Scheme Details & Activation)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [stepLoading, setStepLoading] = useState(false);
 
   // CIF Selection (Servicer-only vs All CIFs)
   const [servicerCifs, setServicerCifs] = useState<EligibleCif[]>([]);
@@ -565,6 +571,8 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
   };
 
   const handleResetForm = () => {
+    setStepLoading(false);
+    setCurrentStep(1);
     setOpeningDate(new Date().toISOString().slice(0, 10));
     setSelectedPartyId("");
     setName("");
@@ -583,6 +591,42 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
     setFormError("");
     setCreatedResult(null);
     setShowSuccessModal(false);
+  };
+
+  const handleStep1Submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!openingDate) {
+      setFormError("Account Opening Value Date is required.");
+      return;
+    }
+    if (!accountType) {
+      setFormError("Please select an Account Scheme.");
+      return;
+    }
+    setFormError("");
+    setStepLoading(true);
+    setTimeout(() => {
+      setStepLoading(false);
+      setCurrentStep(2);
+    }, 600);
+  };
+
+  const handleStep2Submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (accountType === "SERVICER" && !selectedPartyId && !name.trim()) {
+      setFormError("Please select an approved Servicer CIF or enter the legal servicer name.");
+      return;
+    }
+    if (!name.trim()) {
+      setFormError("Primary Account Holder Name / Legal Title is required.");
+      return;
+    }
+    setFormError("");
+    setStepLoading(true);
+    setTimeout(() => {
+      setStepLoading(false);
+      setCurrentStep(3);
+    }, 600);
   };
 
   const handleOpenAccount = async (e: React.FormEvent) => {
@@ -663,221 +707,238 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
   return (
     <div className="flex-1 flex flex-col bg-white overflow-hidden text-xs select-none">
       {/* 1. Page Title Header */}
-      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <Landmark className="w-5 h-5 text-[#104080]" />
-            <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
-              Open Account Onboarding Desk (OAAC)
-            </h1>
-          </div>
-        </div>
+      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex items-center justify-between shrink-0 shadow-2xs">
         <div className="flex items-center gap-2.5">
-          {accountType === "SERVICER" && onNavigate && (
-            <button
-              type="button"
-              onClick={() => onNavigate("SERVICER WALLETS")}
-              className="flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-xs"
-            >
-              <Wallet className="w-3.5 h-3.5 text-amber-300" />
-              <span>Servicer Passbook</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={handleResetForm}
-            className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border border-gray-300 shadow-2xs"
-          >
-            <RefreshCw className="w-3 h-3 text-gray-600" />
-            <span>Reset Form</span>
-          </button>
+          <Landmark className="w-5 h-5 text-[#104080]" />
+          <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
+            Open Account Onboarding Desk (OAAC)
+          </h1>
         </div>
       </div>
 
-      {/* 2. Main Workspace Area - Generous Breathing Room */}
+      {/* 2. Main Workspace Area - Centered Stepped Flow */}
       <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar bg-slate-50/60">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Error Banner */}
-          {formError && (
-            <div className="bg-red-50 border-l-4 border-red-600 p-3.5 rounded-md flex items-center gap-2.5 text-red-800 text-xs shadow-xs">
-              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-              <span className="font-bold">{formError}</span>
-            </div>
-          )}
+        <div className="min-h-full flex flex-col items-center justify-center pt-4 pb-20 md:pb-28">
+          <div className={`w-full mx-auto space-y-6 -translate-y-4 md:-translate-y-6 ${currentStep === 3 ? 'max-w-3xl' : 'max-w-2xl'}`}>
 
-          <form onSubmit={handleOpenAccount} className="space-y-6">
-            {/* Account Classification & Operating Branch Parameters (Native Form Card) */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-xs">
-              <div className="bg-slate-50/80 border-b border-gray-200 px-5 py-3.5 flex items-center justify-between rounded-t-lg">
+            {/* Error Banner */}
+            {formError && (
+              <div className="bg-red-50 border-l-4 border-red-600 p-3.5 rounded-md flex items-center gap-2.5 text-red-800 text-xs shadow-xs">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                <span className="font-bold">{formError}</span>
+              </div>
+            )}
+
+            {/* Step Transition Loading State */}
+            {stepLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader />
+              </div>
+            ) : (
+              <>
+                {/* STEP 1: ACCOUNT CLASSIFICATION & VALUE DATE ONLY */}
+                {currentStep === 1 && (
+                  <form onSubmit={handleStep1Submit} className="bg-white border border-gray-200 rounded-lg shadow-xs">
+              <div className="bg-[#104080] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
                 <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-[#104080]" />
-                  <span className="font-bold text-sm text-[#104080] uppercase tracking-wide">
-                    Account Classification &amp; Operating Branch
+                  <Building2 className="w-4 h-4 text-blue-200" />
+                  <span className="font-bold text-sm text-white uppercase tracking-wide">
+                    Account Classification &amp; Value Date
                   </span>
                 </div>
+                <span className="text-[11px] bg-white/15 text-white border border-white/25 font-bold px-2 py-0.5 rounded font-mono">
+                  1/3
+                </span>
               </div>
 
-              <div className="p-5 md:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {/* 1. Account Opening Date (First Option) */}
-                <div>
-                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5 flex items-center justify-between">
-                    <span>Account Opening Date: *</span>
-                    <span className="text-[11px] font-normal text-gray-500">Value Date</span>
-                  </label>
-                  <FinacleDatePicker
-                    value={openingDate}
-                    onChange={(e) => setOpeningDate(e.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-xs font-semibold text-gray-900 shadow-2xs hover:border-gray-400 focus-within:border-[#104080] focus-within:ring-1 focus-within:ring-[#104080] flex items-center justify-between min-h-[38px]"
-                  />
-                </div>
-
-                {/* 2. Select Account Scheme */}
-                <div>
-                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                    Select Account Scheme: *
-                  </label>
-                  <FinacleSelect<AccountType>
-                    value={accountType}
-                    onChange={(e) => {
-                      const newType = e.target.value as AccountType;
-                      setAccountType(newType);
-                      setFormError("");
-                      // If switching to SERVICER, ensure currently selected party is an eligible servicer
-                      if (newType === "SERVICER" && selectedPartyId) {
-                        const isServicer = servicerCifs.some(
-                          (s) => String(s.id) === String(selectedPartyId)
-                        );
-                        if (!isServicer) {
-                          setSelectedPartyId("");
-                          setName("");
-                          setPhone("");
-                          setCity("");
-                          setEntryAccountHolder("");
-                        }
-                      }
-                    }}
-                    accentClass="text-[#104080]"
-                    options={[
-                      { value: "SAVINGS", label: "Savings Account (SBA)", badge: "1020" },
-                      { value: "SALARY", label: "Salary Account (SAL)", badge: "1050" },
-                      { value: "CURRENT", label: "Current Account (CAA)", badge: "1030" },
-                      { value: "CORPORATE_SINGLE", label: "Corporate Account - Single (CAP-S)", badge: "1060" },
-                      { value: "CORPORATE_JOINT", label: "Corporate Account - Joint (CAP-J)", badge: "1070" },
-                      { value: "PROFIT", label: "Profit Account (PFT)", badge: "2010" },
-                      { value: "EXPENSE", label: "Expense Account (EXP)", badge: "2020" },
-                      { value: "BORROWED", label: "Overdraft / Loan (ODA)", badge: "1040" },
-                      { value: "SERVICER", label: "Servicer Float (SRV)", badge: "1010" }
-                    ]}
-                  />
-                </div>
-
-                {/* 3. Select Operating Branch */}
-                <div>
-                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                    Operating Branch: *
-                  </label>
-                  <FinacleSelect<"INDIA" | "UAE">
-                    value={branch}
-                    onChange={(e) => setBranch(e.target.value)}
-                    accentClass="text-gray-900"
-                    options={[
-                      { value: "INDIA", label: "India Clearing Branch (INR - ₹)" },
-                      { value: "UAE", label: "UAE Dubai Regional Branch (AED)" }
-                    ]}
-                  />
-                </div>
-
-                {/* 4. Clearing IFSC Code */}
-                <div>
-                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                    Clearing IFSC Code:
-                  </label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={clearingIfsc}
-                    className="w-full bg-slate-50 border border-gray-300 rounded-md px-3 py-2 text-xs font-mono font-bold text-[#104080] focus:outline-none cursor-default min-h-[38px]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 2-COLUMN BALANCED WORKSPACE: LEFT (CIF) & RIGHT (SCHEME PARAMS) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              
-              {/* SECTION 1: MASTER CIF LINKAGE (5 COLS) */}
-              <div className="lg:col-span-5 bg-white border border-gray-200 rounded-lg shadow-xs">
-                <div className="bg-slate-50/80 border-b border-gray-200 px-5 py-3.5 flex items-center justify-between rounded-t-lg">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-[#104080]" />
-                    <span className="font-bold text-sm text-[#104080] uppercase tracking-wide">
-                      1. Master CIF Linkage
-                    </span>
-                  </div>
-                  <span className="text-xs bg-blue-50 text-[#104080] border border-blue-100 font-bold px-2.5 py-1 rounded flex items-center gap-1.5 font-mono">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    {accountType === "SERVICER" ? "SERVICER MASTER" : "ALL CIF MASTER"}
-                  </span>
-                </div>
-
-                <div className="p-5 md:p-6 space-y-5">
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* 1. Account Opening Date (First Option) */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      {accountType === "SERVICER"
-                        ? "Select Verified Servicer CIF: *"
-                        : "Select Verified CIF:"}
+                    <label className="block text-[13px] font-semibold text-gray-700 mb-1.5 flex items-center justify-between">
+                      <span>Account Opening Date: *</span>
+                      <span className="text-[11px] font-normal text-gray-500">Value Date</span>
                     </label>
-                    <FinacleSelect
-                      value={selectedPartyId}
-                      onChange={(e) => handleSelectCif(e.target.value)}
-                      disabled={loadingCifs}
-                      searchable={true}
-                      searchPlaceholder="Type CIF #, customer name, contact..."
-                      placeholder={
-                        loadingCifs
-                          ? "Loading Verified CIFs..."
-                          : accountType === "SERVICER"
-                          ? "-- Choose Verified Servicer CIF --"
-                          : "-- Choose Verified CIF or Enter Manually --"
-                      }
+                    <FinacleDatePicker
+                      value={openingDate}
+                      onChange={(e) => setOpeningDate(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-xs font-semibold text-gray-900 shadow-2xs hover:border-gray-400 focus-within:border-[#104080] focus-within:ring-1 focus-within:ring-[#104080] flex items-center justify-between min-h-[38px]"
+                    />
+                  </div>
+
+                  {/* 2. Select Account Scheme */}
+                  <div>
+                    <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
+                      Select Account Scheme: *
+                    </label>
+                    <FinacleSelect<AccountType>
+                      value={accountType}
+                      onChange={(e) => {
+                        const newType = e.target.value as AccountType;
+                        setAccountType(newType);
+                        setFormError("");
+                        if (newType === "SERVICER" && selectedPartyId) {
+                          const isServicer = servicerCifs.some(
+                            (s) => String(s.id) === String(selectedPartyId)
+                          );
+                          if (!isServicer) {
+                            setSelectedPartyId("");
+                            setName("");
+                            setPhone("");
+                            setCity("");
+                            setEntryAccountHolder("");
+                          }
+                        }
+                      }}
+                      accentClass="text-[#104080]"
                       options={[
-                        {
-                          value: "",
-                          label:
-                            accountType === "SERVICER"
-                              ? "-- Choose Verified Servicer CIF --"
-                              : "-- Choose Verified CIF or Enter Manually --"
-                        },
-                        ...activeCifList.map((c) => {
-                          const fullName = `${c.first_name} ${c.last_name}`.trim();
-                          const badge = c.cif_type_name || (accountType === "SERVICER" ? "Servicer" : "CIF");
-                          return {
-                            value: String(c.id),
-                            label: `${c.cif_no} — ${fullName} [${badge}]`,
-                            subLabel: c.contact_number ? `Contact: ${c.contact_number}` : undefined
-                          };
-                        })
+                        { value: "SAVINGS", label: "Savings Account (SBA)", badge: "1020" },
+                        { value: "SALARY", label: "Salary Account (SAL)", badge: "1050" },
+                        { value: "CURRENT", label: "Current Account (CAA)", badge: "1030" },
+                        { value: "CORPORATE_SINGLE", label: "Corporate Account - Single (CAP-S)", badge: "1060" },
+                        { value: "CORPORATE_JOINT", label: "Corporate Account - Joint (CAP-J)", badge: "1070" },
+                        { value: "PROFIT", label: "Profit Account (PFT)", badge: "2010" },
+                        { value: "EXPENSE", label: "Expense Account (EXP)", badge: "2020" },
+                        { value: "BORROWED", label: "Overdraft / Loan (ODA)", badge: "1040" },
+                        { value: "SERVICER", label: "Servicer Float (SRV)", badge: "1010" }
                       ]}
                     />
-                    {selectedPartyId ? (
-                      <div className="text-xs text-emerald-700 font-semibold mt-1.5 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>
-                          Linked to {selectedCifObj?.cif_type_name || "CIF"} {selectedCifObj?.cif_no}. Full profile inherited.
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="text-xs text-gray-500 mt-1.5">
-                        {accountType === "SERVICER"
-                          ? "Select an approved Servicer CIF or enter payout operating details below."
-                          : "Select any verified CIF record or type primary account holder details manually below."}
-                      </div>
-                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 1 Actions */}
+              <div className="bg-slate-50 border-t border-gray-200 px-6 py-3.5 flex items-center justify-between rounded-b-lg">
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                >
+                  Clear Form
+                </button>
+
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 bg-[#104080] hover:bg-[#1a559e] text-white px-5 py-2 rounded-md text-xs font-bold shadow-md cursor-pointer transition-all"
+                >
+                  <span>Continue to CIF &amp; Branch Linkage</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 2: OPERATING BRANCH, CLEARING IFSC & MASTER CIF LINKAGE */}
+          {currentStep === 2 && (
+            <form onSubmit={handleStep2Submit} className="bg-white border border-gray-200 rounded-lg shadow-xs">
+              <div className="bg-[#104080] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-blue-200" />
+                  <span className="font-bold text-sm text-white uppercase tracking-wide">
+                    Operating Branch &amp; Master CIF Linkage
+                  </span>
+                </div>
+                <span className="text-[11px] bg-white/15 text-white border border-white/25 font-bold px-2 py-0.5 rounded font-mono">
+                  2/3
+                </span>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* 1. Operating Branch & Clearing IFSC Section */}
+                <div className="bg-slate-50/70 p-4 rounded-lg border border-slate-200 space-y-3">
+                  <div className="text-[12px] font-bold text-[#104080] uppercase tracking-wide flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-[#104080]" />
+                    <span>Operating Branch &amp; Clearing Parameters</span>
                   </div>
 
-                  {/* Profile Inputs */}
-                  <div className="space-y-4 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
+                        Operating Branch: *
+                      </label>
+                      <FinacleSelect<"INDIA" | "UAE">
+                        value={branch}
+                        onChange={(e) => setBranch(e.target.value)}
+                        accentClass="text-gray-900"
+                        options={[
+                          { value: "INDIA", label: "India Clearing Branch (INR - ₹)" },
+                          { value: "UAE", label: "UAE Dubai Regional Branch (AED)" }
+                        ]}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
+                        Clearing IFSC Code:
+                      </label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={clearingIfsc}
+                        className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-xs font-mono font-bold text-[#104080] focus:outline-none cursor-default h-[38px] box-border leading-normal"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Master CIF Linkage */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-[#104080] uppercase tracking-wide">
+                      {accountType === "SERVICER"
+                        ? "Select Verified Servicer CIF: *"
+                        : "Select Verified Master CIF:"}
+                    </label>
+                    <span className="text-xs bg-blue-50 text-[#104080] border border-blue-100 font-bold px-2 py-0.5 rounded flex items-center gap-1 font-mono">
+                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                      {accountType === "SERVICER" ? "SERVICER MASTER" : "ALL CIF MASTER"}
+                    </span>
+                  </div>
+
+                  <FinacleSelect
+                    value={selectedPartyId}
+                    onChange={(e) => handleSelectCif(e.target.value)}
+                    disabled={loadingCifs}
+                    searchable={true}
+                    searchPlaceholder="Type CIF #, customer name, contact..."
+                    placeholder={
+                      loadingCifs
+                        ? "Loading Verified CIFs..."
+                        : accountType === "SERVICER"
+                        ? "-- Choose Verified Servicer CIF --"
+                        : "-- Choose Verified CIF or Enter Manually Below --"
+                    }
+                    options={[
+                      {
+                        value: "",
+                        label:
+                          accountType === "SERVICER"
+                            ? "-- Choose Verified Servicer CIF --"
+                            : "-- Choose Verified CIF or Enter Manually Below --"
+                      },
+                      ...activeCifList.map((c) => {
+                        const fullName = `${c.first_name} ${c.last_name}`.trim();
+                        const badge = c.cif_type_name || (accountType === "SERVICER" ? "Servicer" : "CIF");
+                        return {
+                          value: String(c.id),
+                          label: `${c.cif_no} — ${fullName} [${badge}]`,
+                          subLabel: c.contact_number ? `Contact: ${c.contact_number}` : undefined
+                        };
+                      })
+                    ]}
+                  />
+
+                  {selectedPartyId && (
+                    <div className="text-xs text-emerald-700 font-semibold flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 p-2.5 rounded-md">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>
+                        Linked to {selectedCifObj?.cif_type_name || "CIF"} {selectedCifObj?.cif_no}. Full profile details inherited below.
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Profile Details (Name & Phone) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div>
                       <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
                         Primary Account Holder Legal Title: *
@@ -906,18 +967,71 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                 </div>
               </div>
 
-              {/* SECTION 2: SCHEME SPECIFICATIONS (7 COLS) */}
-              <div className="lg:col-span-7 bg-white border border-gray-200 rounded-lg shadow-xs">
-                <div className="bg-slate-50/80 border-b border-gray-200 px-5 py-3.5 flex items-center justify-between rounded-t-lg">
-                  <div className="flex items-center gap-2">
-                    {schemeDetails[accountType].icon}
-                    <span className="font-bold text-sm text-[#104080] uppercase tracking-wide">
-                      2. {schemeDetails[accountType].title}
-                    </span>
-                  </div>
-                </div>
+              {/* Step 2 Actions */}
+              <div className="bg-slate-50 border-t border-gray-200 px-6 py-3.5 flex items-center justify-between rounded-b-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormError("");
+                    setCurrentStep(1);
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Step 1</span>
+                </button>
 
-                <div className="p-5 md:p-6 space-y-5">
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 bg-[#104080] hover:bg-[#1a559e] text-white px-5 py-2 rounded-md text-xs font-bold shadow-md cursor-pointer transition-all"
+                >
+                  <span>Continue to Scheme Details</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 3: SCHEME SPECIFICATIONS & FINAL AUTHORIZATION */}
+          {currentStep === 3 && (
+            <form onSubmit={handleOpenAccount} className="bg-white border border-gray-200 rounded-lg shadow-xs">
+              <div className="bg-[#104080] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-200">{schemeDetails[accountType].icon}</span>
+                  <span className="font-bold text-sm text-white uppercase tracking-wide">
+                    {schemeDetails[accountType].title} Specifications
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] bg-white/15 text-white border border-white/25 font-bold px-2 py-0.5 rounded font-mono">
+                    3/3
+                  </span>
+                  <span className="text-xs font-mono font-bold bg-white/15 text-white border border-white/25 px-2.5 py-0.5 rounded">
+                    {schemeCode}
+                  </span>
+                </div>
+              </div>
+
+              {/* Step 3 Summary Ribbon */}
+              <div className="bg-slate-50/60 border-b border-gray-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-gray-500">Value Date: <strong className="text-gray-800 font-mono">{formatDateToDisplay(openingDate)}</strong></span>
+                  <span className="text-gray-300">|</span>
+                  <span className="text-gray-500">Branch: <strong className="text-gray-800">{branch === "UAE" ? "Dubai (AED)" : "India (INR)"}</strong></span>
+                  <span className="text-gray-300">|</span>
+                  <span className="text-gray-500">Holder: <strong className="text-[#104080]">{name}</strong></span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(2)}
+                  className="text-xs text-[#104080] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Edit CIF / Branch</span>
+                  <Pencil className="w-3 h-3" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
                   
                   {/* SCHEME: SAVINGS, SALARY, CURRENT, CORPORATE SINGLE, PROFIT, EXPENSE */}
                   {(accountType === "SAVINGS" ||
@@ -1073,7 +1187,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                                     type="text"
                                     value={holder.name}
                                     onChange={(e) => handleUpdateJointHolder(idx, "name", e.target.value)}
-                                    placeholder="Signatory legal name *"
                                     className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
                                     required={idx === 0}
                                   />
@@ -1086,7 +1199,6 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                                     type="text"
                                     value={holder.designation || ""}
                                     onChange={(e) => handleUpdateJointHolder(idx, "designation", e.target.value)}
-                                    placeholder="e.g. Director, Partner, Signatory"
                                     className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080]"
                                   />
                                 </div>
@@ -1307,41 +1419,36 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                       </div>
                     </div>
                   )}
+              </div>
 
+              {/* Step 3 Banking Command Bar (Footer) */}
+              <div className="bg-slate-50 border-t border-gray-200 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-b-lg">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormError("");
+                      setCurrentStep(2);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Step 2</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResetForm}
+                    className="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                  >
+                    Clear Form
+                  </button>
                 </div>
-              </div>
-
-            </div>
-
-            {/* SECTION 3: STICKY BANKING COMMAND BAR (FOOTER) */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4 md:px-6 md:py-3.5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-              <div className="flex items-center gap-3 text-xs text-gray-600 flex-wrap">
-                <span className="font-bold text-gray-800">Value Date:</span>
-                <span className="font-mono font-bold text-[#104080]">{formatDateToDisplay(openingDate)}</span>
-                <span className="text-gray-300">|</span>
-                <span className="font-bold text-gray-800">Branch Office:</span>
-                <span className="font-mono font-bold text-[#104080] flex items-center gap-1.5">
-                  <Globe className="w-4 h-4 text-[#104080]" />
-                  <span>{branch === "UAE" ? "Dubai Regional Branch (UAE)" : "India National Branch (IN)"}</span>
-                </span>
-                <span className="text-gray-300">|</span>
-                <span className="font-bold text-gray-800">Currency:</span>
-                <span className="font-bold text-emerald-800">{currencySymbol}</span>
-              </div>
-
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                <button
-                  type="button"
-                  onClick={handleResetForm}
-                  className="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-[13px] font-bold cursor-pointer transition-colors shadow-2xs"
-                >
-                  Clear Form
-                </button>
 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2 rounded-md text-[13px] font-bold shadow-md cursor-pointer disabled:opacity-50 transition-all"
+                  className="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2 rounded-md text-xs font-bold shadow-md cursor-pointer disabled:opacity-50 transition-all w-full sm:w-auto justify-center"
                 >
                   {submitting ? (
                     <>
@@ -1350,15 +1457,17 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                     </>
                   ) : (
                     <>
-                      <span>Activate & Open Account</span>
+                      <span>Activate &amp; Open Account</span>
                       <ChevronRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
               </div>
-            </div>
-
-          </form>
+            </form>
+          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
