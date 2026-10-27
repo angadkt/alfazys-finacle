@@ -172,7 +172,7 @@ export default function CustomerViewPage() {
               </svg>
               <span>Back</span>
             </button>
-            <span className="text-sm font-black uppercase tracking-wider font-montserrat">
+            <span className="text-base font-bold uppercase tracking-wide">
               {isAdmin && isPending 
                 ? 'Customer Verification & Admin Approval' 
                 : 'Customer Detailed Code Card'}
@@ -192,7 +192,7 @@ export default function CustomerViewPage() {
               <svg className="w-5 h-5 text-amber-600 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
-              <span className="uppercase tracking-wider font-montserrat font-black">Waiting for admin verification & approval</span>
+              <span className="uppercase tracking-wider font-bold">Waiting for admin verification & approval</span>
             </div>
           )}
 
@@ -203,7 +203,7 @@ export default function CustomerViewPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-600 flex-shrink-0" />
                 <span><strong>Admin Review:</strong> Verify customer details and choose to approve or reject this onboarding request.</span>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 px-2.5 py-1 rounded-md">
+              <span className="text-[11px] font-bold uppercase tracking-wider bg-blue-100 text-blue-900 px-2.5 py-1 rounded-md">
                 Action Required
               </span>
             </div>
@@ -215,11 +215,11 @@ export default function CustomerViewPage() {
               {getInitials(customer.name)}
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-black text-slate-800 leading-tight">{customer.name}</span>
-              <span className="text-xs text-slate-400 font-bold mt-1.5">{customer.email}</span>
+              <span className="text-xl font-bold text-slate-800 leading-tight">{customer.name}</span>
+              <span className="text-[13px] text-slate-500 font-medium mt-1">{customer.email}</span>
             </div>
             <div className="ml-auto">
-              <span className={`inline-flex px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider leading-none rounded-full border ${
+              <span className={`inline-flex px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider leading-none rounded-full border ${
                 customer.status === 'approved'
                   ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                   : customer.status === 'rejected'
@@ -235,20 +235,20 @@ export default function CustomerViewPage() {
             
             {/* Customer ID */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Customer ID
               </label>
               <input
                 type="text"
                 readOnly
                 value={customer.id}
-                className="bg-slate-50 border border-slate-200 text-[#9e0248] font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                className="bg-slate-50 border border-slate-200 text-[#9e0248] font-bold p-3.5 rounded-md text-[13px] outline-none select-all"
               />
             </div>
 
             {/* Customer Name */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Customer Name
               </label>
               {isAdmin && isPending ? (
@@ -256,21 +256,21 @@ export default function CustomerViewPage() {
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
                   type="text"
                   readOnly
                   value={customer.name}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none select-all"
                 />
               )}
             </div>
 
             {/* Short Name */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Short Name
               </label>
               {isAdmin && isPending ? (
@@ -279,7 +279,7 @@ export default function CustomerViewPage() {
                   value={shortName}
                   onChange={(e) => setShortName(e.target.value)}
                   placeholder="-"
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
@@ -287,14 +287,14 @@ export default function CustomerViewPage() {
                   readOnly
                   value={customer.shortName || ''}
                   placeholder="-"
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none select-all"
                 />
               )}
             </div>
 
             {/* Phone No */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Phone No
               </label>
               {isAdmin && isPending ? (
@@ -302,21 +302,21 @@ export default function CustomerViewPage() {
                   type="text"
                   value={phoneNo}
                   onChange={(e) => setPhoneNo(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
                   type="text"
                   readOnly
                   value={customer.phone}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none select-all"
                 />
               )}
             </div>
 
             {/* Email */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Email
               </label>
               {isAdmin && isPending ? (
@@ -324,21 +324,21 @@ export default function CustomerViewPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
                   type="email"
                   readOnly
                   value={customer.email}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none select-all"
                 />
               )}
             </div>
 
             {/* Address */}
             <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Address
               </label>
               {isAdmin && isPending ? (
@@ -347,7 +347,7 @@ export default function CustomerViewPage() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="-"
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
@@ -355,14 +355,14 @@ export default function CustomerViewPage() {
                   readOnly
                   value={customer.address || ''}
                   placeholder="-"
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none select-all"
                 />
               )}
             </div>
 
             {/* City */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 City
               </label>
               {isAdmin && isPending ? (
@@ -371,7 +371,7 @@ export default function CustomerViewPage() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="-"
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none focus:border-[#9e0248] transition"
                 />
               ) : (
                 <input
@@ -379,21 +379,21 @@ export default function CustomerViewPage() {
                   readOnly
                   value={customer.city || ''}
                   placeholder="-"
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none select-all"
                 />
               )}
             </div>
 
             {/* Emirates */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Emirates
               </label>
               {isAdmin && isPending ? (
                 <select
                   value={emirates}
                   onChange={(e) => setEmirates(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none focus:border-[#9e0248] transition"
+                  className="bg-white border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none focus:border-[#9e0248] transition"
                 >
                   <option value="Abu Dhabi">Abu Dhabi</option>
                   <option value="Dubai">Dubai</option>
@@ -408,31 +408,31 @@ export default function CustomerViewPage() {
                   type="text"
                   readOnly
                   value={customer.emirates || customer.country}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none select-all"
                 />
               )}
             </div>
 
             {/* Submitted Date */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Submitted Date
               </label>
               <input
                 type="text"
                 readOnly
                 value={customer.joinedDate}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-bold p-3.5 rounded-md text-xs outline-none select-all"
+                className="bg-slate-50 border border-slate-200 text-slate-800 font-medium p-3.5 rounded-md text-[13px] outline-none select-all"
               />
             </div>
 
             {/* Status */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-slate-500 font-black uppercase tracking-wider font-montserrat">
+              <label className="text-[13px] text-slate-700 font-semibold tracking-wide">
                 Current Verification Status
               </label>
               <div className="flex items-center h-full">
-                <span className={`inline-flex px-3.5 py-1.5 text-[9px] font-black uppercase tracking-wider leading-none rounded-full border ${
+                <span className={`inline-flex px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider leading-none rounded-full border ${
                   customer.status === 'approved'
                     ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/15'
                     : customer.status === 'rejected'
@@ -455,7 +455,7 @@ export default function CustomerViewPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/customers')}
-                  className="w-full sm:w-auto border border-slate-300 hover:bg-slate-50 text-slate-700 font-black px-6 py-3.5 rounded-md text-xs tracking-wider uppercase cursor-pointer transition select-none text-center"
+                  className="w-full sm:w-auto border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold px-6 py-3.5 rounded-md text-[13px] tracking-wide uppercase cursor-pointer transition select-none text-center"
                 >
                   Cancel
                 </button>
@@ -463,7 +463,7 @@ export default function CustomerViewPage() {
                 <button
                   type="button"
                   onClick={handleReject}
-                  className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-black px-6 py-3.5 rounded-md text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
+                  className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-3.5 rounded-md text-[13px] tracking-wide uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -474,7 +474,7 @@ export default function CustomerViewPage() {
                 <button
                   type="button"
                   onClick={handleApprove}
-                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-3.5 rounded-md text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3.5 rounded-md text-[13px] tracking-wide uppercase flex items-center justify-center gap-2 cursor-pointer transition shadow-sm select-none"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -486,7 +486,7 @@ export default function CustomerViewPage() {
               <button
                 type="button"
                 onClick={() => navigate('/customers')}
-                className="w-full sm:w-auto bg-[#9e0248] hover:bg-[#85013c] text-white font-black px-6 py-3.5 rounded-md text-xs tracking-wider uppercase cursor-pointer transition select-none text-center shadow-md"
+                className="w-full sm:w-auto bg-[#9e0248] hover:bg-[#85013c] text-white font-bold px-6 py-3.5 rounded-md text-[13px] tracking-wide uppercase cursor-pointer transition select-none text-center shadow-md"
               >
                 Return to Customers Registry
               </button>

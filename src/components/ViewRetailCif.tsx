@@ -146,21 +146,26 @@ export default function ViewRetailCif() {
   return (
     <div className="flex-1 flex flex-col bg-[#f0f4f8] overflow-hidden select-none">
       
-      {/* 1. Finacle Command Bar Header */}
-      <div className="bg-[#104080] text-white px-5 py-2.5 flex items-center justify-between border-b border-[#0a2850] shadow-xs shrink-0">
-        <div className="flex items-center gap-3">
-          <Eye className="w-5 h-5 text-amber-300" />
-          <span className="font-bold tracking-wider text-sm uppercase font-sans">
-            RETAIL CIF INQUIRY DESK (VCIF)
-          </span>
-          <span className="bg-blue-950/80 text-blue-200 border border-blue-600 px-2.5 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
-            INQUIRY: VCIF
-          </span>
-          <span className="bg-emerald-950/80 text-emerald-200 border border-emerald-600 px-2.5 py-0.5 rounded text-xs font-mono font-bold">
-            {filteredCifs.length} {filteredCifs.length === 1 ? 'RECORD' : 'RECORDS'} VERIFIED
-          </span>
+      {/* 1. Page Title Header */}
+      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <Eye className="w-5 h-5 text-[#104080]" />
+            <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
+              Retail CIF Inquiry Desk (VCIF)
+            </h1>
+            <span className="bg-blue-50 text-[#104080] border border-blue-200 px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
+              INQUIRY: VCIF
+            </span>
+            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded text-xs font-mono font-bold">
+              {filteredCifs.length} {filteredCifs.length === 1 ? 'RECORD' : 'RECORDS'} VERIFIED
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5 ml-7">
+            Verified Retail Customer Information File Directory (CRM-CIF) • Global Search & Dossier Review
+          </p>
         </div>
-        <div className="text-xs text-blue-100 font-medium">
+        <div className="text-xs text-gray-500 font-medium">
           Infosys Finacle Core Banking
         </div>
       </div>

@@ -152,11 +152,11 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
             </button>
-            <span className="text-sm font-black uppercase tracking-wider font-montserrat">
+            <span className="text-base font-bold uppercase tracking-wide">
               {isConfirmationMode ? 'Customer Registration Confirmation' : 'Customer Code Creation - Retail'}
             </span>
           </div>
-          <span className="text-[10px] font-bold text-white/90 tracking-widest bg-white/10 px-3 py-1.5 rounded uppercase">
+          <span className="text-xs font-bold text-white/90 tracking-wider bg-white/10 px-3 py-1.5 rounded uppercase">
             {currentTimeStr}
           </span>
         </div>
@@ -268,50 +268,50 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                 {/* Left Column */}
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Customer Name</label>
+                    <label className="text-[13px] font-semibold text-slate-700 tracking-wide">Customer Name</label>
                     <input
                       type="text"
                       required
                       placeholder="Enter customer full name"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
+                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-[13px] text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Short Name</label>
+                    <label className="text-[13px] font-semibold text-slate-700 tracking-wide">Short Name</label>
                     <input
                       type="text"
                       required
                       placeholder="Enter short code/alias"
                       value={shortName}
                       onChange={(e) => setShortName(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
+                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-[13px] text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Phone No</label>
+                    <label className="text-[13px] font-semibold text-slate-700 tracking-wide">Phone No</label>
                     <input
                       type="tel"
                       required
                       placeholder="e.g. +971 50 123 4567"
                       value={phoneNo}
                       onChange={(e) => setPhoneNo(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
+                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-[13px] text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Email</label>
+                    <label className="text-[13px] font-semibold text-slate-700 tracking-wide">Email</label>
                     <input
                       type="email"
                       required
                       placeholder="e.g. name@company.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
+                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-[13px] text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
                 </div>
@@ -319,36 +319,36 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                 {/* Right Column */}
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Address</label>
+                    <label className="text-[13px] font-semibold text-slate-700 tracking-wide">Address</label>
                     <input
                       type="text"
                       required
                       placeholder="Enter physical address"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
+                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-[13px] text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">City</label>
+                    <label className="text-[13px] font-semibold text-slate-700 tracking-wide">City</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Dubai"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition"
+                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-[13px] text-slate-800 font-medium rounded-md transition"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Emirates (Select)</label>
+                    <label className="text-[13px] font-semibold text-slate-700 tracking-wide">Emirates (Select)</label>
                     <select
                       required
                       value={emirates}
                       onChange={(e) => setEmirates(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-sm text-slate-800 font-medium rounded-md transition bg-white cursor-pointer"
+                      className="w-full border border-slate-200 px-3 py-2.5 outline-none focus:border-[#9e0248] text-[13px] text-slate-800 font-medium rounded-md transition bg-white cursor-pointer"
                     >
                       <option value="" disabled>Please Select</option>
                       <option value="Abu Dhabi">Abu Dhabi</option>
@@ -369,7 +369,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-[#9e0248] hover:bg-[#85013c] text-white font-bold py-3 px-6 rounded-md transition cursor-pointer text-xs uppercase tracking-wider shadow-sm disabled:opacity-75"
+                  className="bg-[#9e0248] hover:bg-[#85013c] text-white font-bold py-3 px-6 rounded-md transition cursor-pointer text-[13px] uppercase tracking-wide shadow-sm disabled:opacity-75"
                 >
                   Create Customer
                 </button>
@@ -377,7 +377,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                 <button
                   type="button"
                   onClick={onClose}
-                  className="bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold py-3 px-6 rounded-md transition cursor-pointer text-xs uppercase tracking-wider border border-slate-200"
+                  className="bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold py-3 px-6 rounded-md transition cursor-pointer text-[13px] uppercase tracking-wide border border-slate-200"
                 >
                   Cancel
                 </button>

@@ -20,7 +20,6 @@ import {
   Zap,
   ArrowLeftRight,
   CreditCard,
-  Folder,
   X,
   Info,
   Lightbulb,
@@ -1128,20 +1127,27 @@ export default function InrDispatchDeskScreen() {
 
   return (
     <div className="flex-1 flex flex-col bg-white overflow-hidden text-xs">
-      {/* Finacle Top Command Header */}
-      <div className="bg-[#104080] text-white px-3 py-1.5 flex items-center justify-between border-b border-[#0a2850] shadow-xs select-none">
-        <div className="flex items-center gap-2">
-          <Folder className="w-4 h-4 text-white" />
-          <span className="font-bold tracking-wider text-xs">
-            FINCORE UNIVERSAL SETTLEMENT — DIRECT BENEFICIARY PAYOUT (DEBIT ENTRY) DESK
-          </span>
+      {/* Page Title Header */}
+      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <Building2 className="w-5 h-5 text-[#104080]" />
+            <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
+              Direct Beneficiary Payout (Debit Entry) Desk
+            </h1>
+            <span className="bg-blue-50 text-[#104080] border border-blue-200 px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
+              BRANCH: INDIA CLEARING (INR)
+            </span>
+            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded text-xs font-mono font-bold">
+              LIVE DESK
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5 ml-7">
+            FINCORE Universal Settlement Module • Real-Time Direct NEFT / RTGS &amp; IMPS Dispatch Journal
+          </p>
         </div>
-        <div className="flex items-center gap-2 text-[10.5px] text-blue-200">
-          <span className="font-mono">BRANCH: INDIA CLEARING (INR)</span>
-          <span className="text-blue-400">•</span>
-          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wider">
-            LIVE DESK
-          </span>
+        <div className="text-xs text-gray-500 font-medium">
+          Infosys Finacle Core Banking
         </div>
       </div>
 
@@ -1234,11 +1240,19 @@ export default function InrDispatchDeskScreen() {
             <div className="h-4 w-px bg-[#c4d4ec] mx-1" />
 
             {/* Compact Paired Date Pickers */}
-            <div className="flex items-center gap-1 pr-1">
-              <span className="text-gray-500 text-[10px] font-semibold pl-1">From:</span>
-              <FinacleDatePicker value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              <span className="text-gray-500 text-[10px] font-semibold">To:</span>
-              <FinacleDatePicker value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
+              <span className="text-[#104080] font-bold text-[11px]">From:</span>
+              <FinacleDatePicker
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
+              />
+              <span className="text-[#104080] font-bold text-[11px] ml-0.5">To:</span>
+              <FinacleDatePicker
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
+              />
               {(fromDate || toDate) && (
                 <button
                   type="button"
@@ -2081,7 +2095,11 @@ export default function InrDispatchDeskScreen() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Entry Date:</label>
-                  <FinacleDatePicker value={creditDate} onChange={(e) => setCreditDate(e.target.value)} />
+                  <FinacleDatePicker
+                    value={creditDate}
+                    onChange={(e) => setCreditDate(e.target.value)}
+                    className="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1 text-xs text-gray-800 h-[28px]"
+                  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">Note:</label>
@@ -2488,7 +2506,11 @@ export default function InrDispatchDeskScreen() {
                     <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
                       Entry Date:
                     </label>
-                    <FinacleDatePicker value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
+                    <FinacleDatePicker
+                      value={entryDate}
+                      onChange={(e) => setEntryDate(e.target.value)}
+                      className="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1 text-xs text-gray-800 h-[28px]"
+                    />
                   </div>
 
                   <div>
@@ -2942,7 +2964,11 @@ export default function InrDispatchDeskScreen() {
                     <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
                       Transfer Date:
                     </label>
-                    <FinacleDatePicker value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
+                    <FinacleDatePicker
+                      value={transferDate}
+                      onChange={(e) => setTransferDate(e.target.value)}
+                      className="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1 text-xs text-gray-800 h-[28px]"
+                    />
                   </div>
 
                   <div>

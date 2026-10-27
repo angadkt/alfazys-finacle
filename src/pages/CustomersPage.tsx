@@ -321,10 +321,10 @@ export default function CustomersPage() {
               
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none font-montserrat">
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-none font-sans">
                     Customers
                   </h1>
-                  <p className="text-sm text-slate-500 font-semibold tracking-wide mt-2">
+                  <p className="text-sm text-slate-500 font-medium tracking-wide mt-2">
                     Manage customer profiles, verification and customer information.
                   </p>
                 </div>
@@ -345,7 +345,7 @@ export default function CustomersPage() {
                 {/* Add Customer Button */}
                 <button 
                   onClick={() => setIsAddCustomerModalOpen(true)}
-                  className="bg-[#9e0248] hover:bg-[#85013c] text-white shadow-md shadow-[#9e0248]/10 hover:shadow-[#9e0248]/20 transition duration-200 py-2.5 px-4 font-bold flex items-center gap-2 text-xs uppercase tracking-wider rounded-md cursor-pointer whitespace-nowrap h-fit"
+                  className="bg-[#9e0248] hover:bg-[#85013c] text-white shadow-md shadow-[#9e0248]/10 hover:shadow-[#9e0248]/20 transition duration-200 py-2.5 px-4 font-bold flex items-center gap-2 text-[13px] uppercase tracking-wide rounded-md cursor-pointer whitespace-nowrap h-fit"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -382,12 +382,12 @@ export default function CustomersPage() {
               <div className="bg-white border border-slate-200 shadow-sm rounded-lg overflow-hidden flex flex-col mb-6">
                 <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
                   <div className="flex flex-col">
-                    <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                    <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
                       Customer Requests
                     </h2>
-                    <p className="text-xs font-semibold text-slate-500 mt-1">Review and process new customer registration requests.</p>
+                    <p className="text-xs font-medium text-slate-500 mt-1">Review and process new customer registration requests.</p>
                   </div>
-                  <span className="text-xs font-black text-amber-700 bg-amber-50 px-3 py-1.5 rounded-md border border-amber-200 flex items-center gap-1.5 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-md border border-amber-200 flex items-center gap-1.5 uppercase tracking-wider">
                     <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                     {pendingCount} Pending
                   </span>
@@ -411,17 +411,17 @@ export default function CustomersPage() {
                       placeholder="Search customers..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 font-semibold"
+                      className="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 font-medium"
                     />
                   </div>
 
                   {/* Filter Pills */}
                   <div className="flex items-center gap-2 flex-wrap select-none">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-2">Status:</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mr-2">Status:</span>
                     
                     <button
                       onClick={() => setStatusFilter('all')}
-                      className={`px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
                         statusFilter === 'all'
                           ? 'bg-[#9e0248]/10 text-[#9e0248]'
                           : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
@@ -432,7 +432,7 @@ export default function CustomersPage() {
 
                     <button
                       onClick={() => setStatusFilter('approved')}
-                      className={`px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
                         statusFilter === 'approved'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
@@ -444,7 +444,7 @@ export default function CustomersPage() {
 
                     <button
                       onClick={() => setStatusFilter('rejected')}
-                      className={`px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
                         statusFilter === 'rejected'
                           ? 'bg-rose-50 text-rose-700 border border-rose-200'
                           : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'

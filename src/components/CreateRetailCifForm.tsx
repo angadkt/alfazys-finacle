@@ -270,18 +270,23 @@ export default function CreateRetailCifForm() {
   if (step === 'selection') {
     return (
       <div className="flex-1 flex flex-col bg-[#f0f4f8] overflow-hidden select-none">
-        {/* Command Bar Header */}
-        <div className="bg-[#104080] text-white px-5 py-2.5 flex items-center justify-between border-b border-[#0a2850] shadow-xs shrink-0">
-          <div className="flex items-center gap-3">
-            <UserPlus className="w-5 h-5 text-amber-300" />
-            <span className="font-bold tracking-wider text-sm uppercase font-sans">
-              RETAIL CIF ONBOARDING DESK (CCIF)
-            </span>
-            <span className="bg-blue-950/80 text-blue-200 border border-blue-600 px-2.5 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
-              FUNCTION SELECTION
-            </span>
+        {/* Page Title Header */}
+        <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <UserPlus className="w-5 h-5 text-[#104080]" />
+              <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
+                Retail CIF Onboarding Desk (CCIF)
+              </h1>
+              <span className="bg-blue-50 text-[#104080] border border-blue-200 px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
+                FUNCTION SELECTION
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5 ml-7">
+              Retail Customer Information File Maintenance (CRM-CIF) • Direct Scheme Provisioning
+            </p>
           </div>
-          <div className="text-xs text-blue-100 font-medium">
+          <div className="text-xs text-gray-500 font-medium">
             Infosys Finacle Core Banking
           </div>
         </div>
@@ -388,26 +393,33 @@ export default function CreateRetailCifForm() {
   return (
     <div className="flex-1 flex flex-col bg-[#f0f4f8] overflow-hidden select-none">
       
-      {/* 1. Finacle Command Bar Header */}
-      <div className="bg-[#104080] text-white px-5 py-2 flex items-center justify-between border-b border-[#0a2850] shadow-xs shrink-0">
-        <div className="flex items-center gap-3">
-          <UserPlus className="w-5 h-5 text-amber-300" />
-          <span className="font-bold tracking-wider text-sm uppercase font-sans">
-            RETAIL CUSTOMER CREATION (CCIF / CRM)
-          </span>
-          <span className="bg-blue-950/80 text-blue-200 border border-blue-600 px-2.5 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
-            FUNCTION: {selectedFunction}
-          </span>
-          <span className="bg-emerald-950/80 text-emerald-200 border border-emerald-600 px-2.5 py-0.5 rounded text-xs font-mono font-bold">
-            STAGE: INITIAL REGISTRATION
-          </span>
+      {/* 1. Page Title Header */}
+      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <UserPlus className="w-5 h-5 text-[#104080]" />
+            <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
+              Retail Customer Creation (CCIF / CRM)
+            </h1>
+            <span className="bg-blue-50 text-[#104080] border border-blue-200 px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
+              FUNCTION: {selectedFunction}
+            </span>
+            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded text-xs font-mono font-bold">
+              STAGE: INITIAL REGISTRATION
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5 ml-7">
+            Infosys Finacle Core Banking • Customer Identification & Master Record
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setStep('selection')}
-            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-semibold cursor-pointer transition-colors"
+            className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border border-gray-300 shadow-2xs"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Change Function
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Change Function</span>
           </button>
         </div>
       </div>

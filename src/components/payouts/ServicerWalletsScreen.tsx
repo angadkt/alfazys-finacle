@@ -769,11 +769,24 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
 
   return (
     <div className="flex-1 flex flex-col bg-white overflow-hidden text-xs">
-      {/* Finacle Command Header */}
-      <div className="bg-[#104080] text-white px-3 py-1.5 flex items-center justify-between border-b border-[#0a2850] shadow-xs select-none">
-        <div className="flex items-center gap-2">
-          <Folder className="w-4 h-4 text-white" />
-          <span className="font-bold tracking-wider text-xs">FINCORE SERVICER ACCOUNTS & DIGITAL WALLETS</span>
+      {/* Page Title Header */}
+      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <Building2 className="w-5 h-5 text-[#104080]" />
+            <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
+              Servicer Accounts & Digital Wallets
+            </h1>
+            <span className="bg-blue-50 text-[#104080] border border-blue-200 px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide">
+              FINCORE WALLETS
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5 ml-7">
+            Servicer float management, digital wallets ledger, and multi-bank settlement statements
+          </p>
+        </div>
+        <div className="text-xs text-gray-500 font-medium">
+          Infosys Finacle Core Banking
         </div>
       </div>
 
@@ -1099,16 +1112,18 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             <div className="h-4 w-px bg-[#c4d4ec] mx-1" />
 
             {/* Compact Paired Date Pickers */}
-            <div className="flex items-center gap-1 pr-1">
-              <span className="text-gray-500 text-[10px] font-semibold pl-1">From:</span>
+            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
+              <span className="text-[#104080] font-bold text-[11px]">From:</span>
               <FinacleDatePicker
                 value={statementFromDate}
                 onChange={(e) => setStatementFromDate(e.target.value)}
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
               />
-              <span className="text-gray-500 text-[10px] font-semibold">To:</span>
+              <span className="text-[#104080] font-bold text-[11px] ml-0.5">To:</span>
               <FinacleDatePicker
                 value={statementToDate}
                 onChange={(e) => setStatementToDate(e.target.value)}
+                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
               />
               {(statementFromDate || statementToDate) && (
                 <button
@@ -2372,7 +2387,11 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                     <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">
                       Transfer Date:
                     </label>
-                    <FinacleDatePicker value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
+                    <FinacleDatePicker
+                      value={transferDate}
+                      onChange={(e) => setTransferDate(e.target.value)}
+                      className="w-full bg-white border border-[#c4d4ec] rounded px-2 py-1 text-xs text-gray-800 h-[30px]"
+                    />
                   </div>
 
                   <div>

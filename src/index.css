@@ -1,13 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+/* Canara Bank-Inspired Typography Foundation (English Fonts Only) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');
 
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', sans-serif;
-  --font-outfit: 'Outfit', sans-serif;
-  --font-montserrat: 'Montserrat', sans-serif;
+  --font-sans: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --font-arial: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --font-arial-black: "Arial Black", Arial, sans-serif;
+  --font-inter: "Inter", Arial, sans-serif;
+  --font-georgia: Georgia, "Times New Roman", serif;
 
   /* Finacle Unified Color Tokens */
   --color-finacle-navy: #104080;
@@ -19,17 +20,48 @@
 }
 
 /* ==========================================================================
-   GLOBAL HIGH-CONTRAST TYPOGRAPHY & VISUAL CLARITY FOUNDATION
+   CANARA BANK-INSPIRED CENTRALIZED TYPOGRAPHY TOKENS & SYSTEM
    ========================================================================== */
 
+:root {
+  /* Font Family Definitions */
+  --erp-font-primary: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --erp-font-black: "Arial Black", Arial, sans-serif;
+  --erp-font-table: "Inter", Arial, sans-serif;
+  --erp-font-brand: Georgia, "Times New Roman", serif;
+
+  /* Typography Scale (Canara Bank ERP Standard) */
+  --font-size-title: 24px;
+  --font-size-section: 18px;
+  --font-size-nav: 14px;
+  --font-size-button: 13px;
+  --font-size-label: 13px;
+  --font-size-table-header: 12px;
+  --font-size-table-content: 13px;
+  --font-size-metrics: 26px;
+  --font-size-helper: 12px;
+
+  /* Font Weights */
+  --font-weight-title: 700;
+  --font-weight-section: 700;
+  --font-weight-nav: 600;
+  --font-weight-button: 700;
+  --font-weight-label: 600;
+  --font-weight-table-header: 700;
+  --font-weight-table-content: 400;
+  --font-weight-metrics: 800;
+  --font-weight-helper: 400;
+}
+
+/* Base HTML & Body Settings */
 html {
-  font-size: 14px; /* Crisp base rem unit */
+  font-size: 14px;
   color-scheme: light;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #0f172a; /* Slate 900 for ultra-crisp contrast */
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  color: #0f172a;
   background-color: #f4f7fb;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -37,15 +69,95 @@ body {
   line-height: 1.45;
 }
 
+/* Global Form Elements Defaulting to Arial */
+button, input, select, textarea, optgroup {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+}
+
+select, option, optgroup {
+  color-scheme: light;
+}
+
+label {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+}
+
+/* Table Standards */
+table {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+}
+
+th {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+}
+
+td {
+  font-family: "Inter", Arial, sans-serif;
+}
+
 /* Tabular and lining numbers for financial balances, rates, and amounts */
 .tabular-nums {
+  font-family: "Inter", Arial, sans-serif;
   font-variant-numeric: tabular-nums lining-nums;
   letter-spacing: -0.01em;
 }
 
-/* Ensure inputs, selects, and textareas have crisp readable text & borders */
-input, select, textarea {
-  color: #0f172a;
+/* Centralized Hierarchy Utility Classes */
+.erp-page-title {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-title);
+  line-height: 1.25;
+}
+
+.erp-section-title {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: var(--font-size-section);
+  font-weight: var(--font-weight-section);
+  line-height: 1.3;
+}
+
+.erp-nav-item {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-nav);
+}
+
+.erp-button {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: var(--font-size-button);
+  font-weight: var(--font-weight-button);
+}
+
+.erp-form-label {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-label);
+}
+
+.erp-table-header {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: var(--font-size-table-header);
+  font-weight: var(--font-weight-table-header);
+}
+
+.erp-table-content {
+  font-family: "Inter", Arial, sans-serif;
+  font-size: var(--font-size-table-content);
+  font-weight: var(--font-weight-table-content);
+}
+
+.erp-metric {
+  font-family: "Arial Black", Arial, sans-serif;
+  font-size: var(--font-size-metrics);
+  font-weight: var(--font-weight-metrics);
+  letter-spacing: -0.02em;
+}
+
+.erp-helper {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: var(--font-size-helper);
+  font-weight: var(--font-weight-helper);
 }
 
 input::placeholder, textarea::placeholder {

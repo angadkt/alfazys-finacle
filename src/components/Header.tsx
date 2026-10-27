@@ -68,13 +68,13 @@ export default function Header({
   return (
     <div className="w-full flex flex-col font-sans antialiased shrink-0">
       {/* Top Utility Navbar */}
-      <div className="w-full bg-white flex items-center justify-between px-8 py-1 border-b border-gray-200 text-[11px] shadow-sm z-10">
+      <div className="w-full bg-white flex items-center justify-between px-8 py-1.5 border-b border-gray-200 text-xs shadow-sm z-10">
         
         {/* Left Side Navigation Info */}
         <div className="flex items-center h-full">
           <div className="text-[#104080] font-semibold flex items-center gap-1.5">
             <span>User: {userName}</span>
-            <span className="text-[9px] bg-[#104080] text-white px-1.5 py-0.2 rounded uppercase font-bold">
+            <span className="text-[11px] bg-[#104080] text-white px-2 py-0.5 rounded uppercase font-bold tracking-wide">
               {isSuperAdmin ? 'ADMIN' : 'STAFF'}
             </span>
           </div>
@@ -94,7 +94,7 @@ export default function Header({
           <div className="flex items-center gap-3">
             <span className="text-[#104080] font-semibold">Solution:</span>
             <select 
-              className="border border-gray-300 rounded-md bg-white text-gray-700 text-[11px] w-[180px] py-1 px-2 focus:outline-none focus:ring-1 focus:ring-[#104080] focus:border-[#104080] transition-colors" 
+              className="border border-gray-300 rounded-md bg-white text-gray-700 text-xs w-[180px] py-1 px-2 focus:outline-none focus:ring-1 focus:ring-[#104080] focus:border-[#104080] transition-colors" 
               value={isFincoreActive ? 'FINCORE' : 'Select'}
               onChange={(e) => {
                 if (e.target.value === 'FINCORE') {
@@ -159,7 +159,7 @@ export default function Header({
           </div>
 
           {/* Top Right Toolbar */}
-          <div className="absolute top-0 right-0 flex items-center text-[11px] font-bold text-[#104080] bg-[#f4f7f9] border border-[#a0a0a0] border-t-0 border-r-0 z-10">
+          <div className="absolute top-0 right-0 flex items-center text-xs font-bold text-[#104080] bg-[#f4f7f9] border border-[#a0a0a0] border-t-0 border-r-0 z-10">
             <button className="px-2 py-0.5 hover:bg-[#e4e9f0] flex items-center justify-center h-full">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10"/><path d="M17 7 7 17"/></svg>
             </button>
@@ -200,11 +200,11 @@ export default function Header({
               if (e.key === 'Enter') handleShortcutGo();
             }}
             placeholder="e.g. CREDIT"
-            className="ml-1 w-[130px] h-[20px] border border-[#a0a0a0] bg-white px-1 outline-none text-[11px] uppercase" 
+            className="ml-1 w-[130px] h-[20px] border border-[#a0a0a0] bg-white px-1 outline-none text-xs uppercase" 
           />
           <button 
             onClick={handleShortcutGo}
-            className="ml-1 h-[20px] bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-2 flex items-center justify-center hover:bg-[#e4e4e4] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white text-[11px] font-bold"
+            className="ml-1 h-[20px] bg-[#d4d0c8] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-2 flex items-center justify-center hover:bg-[#e4e4e4] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white text-xs font-bold"
           >
             Go
           </button>

@@ -102,10 +102,10 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
       <div className="bg-[#ece9d8] shadow-2xl flex flex-col w-full max-w-sm border-2 border-[#104080] rounded-[2px] overflow-hidden text-black font-sans text-xs">
         
         {/* Retro Title Bar */}
-        <div className="bg-[#104080] text-white px-2 py-1 flex items-center justify-between text-[11px] font-bold select-none cursor-move">
+        <div className="bg-[#104080] text-white px-2.5 py-1.5 flex items-center justify-between text-xs font-bold select-none cursor-move">
           <div className="flex items-center gap-1.5">
             <div className="w-3.5 h-3.5 bg-white flex items-center justify-center rounded-[1px]">
-              <span className="text-[#104080] font-bold text-[9px] leading-none">%</span>
+              <span className="text-[#104080] font-bold text-[10px] leading-none">%</span>
             </div>
             <span>Set Up Cost Rate</span>
           </div>
@@ -123,7 +123,7 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
           
           {/* Notification Message */}
           {message && (
-            <div className={`px-2.5 py-1.5 rounded text-[11px] font-medium border flex items-center justify-between ${
+            <div className={`px-2.5 py-1.5 rounded text-xs font-medium border flex items-center justify-between ${
               message.type === 'success' 
                 ? 'bg-green-50 text-green-800 border-green-300' 
                 : 'bg-red-50 text-red-800 border-red-300'
@@ -141,9 +141,9 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
 
           {/* Date Picker */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-[#104080] flex items-center justify-between">
+            <label className="text-[13px] font-bold text-[#104080] flex items-center justify-between">
               <span>Date: <span className="text-red-600">*</span></span>
-              {loading && <span className="text-gray-400 font-normal italic text-[10px]">Loading...</span>}
+              {loading && <span className="text-gray-400 font-normal italic text-xs">Loading...</span>}
             </label>
             <FinacleDatePicker 
               value={selectedDate}
@@ -152,7 +152,7 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
               required
             />
             {hasSavedRate && (
-              <span className="text-[10px] text-emerald-700 font-medium flex items-center gap-1">
+              <span className="text-xs text-emerald-700 font-medium flex items-center gap-1">
                 <Check className="w-3 h-3 text-emerald-600 stroke-[2.5]" /> Cost rate currently configured for this date
               </span>
             )}
@@ -160,7 +160,7 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
 
           {/* Cost Rate Input */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-[#104080]">
+            <label className="text-[13px] font-bold text-[#104080]">
               Cost Rate: <span className="text-red-600">*</span>
             </label>
             <input 
@@ -174,7 +174,7 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
               required
               autoFocus
             />
-            <span className="text-[10px] text-gray-500">
+            <span className="text-xs text-gray-500">
               The cost rate used to calculate profits for orders on this date.
             </span>
           </div>

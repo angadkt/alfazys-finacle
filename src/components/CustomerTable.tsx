@@ -41,13 +41,13 @@ export default function CustomerTable({ customers, isAdmin, onApprove, onReject 
       <table className="w-full border-collapse text-left bg-white">
         <thead>
           <tr className="bg-slate-50/80 border-y border-slate-200">
-            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Customer</th>
-            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Contact</th>
-            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Location</th>
-            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Status</th>
-            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Issued By</th>
-            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6">Verified By</th>
-            <th className="text-slate-500 text-[10px] uppercase font-black tracking-widest py-4 px-6 text-center">
+            <th className="text-slate-700 text-xs uppercase font-bold tracking-wider py-3.5 px-6">Customer</th>
+            <th className="text-slate-700 text-xs uppercase font-bold tracking-wider py-3.5 px-6">Contact</th>
+            <th className="text-slate-700 text-xs uppercase font-bold tracking-wider py-3.5 px-6">Location</th>
+            <th className="text-slate-700 text-xs uppercase font-bold tracking-wider py-3.5 px-6">Status</th>
+            <th className="text-slate-700 text-xs uppercase font-bold tracking-wider py-3.5 px-6">Issued By</th>
+            <th className="text-slate-700 text-xs uppercase font-bold tracking-wider py-3.5 px-6">Verified By</th>
+            <th className="text-slate-700 text-xs uppercase font-bold tracking-wider py-3.5 px-6 text-center">
               {isAdmin ? 'Actions & Verification' : 'Actions'}
             </th>
           </tr>
@@ -76,7 +76,7 @@ export default function CustomerTable({ customers, isAdmin, onApprove, onReject 
                         {getInitials(cust.name)}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-black text-slate-800 leading-tight">
+                        <span className="text-[13px] font-bold text-slate-800 leading-tight">
                           {cust.name} {cust.shortName ? <span className="text-slate-400 font-semibold ml-1 text-xs">({cust.shortName})</span> : null}
                         </span>
                         <span className="text-xs text-slate-500 font-medium mt-0.5">{cust.email}</span>
@@ -84,18 +84,18 @@ export default function CustomerTable({ customers, isAdmin, onApprove, onReject 
                     </div>
                   </td>
                   <td className="py-4.5 px-6">
-                    <span className="text-xs font-semibold text-slate-700 tabular-nums font-inter">{cust.phone || '-'}</span>
+                    <span className="text-[13px] font-medium text-slate-700 tabular-nums font-inter">{cust.phone || '-'}</span>
                   </td>
                   <td className="py-4.5 px-6">
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-700">{emirate || '-'}</span>
+                      <span className="text-[13px] font-medium text-slate-700">{emirate || '-'}</span>
                       {addressLine && (
-                        <span className="text-[10px] text-slate-500 mt-0.5 max-w-[200px] truncate">{addressLine}</span>
+                        <span className="text-xs text-slate-500 mt-0.5 max-w-[200px] truncate">{addressLine}</span>
                       )}
                     </div>
                   </td>
                   <td className="py-4.5 px-6">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider leading-none rounded-md ${
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider leading-none rounded-md ${
                       cust.status === 'approved' 
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' 
                         : cust.status === 'rejected'
@@ -111,10 +111,10 @@ export default function CustomerTable({ customers, isAdmin, onApprove, onReject 
                     </span>
                   </td>
                   <td className="py-4.5 px-6">
-                    <span className="text-xs font-semibold text-slate-700">{cust.issuedBy || '-'}</span>
+                    <span className="text-[13px] font-medium text-slate-700">{cust.issuedBy || '-'}</span>
                   </td>
                   <td className="py-4.5 px-6">
-                    <span className="text-xs font-semibold text-slate-700">{cust.verifiedBy || '-'}</span>
+                    <span className="text-[13px] font-medium text-slate-700">{cust.verifiedBy || '-'}</span>
                   </td>
                   <td className="py-4.5 px-6 text-center">
                     <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>

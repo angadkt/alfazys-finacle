@@ -180,7 +180,7 @@ export default function FincorePage() {
         {isSidebarOpen && (
           <div className="w-[320px] flex flex-col border-r border-[#a0a0a0] bg-[#f8f9fa] flex-shrink-0">
             {/* Sidebar Header */}
-            <div className="bg-[#e4e4e4] flex items-center justify-between px-2 py-0.5 border-b border-[#a0a0a0] text-[11px] font-bold text-black">
+            <div className="bg-[#e4e4e4] flex items-center justify-between px-2.5 py-1 border-b border-[#a0a0a0] text-xs font-bold text-black">
               <span className="flex items-center gap-1.5">
                 <Folder className="w-3.5 h-3.5 text-[#104080]" /> Finacle Function Tree
               </span>
@@ -193,12 +193,12 @@ export default function FincorePage() {
             </div>
             
             {/* Sidebar Tree List */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 custom-scrollbar text-[13px]">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 custom-scrollbar text-[14px]">
               {/* General Upper Menu Items */}
               {generalMenuItems.map((item, idx) => (
                 <div 
                   key={idx} 
-                  className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group tracking-wide text-[#000080] rounded-xs ${activeScreen === item ? 'bg-[#316ac5] text-white font-semibold' : ''}`}
+                  className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group tracking-wide text-[#000080] rounded-xs font-medium ${activeScreen === item ? 'bg-[#316ac5] text-white font-semibold' : ''}`}
                   onClick={() => {
                     setActiveScreen(item);
                   }}
@@ -211,7 +211,7 @@ export default function FincorePage() {
                 </div>
               ))}
 
-                            {/* INR PAYOUT & SERVICER Tree Group */}
+              {/* INR PAYOUT & SERVICER Tree Group */}
               {hasAedAccess && (
                 <div className="mt-1 pt-1 border-t border-gray-200">
                   <div 
@@ -219,14 +219,14 @@ export default function FincorePage() {
                     onClick={() => setIsPayoutExpanded(!isPayoutExpanded)}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[10px] leading-none font-mono text-[#104080] font-bold">
+                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[11px] leading-none font-mono text-[#104080] font-bold">
                         {isPayoutExpanded ? "−" : "+"}
                       </span>
-                      <span className="text-[#104080] font-extrabold text-[13px] tracking-wide flex items-center gap-1.5">
+                      <span className="text-[#104080] font-bold text-[14px] tracking-wide flex items-center gap-1.5">
                         <FolderOpen className="w-3.5 h-3.5 text-[#104080]" /> INR PAYOUT
                       </span>
                     </div>
-                    <span className="text-[10px] text-gray-500 font-normal">
+                    <span className="text-[11px] text-gray-500 font-medium">
                       ({payoutSubItems.length})
                     </span>
                   </div>
@@ -236,7 +236,7 @@ export default function FincorePage() {
                       {payoutSubItems.map((sub, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[13px] text-[#000080] rounded-xs ${
+                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] font-medium text-[#000080] rounded-xs ${
                             activeScreen === sub.name ? "bg-[#316ac5] text-white font-bold" : ""
                           }`}
                           onClick={() => {
@@ -254,7 +254,7 @@ export default function FincorePage() {
                 </div>
               )}
 
-{/* AED COLLECTION Tree Group */}
+              {/* AED COLLECTION Tree Group */}
               {hasAedAccess && (
                 <div className="mt-1 pt-1 border-t border-gray-200">
                   {/* Folder Header */}
@@ -264,14 +264,14 @@ export default function FincorePage() {
                   >
                     <div className="flex items-center gap-2">
                       {/* Plus/Minus Box */}
-                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[10px] leading-none font-mono text-[#104080] font-bold">
+                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[11px] leading-none font-mono text-[#104080] font-bold">
                         {isAedExpanded ? '−' : '+'}
                       </span>
-                      <span className="text-[#104080] font-extrabold text-[13px] tracking-wide flex items-center gap-1.5">
+                      <span className="text-[#104080] font-bold text-[14px] tracking-wide flex items-center gap-1.5">
                         <FolderOpen className="w-3.5 h-3.5 text-[#104080]" /> AED COLLECTION
                       </span>
                     </div>
-                    <span className="text-[10px] text-gray-500 font-normal">
+                    <span className="text-[11px] text-gray-500 font-medium">
                       ({aedSubItems.length})
                     </span>
                   </div>
@@ -282,7 +282,7 @@ export default function FincorePage() {
                       {aedSubItems.map((sub, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[13px] text-[#000080] rounded-xs ${
+                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] font-medium text-[#000080] rounded-xs ${
                             activeScreen === sub.name ? 'bg-[#316ac5] text-white font-bold' : ''
                           }`}
                           onClick={() => {
