@@ -13,6 +13,7 @@ import {
   Check
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { toJpeg, toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 
 interface ReceivedRecord {
@@ -105,28 +106,58 @@ export default function ReceivedAedReceiptModal({ record, isOpen, onClose }: Pro
     ? record.entry_date.slice(0, 10)
     : new Date().toISOString().slice(0, 10);
 
+  // Helper to reliably capture the element as image data URL (works with Tailwind v4)
+  const captureReceiptImageDataUrl = async (): Promise<string> => {
+    if (!receiptRef.current) throw new Error('Receipt element not found');
+
+    // 1. Primary: html-to-image toJpeg (native browser rendering, perfectly handles modern CSS / oklch)
+    try {
+      return await toJpeg(receiptRef.current, {
+        quality: 0.95,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        skipFonts: true,
+      });
+    } catch (e1) {
+      console.warn('toJpeg failed, attempting toPng fallback...', e1);
+    }
+
+    // 2. Secondary fallback: html-to-image toPng
+    try {
+      return await toPng(receiptRef.current, {
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        skipFonts: true,
+      });
+    } catch (e2) {
+      console.warn('toPng failed, attempting html2canvas fallback...', e2);
+    }
+
+    // 3. Final fallback: html2canvas
+    const canvas = await html2canvas(receiptRef.current, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+    });
+    return canvas.toDataURL('image/jpeg', 0.95);
+  };
+
   // Download as JPG
   const handleDownloadJpg = async () => {
     if (!receiptRef.current) return;
     try {
       setDownloadingJpg(true);
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      const image = canvas.toDataURL('image/jpeg', 0.95);
+      const imgDataUrl = await captureReceiptImageDataUrl();
       const link = document.createElement('a');
-      link.href = image;
+      link.href = imgDataUrl;
       link.download = `Finacle_Receipt_${referenceNo}_${txnDate}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to generate JPG receipt:', err);
-      alert('Could not generate JPG. Please try again.');
+      alert('Could not generate JPG. Please use the Print option as an alternative.');
     } finally {
       setDownloadingJpg(false);
     }
@@ -137,14 +168,8 @@ export default function ReceivedAedReceiptModal({ record, isOpen, onClose }: Pro
     if (!receiptRef.current) return;
     try {
       setDownloadingPdf(true);
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
+      const imgDataUrl = await captureReceiptImageDataUrl();
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -153,17 +178,24 @@ export default function ReceivedAedReceiptModal({ record, isOpen, onClose }: Pro
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth - 20; // 10mm margins on sides
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      const img = new Image();
+      img.src = imgDataUrl;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Image decode failed'));
+      });
 
-      // Position centered vertically if fits on single page
-      const posY = imgHeight < pdfHeight ? 12 : 8;
+      const margin = 10;
+      const imgWidth = pdfWidth - (margin * 2);
+      const imgHeight = (img.height * imgWidth) / img.width;
+      const posY = imgHeight < pdfHeight - (margin * 2) ? 12 : margin;
 
-      pdf.addImage(imgData, 'JPEG', 10, posY, imgWidth, imgHeight);
+      pdf.addImage(imgDataUrl, 'JPEG', margin, posY, imgWidth, Math.min(imgHeight, pdfHeight - (margin * 2)));
       pdf.save(`Finacle_Receipt_${referenceNo}_${txnDate}.pdf`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to generate PDF receipt:', err);
-      alert('Could not generate PDF. Please try again.');
+      alert('Could not generate PDF. Please use the Print option as an alternative.');
     } finally {
       setDownloadingPdf(false);
     }
