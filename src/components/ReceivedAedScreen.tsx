@@ -1,8 +1,9 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect } from 'react';
-import { ExternalLink, X } from 'lucide-react';
+import { ExternalLink, X, FileText } from 'lucide-react';
 import api from '../services/api';
 import FinacleSelect from './FinacleSelect';
+import ReceivedAedReceiptModal from './ReceivedAedReceiptModal';
 
 interface Customer {
   id: string;
@@ -21,6 +22,15 @@ export default function ReceivedAedScreen() {
   const [agentFilter, setAgentFilter] = useState('');
   const [modeFilter, setModeFilter] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
+
+  // Receipt Modal State
+  const [selectedReceiptRecord, setSelectedReceiptRecord] = useState<any | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+
+  const handleOpenReceipt = (rec: any) => {
+    setSelectedReceiptRecord(rec);
+    setIsReceiptModalOpen(true);
+  };
 
   // Entry / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -455,7 +465,15 @@ export default function ReceivedAedScreen() {
                       {rec.created_by_name || 'Admin'}
                     </td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleOpenReceipt(rec)}
+                          className="text-[#0284c7] hover:text-[#0369a1] bg-[#e0f2fe] hover:bg-[#bae6fd] border border-[#7dd3fc] px-2 py-0.5 rounded font-bold text-[11px] cursor-pointer flex items-center gap-1 transition-colors shadow-2xs"
+                          title="View, Print & Download Receipt"
+                        >
+                          <FileText className="w-3 h-3 text-[#0284c7]" />
+                          Receipt
+                        </button>
                         <button
                           onClick={() => handleEdit(rec)}
                           className="text-[#104080] hover:underline font-bold text-[11px] cursor-pointer"
@@ -705,6 +723,16 @@ export default function ReceivedAedScreen() {
           </div>
         </>
       )}
+
+      {/* Official Collection Receipt Preview & Download Modal */}
+      <ReceivedAedReceiptModal
+        record={selectedReceiptRecord}
+        isOpen={isReceiptModalOpen}
+        onClose={() => {
+          setIsReceiptModalOpen(false);
+          setSelectedReceiptRecord(null);
+        }}
+      />
     </div>
   );
 }
