@@ -19,6 +19,8 @@ const PendingAedReportScreen = lazy(() => import('../components/PendingAedReport
 const InrDispatchDeskScreen = lazy(() => import("../components/payouts/InrDispatchDeskScreen"));
 const ServicerWalletsScreen = lazy(() => import("../components/payouts/ServicerWalletsScreen"));
 const OpenAccountScreen = lazy(() => import("../components/OpenAccountScreen"));
+const AccountInquiryScreen = lazy(() => import("../components/AccountInquiryScreen"));
+const AccountLedgerScreen = lazy(() => import("../components/AccountLedgerScreen"));
 const AddStaffForm = lazy(() => import('../components/AddStaffForm'));
 const StaffManagement = lazy(() => import('../components/StaffManagement'));
 
@@ -30,6 +32,8 @@ export default function FincorePage() {
     return sessionStorage.getItem('fincore_active_screen') || 'DASHBOARD';
   });
 
+  const [ledgerAccountNo, setLedgerAccountNo] = useState<string>("");
+
   const isAedScreen = (screen: string) => 
     screen === 'ORDER ENTRY' || 
     screen === 'RECEIVED AED' || 
@@ -39,13 +43,28 @@ export default function FincorePage() {
     screen === 'PENDING AED REPORT';
 
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
-  const [isAedExpanded, setIsAedExpanded] = useState<boolean>(true);
+  const [isAccountsExpanded, setIsAccountsExpanded] = useState<boolean>(true);
   const [isPayoutExpanded, setIsPayoutExpanded] = useState<boolean>(true);
+  const [isAedExpanded, setIsAedExpanded] = useState<boolean>(true);
+
+  const isAccountsScreen = (screen: string) =>
+    screen === 'OPEN ACCOUNT' || 
+    screen === 'OPEN SERVICER ACCOUNT' || 
+    screen === 'ACCOUNT ENQUIRY (ACIQ)' || 
+    screen === 'ACCOUNT ENQUIRY' || 
+    screen === 'ACCOUNT LEDGER (ACLI)' || 
+    screen === 'ACCOUNT LEDGER';
 
   const isPayoutScreen = (screen: string) =>
     screen === 'INR DISPATCH DESK' || 
     screen === 'SERVICER WALLETS' || 
     screen === 'INR PAYOUT';
+
+  useEffect(() => {
+    if (isAccountsScreen(activeScreen)) {
+      setIsAccountsExpanded(true);
+    }
+  }, [activeScreen]);
 
   useEffect(() => {
     if (isPayoutScreen(activeScreen)) {
@@ -82,7 +101,7 @@ export default function FincorePage() {
   // Has permission for AED section
   const hasAedAccess = userRole === 'super_admin' || permissions['AED COLLECTON'] || permissions['ORDER ENTRY'];
 
-  // Base Menu items (excluding AED collection children which are rendered in the tree)
+  // Base Menu items (excluding tree-nested children)
   const generalMenuItems = userRole === 'super_admin' ? [
     "DASHBOARD",
     "ADD STAFF",
@@ -94,17 +113,24 @@ export default function FincorePage() {
     "VERIFY RETAIL CIF CREATION",
     "VERIFY RETAIL CIF MODIFICATION",
     "VIEW RETAIL CIF",
-    "OPEN ACCOUNT",
     "CREDIT ENTRY"
   ] : [
     ...(permissions['DASHBOARD'] ? ["DASHBOARD"] : []),
     ...(permissions['CREATE RETAIL CIF'] ? ["CREATE RETAIL CIF"] : []),
     ...(permissions['VIEW RETAIL CIF'] ? ["VIEW RETAIL CIF"] : []),
-    ...(permissions['OPEN ACCOUNT'] ? ["OPEN ACCOUNT"] : []),
     ...(permissions['CREDIT ENTRY'] ? ["CREDIT ENTRY"] : []),
     ...(permissions['VERIFY RETAIL CIF CREATION'] ? ["VERIFY RETAIL CIF CREATION"] : []),
     ...(permissions['VERIFY RETAIL CIF MODIFICATION'] ? ["VERIFY RETAIL CIF MODIFICATION"] : [])
   ];
+
+  // ACCOUNTS Tree Children (Open Account, ACIQ, ACLI)
+  const accountsSubItems = [
+    { name: "OPEN ACCOUNT", label: "OPEN ACCOUNT (OAAC)" },
+    { name: "ACCOUNT ENQUIRY (ACIQ)", label: "ACCOUNT ENQUIRY (ACIQ)" },
+    { name: "ACCOUNT LEDGER (ACLI)", label: "ACCOUNT LEDGER (ACLI)" }
+  ].filter(sub => userRole === 'super_admin' || permissions[sub.name as FinacleScreen]);
+
+  const hasAccountsAccess = userRole === 'super_admin' || accountsSubItems.length > 0;
 
   const aedSubItems = [
     { name: "ORDER ENTRY", label: "ORDER ENTRY" },
@@ -118,24 +144,33 @@ export default function FincorePage() {
     { name: "SERVICER WALLETS", label: "SERVICER WALLETS" }
   ];
 
+  const navigateToScreen = (screen: string) => {
+    setActiveScreen(screen);
+    setIsSidebarOpen(false);
+  };
+
   const handleShortcutSelect = (screen: string) => {
     const upper = screen.toUpperCase().trim();
     if (upper.includes('ADD') && upper.includes('STAF')) {
-      setActiveScreen('ADD STAFF');
+      navigateToScreen('ADD STAFF');
     } else if (upper.includes('STAF') || upper === 'STFMGMT' || upper === 'STFM') {
-      setActiveScreen('STAFF MANAGEMENT');
+      navigateToScreen('STAFF MANAGEMENT');
     } else if (upper.includes('RCV') || upper.includes('RECEIVED')) {
-      setActiveScreen('RECEIVED AED');
+      navigateToScreen('RECEIVED AED');
     } else if (upper.includes('PEND') || upper === 'PAR' || upper === 'PAED') {
-      setActiveScreen('PENDING AED REPORT');
+      navigateToScreen('PENDING AED REPORT');
     } else if (upper.includes('REPORT') || upper.includes('SUMMARY')) {
-      setActiveScreen('AED SUMMARY & REPORTS');
+      navigateToScreen('AED SUMMARY & REPORTS');
     } else if (upper.includes('ORDER')) {
-      setActiveScreen('ORDER ENTRY');
+      navigateToScreen('ORDER ENTRY');
     } else if ((upper.includes('OPEN') && (upper.includes('ACC') || upper.includes('SERVICER'))) || upper === 'OAAC') {
-      setActiveScreen('OPEN ACCOUNT');
+      navigateToScreen('OPEN ACCOUNT');
+    } else if (upper.includes('ACLI') || upper === 'ACL' || upper.includes('LEDGER') || upper === 'STATEMENT') {
+      navigateToScreen('ACCOUNT LEDGER (ACLI)');
+    } else if (upper.includes('ACIQ') || upper.includes('ENQUIRY') || upper.includes('INQUIRY') || upper === 'ACCTS' || upper === 'ACCOUNTS') {
+      navigateToScreen('ACCOUNT ENQUIRY (ACIQ)');
     } else {
-      setActiveScreen(screen);
+      navigateToScreen(screen);
     }
   };
 
@@ -200,7 +235,7 @@ export default function FincorePage() {
                   key={idx} 
                   className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group tracking-wide text-[#000080] rounded-xs font-medium ${activeScreen === item ? 'bg-[#316ac5] text-white font-semibold' : ''}`}
                   onClick={() => {
-                    setActiveScreen(item);
+                    navigateToScreen(item);
                   }}
                 >
                   {/* Finacle Leaf Icon */}
@@ -210,6 +245,49 @@ export default function FincorePage() {
                   <span className="truncate">{item}</span>
                 </div>
               ))}
+
+              {/* ACCOUNTS (Open Account, ACIQ, ACLI) Tree Group */}
+              {hasAccountsAccess && (
+                <div className="mt-1 pt-1 border-t border-gray-200">
+                  <div 
+                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#e6edf8] text-[#104080] font-bold select-none group rounded-xs"
+                    onClick={() => setIsAccountsExpanded(!isAccountsExpanded)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[11px] leading-none font-mono text-[#104080] font-bold">
+                        {isAccountsExpanded ? "−" : "+"}
+                      </span>
+                      <span className="text-[#104080] font-bold text-[14px] tracking-wide flex items-center gap-1.5">
+                        <FolderOpen className="w-3.5 h-3.5 text-[#104080]" /> ACCOUNTS
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-gray-500 font-medium">
+                      ({accountsSubItems.length})
+                    </span>
+                  </div>
+
+                  {isAccountsExpanded && (
+                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-[#9eb3cd] space-y-0.5 mt-0.5">
+                      {accountsSubItems.map((sub, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] font-medium text-[#000080] rounded-xs ${
+                            activeScreen === sub.name ? "bg-[#316ac5] text-white font-bold" : ""
+                          }`}
+                          onClick={() => {
+                            navigateToScreen(sub.name);
+                          }}
+                        >
+                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === sub.name ? "border-white" : "group-hover:border-white"}`}>
+                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? "bg-white" : "bg-[#3b73b9] group-hover:bg-white"}`} />
+                          </div>
+                          <span className="truncate">{sub.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* INR PAYOUT & SERVICER Tree Group */}
               {hasAedAccess && (
@@ -240,7 +318,7 @@ export default function FincorePage() {
                             activeScreen === sub.name ? "bg-[#316ac5] text-white font-bold" : ""
                           }`}
                           onClick={() => {
-                            setActiveScreen(sub.name);
+                            navigateToScreen(sub.name);
                           }}
                         >
                           <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === sub.name ? "border-white" : "group-hover:border-white"}`}>
@@ -286,7 +364,7 @@ export default function FincorePage() {
                             activeScreen === sub.name ? 'bg-[#316ac5] text-white font-bold' : ''
                           }`}
                           onClick={() => {
-                            setActiveScreen(sub.name);
+                            navigateToScreen(sub.name);
                           }}
                         >
                           {/* Sub Item Bullet */}
@@ -356,6 +434,18 @@ export default function FincorePage() {
                 <ServicerWalletsScreen onNavigate={(screen) => setActiveScreen(screen)} />
               ) : activeScreen === 'OPEN ACCOUNT' || activeScreen === 'OPEN SERVICER ACCOUNT' ? (
                 <OpenAccountScreen onNavigate={(screen) => setActiveScreen(screen)} />
+              ) : activeScreen === 'ACCOUNT ENQUIRY (ACIQ)' || activeScreen === 'ACCOUNT ENQUIRY' ? (
+                <AccountInquiryScreen 
+                  onNavigateToLedger={(accNo) => {
+                    setLedgerAccountNo(accNo);
+                    setActiveScreen('ACCOUNT LEDGER (ACLI)');
+                  }}
+                />
+              ) : activeScreen === 'ACCOUNT LEDGER (ACLI)' || activeScreen === 'ACCOUNT LEDGER' ? (
+                <AccountLedgerScreen 
+                  initialAccountNo={ledgerAccountNo}
+                  onNavigateToAccounts={() => setActiveScreen('ACCOUNT ENQUIRY (ACIQ)')}
+                />
               ) : (
                 <div className="flex-1 flex items-center justify-center">
                   <h1 className="text-[44px] font-bold text-black tracking-wide" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>

@@ -176,6 +176,8 @@ export const initialStaffMembers: StaffMember[] = [
       'VERIFY RETAIL CIF MODIFICATION': false,
       'VIEW RETAIL CIF': true,
       'OPEN ACCOUNT': true,
+      'ACCOUNT ENQUIRY (ACIQ)': true,
+      'ACCOUNT LEDGER (ACLI)': true,
       'ORDER ENTRY': false,
       'CREDIT ENTRY': true,
       'AED COLLECTON': false,

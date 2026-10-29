@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   FileSpreadsheet, 
   FileText, 
@@ -11,10 +11,25 @@ import {
   User, 
   Building2, 
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Landmark,
+  Copy,
+  Check
 } from 'lucide-react';
 import api from '../services/api';
 import { exportCifsToExcel, exportCifsToPdf } from '../utils/exportCif';
+
+const SCHEME_BADGES: Record<string, { label: string; badgeClass: string }> = {
+  SAVINGS: { label: "Savings Account", badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-300" },
+  CURRENT: { label: "Current Account", badgeClass: "bg-blue-50 text-blue-800 border-blue-300" },
+  SALARY: { label: "Salary Account", badgeClass: "bg-indigo-50 text-indigo-800 border-indigo-300" },
+  CORPORATE_SINGLE: { label: "Corporate Single", badgeClass: "bg-purple-50 text-purple-800 border-purple-300" },
+  CORPORATE_JOINT: { label: "Corporate Joint", badgeClass: "bg-violet-50 text-violet-800 border-violet-300" },
+  BORROWED: { label: "Borrowed / OD", badgeClass: "bg-rose-50 text-rose-800 border-rose-300" },
+  PROFIT: { label: "Profit Account", badgeClass: "bg-teal-50 text-teal-800 border-teal-300" },
+  EXPENSE: { label: "Expense Account", badgeClass: "bg-amber-50 text-amber-800 border-amber-300" },
+  SERVICER: { label: "Servicer Account", badgeClass: "bg-cyan-50 text-cyan-800 border-cyan-300" },
+};
 
 export default function ViewRetailCif() {
   const [verifiedCifs, setVerifiedCifs] = useState<any[]>([]);
@@ -28,6 +43,9 @@ export default function ViewRetailCif() {
   const isAdmin = activeRole === 'super_admin' || activeRole === 'admin';
   const [deleteCifTarget, setDeleteCifTarget] = useState<any | null>(null);
   const [isDeletingCif, setIsDeletingCif] = useState(false);
+  const [allAccounts, setAllAccounts] = useState<any[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [copiedAccNo, setCopiedAccNo] = useState<string | null>(null);
 
   const handleConfirmDeleteCif = async () => {
     if (!deleteCifTarget) return;
@@ -75,7 +93,20 @@ export default function ViewRetailCif() {
 
   useEffect(() => {
     loadVerifiedCifs();
+    loadAccounts();
   }, []);
+
+  const loadAccounts = async () => {
+    setLoadingAccounts(true);
+    try {
+      const res = await api.get('/payouts/servicers');
+      setAllAccounts(res.data?.servicers || []);
+    } catch (err) {
+      console.error('Failed to load accounts:', err);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
 
   const loadVerifiedCifs = async () => {
     try {
@@ -98,6 +129,23 @@ export default function ViewRetailCif() {
     } finally {
       setLoadingDetails(false);
     }
+  };
+
+  const linkedAccounts = useMemo(() => {
+    if (!selectedCif) return [];
+    const partyId = String(selectedCif.id || '');
+    const cifNo = String(selectedCif.cif_no || '').trim().toLowerCase();
+    return allAccounts.filter((acc) => {
+      if (acc.party_id && String(acc.party_id) === partyId) return true;
+      if (acc.cif_no && cifNo && String(acc.cif_no).trim().toLowerCase() === cifNo) return true;
+      return false;
+    });
+  }, [selectedCif, allAccounts]);
+
+  const handleCopyAcc = (accNo: string) => {
+    navigator.clipboard.writeText(accNo);
+    setCopiedAccNo(accNo);
+    setTimeout(() => setCopiedAccNo(null), 1800);
   };
 
   const filteredCifs = verifiedCifs.filter((cif) => {
@@ -433,6 +481,108 @@ export default function ViewRetailCif() {
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Linked Core Banking Accounts Section */}
+              <div className="bg-[#f8fafc] border border-[#c4d4ec] rounded-md p-4 shadow-2xs">
+                <div className="font-bold text-[#104080] text-xs uppercase tracking-wide border-b border-[#c4d4ec] pb-2 mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Landmark className="w-4 h-4 text-[#104080]" />
+                    <span>Associated Core Banking Accounts</span>
+                  </div>
+                  <span className="text-xs text-slate-600 font-semibold bg-white px-2 py-0.5 rounded border border-[#c4d4ec]">
+                    {linkedAccounts.length} Linked {linkedAccounts.length === 1 ? 'Account' : 'Accounts'}
+                  </span>
+                </div>
+
+                {loadingAccounts ? (
+                  <div className="text-sm text-slate-500 italic p-6 bg-white text-center border border-dashed border-[#c4d4ec] rounded-md">
+                    Loading associated accounts...
+                  </div>
+                ) : linkedAccounts.length === 0 ? (
+                  <div className="text-sm text-slate-500 italic p-6 bg-white text-center border border-dashed border-[#c4d4ec] rounded-md flex flex-col items-center justify-center gap-1">
+                    <div>No core accounts linked to this CIF record yet.</div>
+                    <div className="text-xs text-slate-400">Accounts opened for this CIF via <b>OPEN ACCOUNT (OAAC)</b> will appear here.</div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-[#c4d4ec] rounded-md bg-white">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-[#e6edf8] text-[#104080] border-b border-[#c4d4ec] text-left uppercase font-bold">
+                          <th className="py-2.5 px-3">Account Number</th>
+                          <th className="py-2.5 px-3">Scheme Type</th>
+                          <th className="py-2.5 px-3">Branch</th>
+                          <th className="py-2.5 px-3">Opening Date</th>
+                          <th className="py-2.5 px-3">Deposit / Limit</th>
+                          <th className="py-2.5 px-3 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {linkedAccounts.map((acc: any) => {
+                          const schemeKey = (acc.account_type || "SERVICER").toUpperCase();
+                          const schemeInfo = SCHEME_BADGES[schemeKey] || {
+                            label: schemeKey,
+                            badgeClass: "bg-slate-100 text-slate-800 border-slate-300"
+                          };
+                          const branchCode = (acc.branch || "INDIA").toUpperCase();
+                          const ccySymbol = branchCode === "UAE" ? "AED" : "₹";
+                          const isCopied = copiedAccNo === acc.account_no;
+
+                          return (
+                            <tr key={acc.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                              <td className="py-2.5 px-3">
+                                <div className="flex items-center gap-1.5 font-mono font-bold text-[#104080]">
+                                  <span>{acc.account_no}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopyAcc(acc.account_no)}
+                                    className="text-slate-400 hover:text-[#104080] transition-colors p-0.5 rounded cursor-pointer"
+                                    title="Copy Account Number"
+                                  >
+                                    {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                                  </button>
+                                </div>
+                                {acc.ifsc_code && (
+                                  <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                    IFSC: {acc.ifsc_code}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold border ${schemeInfo.badgeClass}`}>
+                                  {schemeInfo.label}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 font-semibold text-slate-700">
+                                {branchCode === "UAE" ? "Dubai (AED)" : "India (INR)"}
+                              </td>
+                              <td className="py-2.5 px-3 text-slate-600">
+                                {acc.opening_date || acc.created_at ? new Date(acc.opening_date || acc.created_at).toLocaleDateString() : "-"}
+                              </td>
+                              <td className="py-2.5 px-3 font-mono font-semibold text-slate-800">
+                                {acc.account_type === "BORROWED" ? (
+                                  <span>
+                                    Limit: {ccySymbol} {Number(acc.sanctioned_limit || 0).toLocaleString()}
+                                  </span>
+                                ) : (
+                                  <span>
+                                    Deposit: {ccySymbol} {Number(acc.initial_deposit || 0).toLocaleString()}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[11px] font-bold">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  <span>{acc.status || "ACTIVE"}</span>
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
 
               {/* Uploaded KYC Documents Section */}

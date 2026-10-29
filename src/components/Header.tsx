@@ -205,7 +205,7 @@ export default function Header({
               if (e.key === 'Enter') handleShortcutGo();
             }}
             placeholder="e.g. CREDIT"
-            className="ml-1 w-[130px] h-[20px] border border-[#a0a0a0] bg-white px-1 outline-none text-xs uppercase" 
+            className="ml-1 w-[240px] h-[20px] border border-[#a0a0a0] bg-white px-2 outline-none text-xs uppercase" 
           />
           <button 
             onClick={handleShortcutGo}
