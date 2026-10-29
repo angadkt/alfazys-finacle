@@ -128,7 +128,7 @@ export interface EligibleCif {
 }
 
 interface OpenAccountScreenProps {
-  onNavigate?: (screen: string) => void;
+  onNavigate?: (screen: string, accountNo?: string) => void;
 }
 
 export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps) {
@@ -204,7 +204,9 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
         };
         return updated;
       }
-      const cif = allCifs.find((c) => String(c.id) === String(partyId));
+      const cif =
+        allCifs.find((c) => String(c.id) === String(partyId)) ||
+        servicerCifs.find((c) => String(c.id) === String(partyId));
       if (cif) {
         const fullName = `${cif.first_name} ${cif.last_name}`.trim();
         updated[index] = {
@@ -388,8 +390,8 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
         "2": "Customer",
         "3": "Employee",
         "4": "Other",
-        "5": "General",
-        "6": "Servicer",
+        "5": "Servicer",
+        "6": "Payment Distributor",
         "7": "Supplier"
       };
 
@@ -652,8 +654,19 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
     setSubmitting(true);
     setFormError("");
 
-    const validBankAccounts = bankAccounts.filter(
-      (b) => b.account_number.trim() || b.bank_name.trim() || b.ifsc_code.trim()
+    // Automatically incorporate any pending typed bank account in case user didn't press "Add"
+    const pendingBank = (accountType === "SERVICER" && entryAccountNumber.trim() && entryIfsc.trim() && entryBankName.trim()) ? [{
+      account_holder: entryAccountHolder.trim() || name.trim(),
+      bank_name: entryBankName.trim(),
+      account_number: entryAccountNumber.trim(),
+      ifsc_code: entryIfsc.trim().toUpperCase(),
+      branch_name: entryBranchName.trim(),
+      account_type: entryAccountType,
+      is_primary: bankAccounts.length === 0
+    }] : [];
+
+    const validBankAccounts = [...bankAccounts, ...pendingBank].filter(
+      (b) => b.account_number.trim() && b.bank_name.trim() && b.ifsc_code.trim()
     );
 
     const primaryName = name.trim();
@@ -1602,15 +1615,32 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
             </div>
 
             {/* Modal Actions */}
-            <div className="bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between">
-              <div>
+            <div className="bg-white border-t border-gray-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                {onNavigate && createdResult.account_no && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSuccessModal(false);
+                      onNavigate("ACCOUNT LEDGER (ACLI)", createdResult.account_no);
+                    }}
+                    className="inline-flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                    title="View Account Ledger Statement"
+                  >
+                    <Receipt className="w-3.5 h-3.5 text-amber-300" />
+                    <span>View Ledger (ACLI)</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
                 {createdResult.servicer_code && onNavigate && (
                   <button
+                    type="button"
                     onClick={() => {
                       setShowSuccessModal(false);
                       onNavigate("SERVICER WALLETS");
                     }}
-                    className="inline-flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded text-[13px] font-bold cursor-pointer transition-colors shadow-xs"
+                    className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
                   >
                     <Wallet className="w-3.5 h-3.5 text-amber-300" />
                     <span>Servicer Passbook</span>
@@ -1623,14 +1653,14 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                 <button
                   type="button"
                   onClick={handleResetForm}
-                  className="px-3.5 py-1.5 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded text-[13px] font-bold cursor-pointer transition-colors"
+                  className="px-3.5 py-1.5 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded text-xs font-bold cursor-pointer transition-colors"
                 >
                   Open Another Account
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowSuccessModal(false)}
-                  className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-[13px] font-bold cursor-pointer transition-colors shadow-xs"
+                  className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
                 >
                   Close
                 </button>

@@ -49,6 +49,7 @@ export default function FincorePage() {
 
   const isAccountsScreen = (screen: string) =>
     screen === 'OPEN ACCOUNT' || 
+    screen === 'OPEN ACCOUNT (OAAC)' ||
     screen === 'OPEN SERVICER ACCOUNT' || 
     screen === 'ACCOUNT ENQUIRY (ACIQ)' || 
     screen === 'ACCOUNT ENQUIRY' || 
@@ -432,8 +433,13 @@ export default function FincorePage() {
                 <InrDispatchDeskScreen />
               ) : activeScreen === 'SERVICER WALLETS' ? (
                 <ServicerWalletsScreen onNavigate={(screen) => setActiveScreen(screen)} />
-              ) : activeScreen === 'OPEN ACCOUNT' || activeScreen === 'OPEN SERVICER ACCOUNT' ? (
-                <OpenAccountScreen onNavigate={(screen) => setActiveScreen(screen)} />
+              ) : activeScreen === 'OPEN ACCOUNT' || activeScreen === 'OPEN ACCOUNT (OAAC)' || activeScreen === 'OPEN SERVICER ACCOUNT' ? (
+                <OpenAccountScreen 
+                  onNavigate={(screen, accNo) => {
+                    if (accNo) setLedgerAccountNo(accNo);
+                    setActiveScreen(screen);
+                  }} 
+                />
               ) : activeScreen === 'ACCOUNT ENQUIRY (ACIQ)' || activeScreen === 'ACCOUNT ENQUIRY' ? (
                 <AccountInquiryScreen 
                   onNavigateToLedger={(accNo) => {
