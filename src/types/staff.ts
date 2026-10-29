@@ -6,6 +6,7 @@ export type FinacleScreen =
   | 'VIEW RETAIL CIF'
   | 'OPEN ACCOUNT'
   | 'ACCOUNT ENQUIRY (ACIQ)'
+  | 'ACCOUNT STATEMENT (ACLI)'
   | 'ACCOUNT LEDGER (ACLI)'
   | 'ORDER ENTRY'
   | 'CREDIT ENTRY'
@@ -24,6 +25,7 @@ export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
   'VIEW RETAIL CIF': true,
   'OPEN ACCOUNT': true,
   'ACCOUNT ENQUIRY (ACIQ)': true,
+  'ACCOUNT STATEMENT (ACLI)': true,
   'ACCOUNT LEDGER (ACLI)': true,
   'ORDER ENTRY': true,
   'CREDIT ENTRY': true,

@@ -1622,13 +1622,13 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                     type="button"
                     onClick={() => {
                       setShowSuccessModal(false);
-                      onNavigate("ACCOUNT LEDGER (ACLI)", createdResult.account_no);
+                      onNavigate("ACCOUNT STATEMENT (ACLI)", createdResult.account_no);
                     }}
                     className="inline-flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
-                    title="View Account Ledger Statement"
+                    title="View Account Statement"
                   >
                     <Receipt className="w-3.5 h-3.5 text-amber-300" />
-                    <span>View Ledger (ACLI)</span>
+                    <span>View Statement (ACLI)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}

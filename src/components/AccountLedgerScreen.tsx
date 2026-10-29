@@ -4,6 +4,7 @@ import {
   Search,
   Landmark,
   ArrowLeft,
+  ArrowRight,
   RefreshCw,
   FileSpreadsheet,
   FileText,
@@ -17,6 +18,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import FinacleSelect from "./FinacleSelect";
+import FinacleDatePicker from "./FinacleDatePicker";
 import Loader from "./Loader";
 
 interface AccountRecord {
@@ -436,7 +438,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
       <div className="bg-white px-4 md:px-6 py-2.5 border-b border-gray-200 flex items-center justify-between gap-3 shrink-0 shadow-2xs">
         <div>
           <h1 className="font-bold text-black text-sm leading-none uppercase tracking-wide">
-            Account Ledger (ACLI)
+            Account Statement (ACLI)
           </h1>
           <p className="text-[10px] text-gray-500 font-medium mt-0.5">
             Passbook Statement &amp; Transaction Audit
@@ -458,60 +460,121 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
           </div>
         </div>
       ) : !activeAccount ? (
-        /* Center Card when no account is selected */
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-slate-50">
-          <div className="bg-white border border-[#c4d4ec] rounded-xl p-8 max-w-md w-full shadow-sm flex flex-col items-center">
-            <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-[#104080] mb-4 shadow-2xs">
-              <Landmark className="w-8 h-8 text-[#104080]" />
-            </div>
+        /* Center Card when no account is selected - Finacle 3-Tier Enterprise Card */
+        <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar bg-slate-50/60">
+          <div className="min-h-full flex flex-col items-center justify-center pt-4 pb-28 md:pb-36">
+            <div className="w-full max-w-2xl mx-auto -translate-y-4 md:-translate-y-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (selectedAccountNo) {
+                    handleSelectAccount(selectedAccountNo);
+                  }
+                }}
+                className="bg-white border border-gray-200 rounded-lg shadow-xs"
+              >
+              {/* Card Header (Finacle Solid Navy Bar) */}
+              <div className="bg-[#104080] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <Landmark className="w-4 h-4 text-blue-200 shrink-0" />
+                  <span className="font-bold text-sm text-white uppercase tracking-wide">
+                    Account Statement &amp; Value Date
+                  </span>
+                </div>
+                <span className="text-[11px] bg-white/15 text-white border border-white/25 font-bold px-2 py-0.5 rounded font-mono">
+                  ACLI
+                </span>
+              </div>
 
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight">
-              Select Account to Show Statement
-            </h2>
-            <p className="text-xs text-gray-500 mt-1 mb-5 max-w-xs">
-              Choose an account to inspect its transaction history and passbook ledger.
-            </p>
+              {/* Card Body */}
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* 1. Account Opening / Value Date */}
+                  <div>
+                    <label className="block text-[13px] font-semibold text-gray-700 mb-1.5 flex items-center justify-between">
+                      <span>Statement Value Date:</span>
+                      <span className="text-[11px] font-normal text-gray-500">Value Date</span>
+                    </label>
+                    <FinacleDatePicker
+                      value={fromDate}
+                      onChange={(e) => setFromDate(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-xs font-semibold text-gray-900 shadow-2xs hover:border-gray-400 focus-within:border-[#104080] focus-within:ring-1 focus-within:ring-[#104080] flex items-center justify-between min-h-[38px]"
+                    />
+                  </div>
 
-            {/* Centered Account Selector Dropdown */}
-            <div className="w-full text-left">
-              <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1.5">
-                Target Account <span className="text-red-500">*</span>
-              </label>
-              <FinacleSelect
-                value={selectedAccountNo}
-                onChange={(e) => handleSelectAccount(e.target.value)}
-                options={[
-                  { value: "", label: "— Choose an Account —" },
-                  ...accounts.map((a) => {
-                    const scheme = (a.account_type || "SERVICER").toUpperCase();
-                    return {
-                      value: a.account_no,
-                      label: `${a.account_no} — ${a.name}`,
-                      badge: `${a.branch === "UAE" ? "AED" : "INR"} • ${scheme}`
-                    };
-                  })
-                ]}
-                searchable={true}
-                searchPlaceholder="Type Account No, CIF, or Name..."
-                placeholder={loadingAccounts ? "Loading accounts..." : "— Choose an Account —"}
-                triggerClassName="!h-[38px] bg-white hover:bg-slate-50 border border-[#c4d4ec] rounded text-xs font-mono font-bold text-[#104080]"
-              />
-            </div>
+                  {/* 2. Select Target Account Scheme / Account */}
+                  <div>
+                    <label className="block text-[13px] font-semibold text-gray-700 mb-1.5 flex items-center justify-between">
+                      <span>Select Target Account: *</span>
+                      <span className="text-[11px] font-normal text-gray-500">Active Accounts</span>
+                    </label>
+                    <FinacleSelect
+                      value={selectedAccountNo}
+                      onChange={(e) => setSelectedAccountNo(e.target.value)}
+                      options={[
+                        { value: "", label: "— Choose an Account —" },
+                        ...accounts.map((a) => {
+                          const scheme = (a.account_type || "SERVICER").toUpperCase();
+                          return {
+                            value: a.account_no,
+                            label: `${a.account_no} — ${a.name}`,
+                            badge: `${a.branch === "UAE" ? "AED" : "INR"} • ${scheme}`
+                          };
+                        })
+                      ]}
+                      searchable={true}
+                      searchPlaceholder="Type Account No, CIF, or Name..."
+                      placeholder={loadingAccounts ? "Loading accounts..." : "— Choose an Account —"}
+                      triggerClassName="!h-[38px] bg-white hover:bg-slate-50 border border-gray-300 rounded-md text-xs font-mono font-bold text-[#104080] shadow-2xs"
+                    />
+                  </div>
+                </div>
+              </div>
 
-            {onNavigateToAccounts && (
-              <div className="mt-6 pt-4 border-t border-gray-100 w-full flex justify-center">
+              {/* Card Footer Ribbon */}
+              <div className="bg-slate-50 border-t border-gray-200 px-6 py-3.5 flex items-center justify-between rounded-b-lg">
+                <div className="flex items-center gap-2">
+                  {onNavigateToAccounts && (
+                    <button
+                      type="button"
+                      onClick={onNavigateToAccounts}
+                      className="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Browse in Enquiry (ACIQ)</span>
+                    </button>
+                  )}
+                  {(selectedAccountNo || fromDate) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedAccountNo("");
+                        setFromDate("");
+                      }}
+                      className="px-3 py-2 border border-gray-300 hover:bg-gray-100 text-gray-600 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      Clear Form
+                    </button>
+                  )}
+                </div>
+
                 <button
-                  type="button"
-                  onClick={onNavigateToAccounts}
-                  className="flex items-center gap-1.5 text-[#104080] hover:text-[#0a2850] font-bold text-xs cursor-pointer transition-colors"
+                  type="submit"
+                  disabled={!selectedAccountNo || loadingAccounts}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-md text-xs font-bold shadow-md transition-all ${
+                    selectedAccountNo && !loadingAccounts
+                      ? "bg-[#104080] hover:bg-[#1a559e] text-white cursor-pointer"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                  }`}
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Browse all in Account Enquiry (ACIQ)</span>
+                  <span>Fetch Statement</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
-            )}
+            </form>
           </div>
         </div>
+      </div>
       ) : (
         <>
           {/* 2. Dedicated Filter & Criteria Toolbar */}
@@ -676,8 +739,8 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
               <div className="col-span-2 bg-[#f0f4f8] border border-[#c4d4ec] rounded p-2.5 flex items-center justify-between">
                 <div>
                   <div className="text-[10px] font-bold text-gray-500 uppercase">Account Holder Title</div>
-                  <div className="font-bold text-gray-900 text-sm truncate max-w-[220px]">
-                    {activeAccount.name}
+                  <div className="font-bold text-gray-900 text-sm truncate max-w-[220px] uppercase tracking-wide">
+                    {activeAccount.name ? activeAccount.name.toUpperCase() : ""}
                   </div>
                   <div className="text-[11px] font-mono text-[#104080] font-bold flex items-center gap-1 mt-0.5">
                     <span>{activeAccount.account_no}</span>

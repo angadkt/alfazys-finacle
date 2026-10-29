@@ -53,6 +53,8 @@ export default function FincorePage() {
     screen === 'OPEN SERVICER ACCOUNT' || 
     screen === 'ACCOUNT ENQUIRY (ACIQ)' || 
     screen === 'ACCOUNT ENQUIRY' || 
+    screen === 'ACCOUNT STATEMENT (ACLI)' || 
+    screen === 'ACCOUNT STATEMENT' || 
     screen === 'ACCOUNT LEDGER (ACLI)' || 
     screen === 'ACCOUNT LEDGER';
 
@@ -128,7 +130,7 @@ export default function FincorePage() {
   const accountsSubItems = [
     { name: "OPEN ACCOUNT", label: "OPEN ACCOUNT (OAAC)" },
     { name: "ACCOUNT ENQUIRY (ACIQ)", label: "ACCOUNT ENQUIRY (ACIQ)" },
-    { name: "ACCOUNT LEDGER (ACLI)", label: "ACCOUNT LEDGER (ACLI)" }
+    { name: "ACCOUNT STATEMENT (ACLI)", label: "ACCOUNT STATEMENT (ACLI)" }
   ].filter(sub => userRole === 'super_admin' || permissions[sub.name as FinacleScreen]);
 
   const hasAccountsAccess = userRole === 'super_admin' || accountsSubItems.length > 0;
@@ -166,8 +168,8 @@ export default function FincorePage() {
       navigateToScreen('ORDER ENTRY');
     } else if ((upper.includes('OPEN') && (upper.includes('ACC') || upper.includes('SERVICER'))) || upper === 'OAAC') {
       navigateToScreen('OPEN ACCOUNT');
-    } else if (upper.includes('ACLI') || upper === 'ACL' || upper.includes('LEDGER') || upper === 'STATEMENT') {
-      navigateToScreen('ACCOUNT LEDGER (ACLI)');
+    } else if (upper.includes('ACLI') || upper === 'ACL' || upper.includes('LEDGER') || upper.includes('STATEMENT')) {
+      navigateToScreen('ACCOUNT STATEMENT (ACLI)');
     } else if (upper.includes('ACIQ') || upper.includes('ENQUIRY') || upper.includes('INQUIRY') || upper === 'ACCTS' || upper === 'ACCOUNTS') {
       navigateToScreen('ACCOUNT ENQUIRY (ACIQ)');
     } else {
@@ -444,10 +446,10 @@ export default function FincorePage() {
                 <AccountInquiryScreen 
                   onNavigateToLedger={(accNo) => {
                     setLedgerAccountNo(accNo);
-                    setActiveScreen('ACCOUNT LEDGER (ACLI)');
+                    setActiveScreen('ACCOUNT STATEMENT (ACLI)');
                   }}
                 />
-              ) : activeScreen === 'ACCOUNT LEDGER (ACLI)' || activeScreen === 'ACCOUNT LEDGER' ? (
+              ) : activeScreen === 'ACCOUNT STATEMENT (ACLI)' || activeScreen === 'ACCOUNT STATEMENT' || activeScreen === 'ACCOUNT LEDGER (ACLI)' || activeScreen === 'ACCOUNT LEDGER' ? (
                 <AccountLedgerScreen 
                   initialAccountNo={ledgerAccountNo}
                   onNavigateToAccounts={() => setActiveScreen('ACCOUNT ENQUIRY (ACIQ)')}
