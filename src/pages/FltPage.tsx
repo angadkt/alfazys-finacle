@@ -10,8 +10,7 @@ import {
   LayoutDashboard, 
   Folder, 
   X,
-  CreditCard,
-  ChevronRight
+  CreditCard
 } from 'lucide-react';
 import Header from '../components/Header';
 import FinacleErrorBoundary from '../components/FinacleErrorBoundary';
@@ -19,10 +18,18 @@ import FinacleScreenLoader from '../components/FinacleScreenLoader';
 
 const FlatMaintenanceScreen = lazy(() => import('../components/flt/FlatMaintenanceScreen'));
 const RoomInventoryScreen = lazy(() => import('../components/flt/RoomInventoryScreen'));
+const MessPlanScreen = lazy(() => import('../components/flt/MessPlanScreen'));
+const KitchenRosterScreen = lazy(() => import('../components/flt/KitchenRosterScreen'));
+const MemberManagementScreen = lazy(() => import('../components/flt/MemberManagementScreen'));
+const RentDueScreen = lazy(() => import('../components/flt/RentDueScreen'));
+const RentCollectionScreen = lazy(() => import('../components/flt/RentCollectionScreen'));
+const TenantStatementScreen = lazy(() => import('../components/flt/TenantStatementScreen'));
+const EmailNoticeDispatchScreen = lazy(() => import('../components/flt/EmailNoticeDispatchScreen'));
+const FltDashboard = lazy(() => import('../components/flt/FltDashboard'));
 
 export default function FltPage() {
   const [activeScreen, setActiveScreen] = useState<string>(() => {
-    return sessionStorage.getItem('flt_active_screen') || 'FLAT MAINTENANCE';
+    return sessionStorage.getItem('flt_active_screen') || 'FLT DASHBOARD';
   });
 
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
@@ -33,6 +40,7 @@ export default function FltPage() {
   }, [activeScreen]);
 
   const fltMenuItems = [
+    { code: 'FDASH', label: 'FLT DASHBOARD', icon: LayoutDashboard, category: 'Analytics' },
     { code: 'FLTM', label: 'FLAT MAINTENANCE', icon: Building2, category: 'Inventory' },
     { code: 'ROOM', label: 'ROOM & BEDSPACE', icon: Bed, category: 'Inventory' },
     { code: 'MESS', label: 'MESS & FOOD PLANS', icon: Utensils, category: 'Mess Management' },
@@ -41,8 +49,7 @@ export default function FltPage() {
     { code: 'RCPT', label: 'RENT COLLECTION', icon: Receipt, category: 'Billing' },
     { code: 'TLEDG', label: 'TENANT STATEMENT', icon: CreditCard, category: 'Audit' },
     { code: 'MROST', label: 'KITCHEN ROSTER', icon: Utensils, category: 'Mess Operations' },
-    { code: 'MAIL', label: 'EMAIL NOTICE DISPATCH', icon: Mail, category: 'Communications' },
-    { code: 'FDASH', label: 'FLT DASHBOARD', icon: LayoutDashboard, category: 'Analytics' }
+    { code: 'MAIL', label: 'EMAIL NOTICE DISPATCH', icon: Mail, category: 'Communications' }
   ];
 
   const navigateToScreen = (screen: string) => {
@@ -52,7 +59,9 @@ export default function FltPage() {
 
   const handleShortcutSelect = (screen: string) => {
     const upper = screen.toUpperCase().trim();
-    if (upper.includes('FLTM') || upper.includes('FLAT')) {
+    if (upper.includes('FDASH') || upper === 'DASH' || upper.includes('FLT DASH')) {
+      navigateToScreen('FLT DASHBOARD');
+    } else if (upper.includes('FLTM') || upper.includes('FLAT')) {
       navigateToScreen('FLAT MAINTENANCE');
     } else if (upper.includes('ROOM') || upper.includes('BED')) {
       navigateToScreen('ROOM & BEDSPACE');
@@ -70,8 +79,6 @@ export default function FltPage() {
       navigateToScreen('KITCHEN ROSTER');
     } else if (upper.includes('MAIL') || upper.includes('EMAIL') || upper.includes('NOTICE')) {
       navigateToScreen('EMAIL NOTICE DISPATCH');
-    } else if (upper.includes('FDASH') || upper.includes('DASH')) {
-      navigateToScreen('FLT DASHBOARD');
     } else {
       navigateToScreen(screen);
     }
@@ -111,7 +118,7 @@ export default function FltPage() {
 
                 return (
                   <div 
-                    key={idx}
+                    key={idx} 
                     onClick={() => navigateToScreen(item.label)}
                     className={`flex items-center justify-between py-2 px-2.5 cursor-pointer rounded-xs transition-colors group ${
                       isActive 
@@ -162,55 +169,28 @@ export default function FltPage() {
           <div className="flex-1 bg-white overflow-hidden relative">
             <FinacleErrorBoundary>
               <Suspense fallback={<FinacleScreenLoader />}>
-                {activeScreen === 'FLAT MAINTENANCE' || activeScreen === 'FLTM' ? (
+                {activeScreen === 'FLT DASHBOARD' || activeScreen === 'FDASH' ? (
+                  <FltDashboard onNavigate={navigateToScreen} />
+                ) : activeScreen === 'FLAT MAINTENANCE' || activeScreen === 'FLTM' ? (
                   <FlatMaintenanceScreen />
                 ) : activeScreen === 'ROOM & BEDSPACE' || activeScreen === 'ROOM' ? (
                   <RoomInventoryScreen />
+                ) : activeScreen === 'MESS & FOOD PLANS' || activeScreen === 'MESS' ? (
+                  <MessPlanScreen />
+                ) : activeScreen === 'MEMBER MANAGEMENT' || activeScreen === 'MBRM' ? (
+                  <MemberManagementScreen />
+                ) : activeScreen === 'RENT DUE & INVOICING' || activeScreen === 'RENTD' ? (
+                  <RentDueScreen />
+                ) : activeScreen === 'RENT COLLECTION' || activeScreen === 'RCPT' ? (
+                  <RentCollectionScreen />
+                ) : activeScreen === 'TENANT STATEMENT' || activeScreen === 'TLEDG' ? (
+                  <TenantStatementScreen />
+                ) : activeScreen === 'KITCHEN ROSTER' || activeScreen === 'MROST' ? (
+                  <KitchenRosterScreen />
+                ) : activeScreen === 'EMAIL NOTICE DISPATCH' || activeScreen === 'MAIL' ? (
+                  <EmailNoticeDispatchScreen />
                 ) : (
-                  <div className="p-6 bg-[#f7f5f0] h-full overflow-auto text-slate-800">
-                    <div className="max-w-3xl bg-white border border-[#b0b0b0] rounded shadow-xs p-5">
-                      <div className="flex items-center gap-2.5 text-[#005A9C] font-bold text-base mb-2">
-                        <Building2 className="w-5 h-5 text-[#FFB800]" />
-                        <span>{activeScreen}</span>
-                      </div>
-                      <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                        This screen is part of the **FLT (Flat &amp; Mess Management)** architecture blueprint. 
-                        Property units and room configurations are active in Phase 1.
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-3 mb-5">
-                        <div 
-                          onClick={() => setActiveScreen('FLAT MAINTENANCE')}
-                          className="bg-blue-50 border border-blue-200 hover:border-[#00A2E8] p-3 rounded cursor-pointer transition-all hover:shadow-xs group"
-                        >
-                          <div className="font-bold text-xs text-[#005A9C] flex items-center justify-between">
-                            <span>Flat Maintenance (FLTM)</span>
-                            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                          </div>
-                          <div className="text-[11px] text-slate-500 mt-1">
-                            Register &amp; configure apartment units, landlords, and utilities.
-                          </div>
-                        </div>
-
-                        <div 
-                          onClick={() => setActiveScreen('ROOM & BEDSPACE')}
-                          className="bg-amber-50 border border-amber-200 hover:border-amber-400 p-3 rounded cursor-pointer transition-all hover:shadow-xs group"
-                        >
-                          <div className="font-bold text-xs text-amber-900 flex items-center justify-between">
-                            <span>Room &amp; Bedspaces (ROOM)</span>
-                            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                          </div>
-                          <div className="text-[11px] text-slate-500 mt-1">
-                            Manage private &amp; sharing rooms, bedspaces, and monthly rent rates.
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-[#f0ece1] p-3 rounded border border-slate-300 text-xs text-slate-700">
-                        <span className="font-bold text-[#005A9C]">Next in Phase 2:</span> Mess &amp; Food Plans, 1-minute Member Onboarding without KYC, Kitchen Headcount Roster, and Automated Rent Due Emails.
-                      </div>
-                    </div>
-                  </div>
+                  <FltDashboard onNavigate={navigateToScreen} />
                 )}
               </Suspense>
             </FinacleErrorBoundary>
