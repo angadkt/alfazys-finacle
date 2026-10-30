@@ -512,16 +512,17 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
           <div className="bg-[#e4e4e4] shadow-2xl flex flex-col max-h-[90vh] w-full max-w-xl border-2 border-[#104080] rounded-[2px] overflow-hidden text-black font-sans">
             
             {/* Modal Title Bar */}
-            <div className="bg-[#104080] text-white px-3 py-1.5 flex items-center justify-between text-[12px] font-bold select-none">
+            <div className="bg-[#0E498C] text-white px-3.5 py-2 flex items-center justify-between text-[12px] font-bold select-none border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2">
-                <ShieldCheck size={14} />
+                <ShieldCheck size={16} className="text-[#FFB800]" />
                 <span>Configure Permissions — {editingStaff.email} ({editingStaff.id})</span>
               </div>
               <button 
                 onClick={() => setEditingStaff(null)}
-                className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] cursor-pointer"
+                className="text-white/80 hover:text-white hover:bg-white/10 px-1 py-1 rounded cursor-pointer text-xs font-bold leading-none"
+                title="Close"
               >
-                <X className="w-3 h-3 stroke-[2.5]" />
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             </div>
 
@@ -565,9 +566,9 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
                   return (
                     <label 
                       key={screen.key}
-                      className={`flex items-center justify-between p-2 border cursor-pointer ${
+                      className={`flex items-center justify-between p-2 border cursor-pointer rounded-xs transition-colors ${
                         allowed 
-                          ? 'bg-[#f0f5fc] border-[#316ac5]' 
+                          ? 'bg-[#EBF6FC] border-[#00A2E8]' 
                           : 'bg-[#fafafa] border-[#e0e0e0] opacity-80'
                       }`}
                     >
@@ -583,13 +584,13 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
                           }}
                           className="cursor-pointer"
                         />
-                        <span className={`text-[12px] font-bold ${allowed ? 'text-[#104080]' : 'text-gray-700'}`}>
+                        <span className={`text-[12px] font-bold ${allowed ? 'text-[#0E498C]' : 'text-gray-700'}`}>
                           {screen.label}
                         </span>
                       </div>
 
-                      <span className={`text-[10px] font-bold px-2 py-0.5 uppercase ${
-                        allowed ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-xs uppercase ${
+                        allowed ? 'bg-[#FFB800] text-black' : 'bg-gray-200 text-gray-600'
                       }`}>
                         {allowed ? 'Authorized' : 'Restricted'}
                       </span>
@@ -603,14 +604,14 @@ export default function StaffManagement({ onNavigateToAddStaff }: StaffManagemen
                 <button
                   type="button"
                   onClick={() => setEditingStaff(null)}
-                  className="bg-[#e4e4e4] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] px-3 py-1 text-[12px] font-bold hover:bg-[#eaeaea]"
+                  className="bg-white hover:bg-[#EBF6FC] text-[#0E498C] border border-gray-300 px-3.5 py-1.5 text-[12px] font-bold rounded-xs cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSavePermissions}
-                  className="bg-[#104080] text-white px-4 py-1 text-[12px] font-bold hover:bg-[#1a559e]"
+                  className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-4 py-1.5 text-[12px] font-bold rounded-xs cursor-pointer transition-colors shadow-xs"
                 >
                   Save Permission Rule
                 </button>

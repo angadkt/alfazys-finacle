@@ -1147,9 +1147,6 @@ export default function InrDispatchDeskScreen() {
             FINCORE Universal Settlement Module • Real-Time Direct NEFT / RTGS &amp; IMPS Dispatch Journal
           </p>
         </div>
-        <div className="text-xs text-gray-500 font-medium">
-          Infosys Finacle Core Banking
-        </div>
       </div>
 
       {/* Success Notification Banner */}
@@ -1871,14 +1868,14 @@ export default function InrDispatchDeskScreen() {
       {/* MODAL 0: ADD FLOAT CREDIT (LIQUIDITY INFLOW) */}
       {isCreditModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
+          <div className="bg-white border border-[#0E498C] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-[#0E498C] text-white px-3.5 py-2 flex items-center justify-between select-none border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-1.5">
-                <CreditCard className="w-4 h-4 text-emerald-400 shrink-0" />
+                <CreditCard className="w-4 h-4 text-[#FFB800] shrink-0" />
                 <span className="font-bold text-xs uppercase tracking-wider">Inject Float Credit (Liquidity Inflow)</span>
               </div>
-              <button onClick={() => setIsCreditModalOpen(false)} className="text-white hover:text-red-300 cursor-pointer">
-                <X className="w-4 h-4 stroke-[2.5]" />
+              <button onClick={() => setIsCreditModalOpen(false)} className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer text-xs font-bold">
+                ✕
               </button>
             </div>
             <form onSubmit={handleAddCredit} className="p-4 space-y-3">
@@ -2140,20 +2137,20 @@ export default function InrDispatchDeskScreen() {
       {/* MODAL 1: NEW DEBIT ENTRY (BENEFICIARY PAYOUT) */}
       {isEntryModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white border border-[#0E498C] shadow-2xl rounded-xs w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
+            <div className="bg-[#0E498C] text-white px-3.5 py-2 flex items-center justify-between select-none border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-400" />
+                <Zap className="w-4 h-4 text-[#FFB800]" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Direct Beneficiary Payout & Debit Entry (India Outflow)
                 </span>
               </div>
               <button
                 onClick={() => setIsEntryModalOpen(false)}
-                className="text-white hover:text-red-300 cursor-pointer"
+                className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer text-xs font-bold"
               >
-                <X className="w-4 h-4 stroke-[2.5]" />
+                ✕
               </button>
             </div>
 
@@ -2589,19 +2586,19 @@ export default function InrDispatchDeskScreen() {
       {/* MODAL 2: VOUCHER DETAILS MODAL */}
       {viewDetailsItem && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
+          <div className="bg-white border border-[#0E498C] shadow-2xl rounded-xs w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-[#0E498C] text-white px-3.5 py-2 flex items-center justify-between select-none border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-white" />
+                <FileText className="w-4 h-4 text-[#FFB800]" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Beneficiary Payout Voucher — {viewDetailsItem.txn_no}
                 </span>
               </div>
               <button
                 onClick={() => setViewDetailsItem(null)}
-                className="text-white hover:text-red-300 cursor-pointer"
+                className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer text-xs font-bold"
               >
-                <X className="w-4 h-4 stroke-[2.5]" />
+                ✕
               </button>
             </div>
 
@@ -2763,21 +2760,21 @@ export default function InrDispatchDeskScreen() {
       {/* MODAL 4: INTER-SERVICER WORKING FLOAT TRANSFER */}
       {isInterTransferOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white border border-[#0E498C] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
+            <div className="bg-[#0E498C] text-white px-3.5 py-2 flex items-center justify-between select-none border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2">
-                <ArrowLeftRight className="w-4 h-4 text-white" />
+                <ArrowLeftRight className="w-4 h-4 text-[#FFB800]" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Inter-Servicer Working Float Transfer (Direct Rebalancing)
                 </span>
               </div>
               <button
                 onClick={() => setIsInterTransferOpen(false)}
-                className="text-white hover:text-red-300 p-1 cursor-pointer transition-colors"
+                className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-xs font-bold"
                 title="Close"
               >
-                <X className="w-4 h-4 stroke-[2.5]" />
+                ✕
               </button>
             </div>
 

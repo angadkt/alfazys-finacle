@@ -359,7 +359,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
       {/* 1. Header Bar */}
       <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
         <div className="flex items-center gap-2.5">
-          <Landmark className="w-5 h-5 text-[#104080]" />
+          <Landmark className="w-5 h-5 text-[#0E498C]" />
           <div>
             <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
               General Ledger Account Inquiry (ACIQ)
@@ -373,9 +373,9 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
 
       {/* 2. Key Metrics Summary Ribbon */}
       <div className="bg-white border-b border-gray-200 px-5 md:px-8 py-3.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3.5 shrink-0">
-        <div className="bg-slate-50 border border-slate-200 rounded-md p-3.5 min-h-[74px] flex flex-col justify-between shadow-2xs">
-          <div className="text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">Total Accounts</div>
-          <div className="text-xl md:text-2xl font-black text-[#104080] font-mono leading-none mt-1">{stats.total}</div>
+        <div className="bg-[#EBF6FC] border border-[#bce2f8] rounded-md p-3.5 min-h-[74px] flex flex-col justify-between shadow-2xs">
+          <div className="text-[10.5px] font-bold text-[#0E498C] uppercase tracking-wide">Total Accounts</div>
+          <div className="text-xl md:text-2xl font-black text-[#0E498C] font-mono leading-none mt-1">{stats.total}</div>
         </div>
         <div className="bg-emerald-50/70 border border-emerald-200 rounded-md p-3.5 min-h-[74px] flex flex-col justify-between shadow-2xs">
           <div className="text-[10.5px] font-bold text-emerald-800 uppercase tracking-wide">Savings (SBA)</div>
@@ -564,7 +564,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
             type="button"
             onClick={handleExportPdf}
             disabled={filteredAccounts.length === 0}
-            className="flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs disabled:opacity-50"
+            className="flex items-center gap-1.5 bg-[#0E498C] hover:bg-[#00A2E8] text-white px-3 py-1.5 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs disabled:opacity-50 border border-[#00B5E2]/40"
             title="Export to PDF Report"
           >
             <FileText className="w-3.5 h-3.5" />
@@ -578,7 +578,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
         <div className="overflow-x-auto border border-[#c4d4ec] bg-white shadow-2xs">
           <table className="w-full text-left border-collapse text-[12px]">
             <thead>
-              <tr className="bg-[#104080] text-white">
+              <tr className="bg-[#0E498C] text-white">
                 <th className="p-2 border border-[#a0a0a0] w-10 text-center font-bold">#</th>
                 <th className="p-2 border border-[#a0a0a0] font-bold">Account Holder Legal Title</th>
                 <th className="p-2 border border-[#a0a0a0] font-bold">Account Number</th>
@@ -629,7 +629,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
                   return (
                     <tr
                       key={acc.id || index}
-                      className="hover:bg-[#f5f8fc] cursor-pointer transition-colors"
+                      className="hover:bg-[#EBF6FC] cursor-pointer transition-colors"
                       onClick={() => setActiveAccountDossier(acc)}
                     >
                       {/* Index */}
@@ -758,7 +758,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
                           <button
                             type="button"
                             onClick={() => setActiveAccountDossier(acc)}
-                            className="px-2.5 py-1 text-[11px] font-bold bg-[#104080] text-white rounded hover:bg-[#0a2850] shadow-2xs transition-colors cursor-pointer inline-flex items-center gap-1"
+                            className="px-2.5 py-1 text-[11px] font-bold bg-[#0E498C] text-white rounded hover:bg-[#00A2E8] shadow-2xs transition-colors cursor-pointer inline-flex items-center gap-1 border border-[#00B5E2]/40"
                             title="View Account Dossier"
                           >
                             <Eye className="w-3.5 h-3.5" />

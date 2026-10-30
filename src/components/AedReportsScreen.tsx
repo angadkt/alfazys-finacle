@@ -1,6 +1,6 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect, useMemo } from 'react';
-import { X } from 'lucide-react';
+import { X, Landmark, RefreshCw } from 'lucide-react';
 import api from '../services/api';
 import CostRateModal from './CostRateModal';
 import FinacleSelect from './FinacleSelect';
@@ -279,30 +279,44 @@ export default function AedReportsScreen() {
   }, [orders, customers]);
 
   return (
-    <div className="flex-1 bg-[#d4d0c8] flex flex-col h-full overflow-hidden select-none" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-      {/* Title Bar */}
-      <div className="bg-[#e4e4e4] border-b border-[#a0a0a0] px-3 py-2 flex items-center justify-between shadow-xs">
-        <div>
-          <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide">
-            AED Collection & Financial Summary Report
-          </h4>
-          <span className="text-[11px] text-gray-600">
-            FINCORE Universal Settlement Module • Real-Time Daily Financial Yield & Remittance Audit
-          </span>
+    <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden text-xs select-none">
+      {/* 1. Header Bar */}
+      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-md bg-[#0E498C] text-white flex items-center justify-center shadow-xs">
+            <Landmark className="w-5 h-5 text-[#FFB800]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base md:text-lg font-bold text-gray-900 tracking-tight">
+                AED Collection &amp; Financial Summary Report
+              </h1>
+              <span className="bg-[#FFB800] text-black font-extrabold text-[10px] px-2 py-0.5 rounded shadow-2xs tracking-wider">
+                SUMMARY-AUDIT
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 font-medium">
+              FINCORE Universal Settlement Module • Real-Time Daily Financial Yield &amp; Remittance Audit
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
-          <span className="bg-[#eaf0f8] border border-[#a2b5cd] text-[#104080] font-bold px-2.5 py-1 rounded">
-            Filtered Date: {filterDate ? filterDate : 'All Available Dates'}
-          </span>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border border-gray-300 shadow-2xs"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Workspace Area */}
-      <div className="flex-1 bg-white border border-[#a0a0a0] m-1 flex flex-col overflow-y-auto">
-        {/* Date Filter & Control Toolbar */}
-        <div className="p-3 bg-[#f8f9fa] border-b border-[#a0a0a0] flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2.5">
+      {/* 2. Date Filter & Control Toolbar */}
+      <div className="p-4 md:px-8 bg-white border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5">
             {/* Quick date pills */}
             <div className="flex items-center border border-[#c4d4ec] rounded overflow-hidden text-xs bg-white">
               <button
@@ -382,19 +396,19 @@ export default function AedReportsScreen() {
 
             <button
               onClick={fetchData}
-              className="bg-[#104080] text-white text-[11px] font-bold px-3 py-1 rounded hover:bg-[#0c3266] cursor-pointer"
+              className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white text-xs font-bold px-3 py-1.5 rounded cursor-pointer transition-colors shadow-2xs"
             >
-              Refresh Report
+              Apply Filter
             </button>
           </div>
 
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 font-medium">
             {loading ? 'Fetching summary...' : `${orderCount} order${orderCount !== 1 ? 's' : ''} in report`}
           </div>
         </div>
 
-        {/* SUMMARY CARDS SECTION — Ultra-Compact Slim Mode matching OrderEntryForm */}
-        <div className="p-3 space-y-2.5">
+        {/* SUMMARY CARDS SECTION */}
+        <div className="flex-1 overflow-y-auto p-4 md:px-8 custom-scrollbar bg-slate-50 space-y-4">
           {/* ── Group 1: AED Collections (3 Cards) ── */}
           <div className="mb-2">
             <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#104080] mb-1 flex items-center gap-1">
@@ -798,7 +812,6 @@ export default function AedReportsScreen() {
             </div>
           </div>
         </div>
-      </div>
 
       <CostRateModal
         isOpen={isCostRateModalOpen}

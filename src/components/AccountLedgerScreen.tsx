@@ -473,15 +473,15 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                 }}
                 className="bg-white border border-gray-200 rounded-lg shadow-xs"
               >
-              {/* Card Header (Finacle Solid Navy Bar) */}
-              <div className="bg-[#104080] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
+              {/* Card Header (Canara Bank Royal Navy Bar) */}
+              <div className="bg-[#0E498C] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
                 <div className="flex items-center gap-2.5">
-                  <Landmark className="w-4 h-4 text-blue-200 shrink-0" />
+                  <Landmark className="w-4 h-4 text-[#00B5E2] shrink-0" />
                   <span className="font-bold text-sm text-white uppercase tracking-wide">
                     Account Statement &amp; Value Date
                   </span>
                 </div>
-                <span className="text-[11px] bg-white/15 text-white border border-white/25 font-bold px-2 py-0.5 rounded font-mono">
+                <span className="text-[11px] bg-[#FFB800] text-black border border-[#e5a600] font-bold px-2 py-0.5 rounded font-mono shadow-2xs">
                   ACLI
                 </span>
               </div>
@@ -538,7 +538,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                     <button
                       type="button"
                       onClick={onNavigateToAccounts}
-                      className="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
+                      className="px-4 py-2 border border-gray-300 hover:bg-[#EBF6FC] hover:text-[#0E498C] text-gray-700 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>Browse in Enquiry (ACIQ)</span>
@@ -563,7 +563,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                   disabled={!selectedAccountNo || loadingAccounts}
                   className={`flex items-center gap-2 px-5 py-2 rounded-md text-xs font-bold shadow-md transition-all ${
                     selectedAccountNo && !loadingAccounts
-                      ? "bg-[#104080] hover:bg-[#1a559e] text-white cursor-pointer"
+                      ? "bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] text-white cursor-pointer"
                       : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                   }`}
                 >
@@ -686,7 +686,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                 type="button"
                 onClick={handleFetchTransactions}
                 disabled={loadingLedger || !activeAccount}
-                className="h-[32px] bg-[#104080] hover:bg-[#0a2850] disabled:opacity-50 text-white font-bold px-3.5 rounded flex items-center gap-1.5 text-xs transition-colors cursor-pointer shadow-2xs"
+                className="h-[32px] bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] disabled:opacity-50 text-white font-bold px-3.5 rounded flex items-center gap-1.5 text-xs transition-colors cursor-pointer shadow-2xs"
                 title="Apply Date Filters & Fetch Statement"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loadingLedger ? "animate-spin" : ""}`} />
@@ -700,7 +700,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                 <button
                   type="button"
                   onClick={onNavigateToAccounts}
-                  className="h-[32px] flex items-center gap-1.5 bg-white hover:bg-slate-50 text-[#104080] font-bold px-3 rounded border border-[#c4d4ec] transition-colors cursor-pointer text-xs shadow-2xs"
+                  className="h-[32px] flex items-center gap-1.5 bg-white hover:bg-[#EBF6FC] text-[#0E498C] font-bold px-3 rounded border border-[#c4d4ec] transition-colors cursor-pointer text-xs shadow-2xs"
                   title="Return to Account Enquiry (ACIQ)"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -723,7 +723,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                 type="button"
                 onClick={handleExportPdf}
                 disabled={filteredLedger.length === 0 || !activeAccount}
-                className="h-[32px] flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] disabled:opacity-40 text-white px-3 rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                className="h-[32px] flex items-center gap-1.5 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] disabled:opacity-40 text-white px-3 rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
                 title="Print Account Statement PDF"
               >
                 <FileText className="w-3.5 h-3.5" />
@@ -807,13 +807,13 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                 </div>
               </div>
 
-              {/* Metric 4: Net Current Ledger Balance */}
-              <div className="bg-[#e6edf8] border border-[#a2bfde] rounded p-2.5">
-                <div className="text-[10px] font-bold text-[#104080] uppercase">Current Balance</div>
-                <div className="text-base font-extrabold text-[#104080] font-mono mt-0.5">
+              {/* Metric 4: Net Current Ledger Balance - Canara Bank Ice Blue Highlight */}
+              <div className="bg-[#EBF6FC] border border-[#bce2f8] rounded p-2.5">
+                <div className="text-[10px] font-bold text-[#0E498C] uppercase">Current Balance</div>
+                <div className="text-base font-extrabold text-[#0E498C] font-mono mt-0.5">
                   {currencySym} {ledgerMetrics.finalBalance.toLocaleString()}
                 </div>
-                <div className="text-[10px] text-blue-700 font-bold">
+                <div className="text-[10px] text-[#00A2E8] font-bold">
                   Available Float
                 </div>
               </div>
@@ -884,17 +884,17 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
               <div className="border border-[#c4d4ec] rounded bg-white shadow-2xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-[11px]">
-                    <thead className="sticky top-0 bg-[#104080] text-white z-10 shadow-xs">
+                    <thead className="sticky top-0 bg-[#0E498C] text-white z-10 shadow-xs">
                       <tr>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799] w-12 text-center">#</th>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799] w-24">Date</th>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799] w-28">Txn Ref</th>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799] w-36">UTR / Order</th>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799]">Particulars &amp; Narration</th>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799] w-28">Mode / Channel</th>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799] text-right w-32 bg-[#0c3162]">Debit (-)</th>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799] text-right w-32 bg-[#0c3162]">Credit (+)</th>
-                        <th className="py-2.5 px-3.5 font-bold border-r border-[#255799] text-right w-36 bg-[#09254a]">Running Balance</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5] w-12 text-center">#</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5] w-24">Date</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5] w-28">Txn Ref</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5] w-36">UTR / Order</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5]">Particulars &amp; Narration</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5] w-28">Mode / Channel</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5] text-right w-32 bg-[#093566]">Debit (-)</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5] text-right w-32 bg-[#093566]">Credit (+)</th>
+                        <th className="py-2.5 px-3.5 font-bold border-r border-[#195ca5] text-right w-36 bg-[#002D62]">Running Balance</th>
                         <th className="py-2.5 px-3.5 font-bold text-center w-20">Status</th>
                       </tr>
                     </thead>

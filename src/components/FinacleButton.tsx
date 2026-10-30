@@ -19,12 +19,12 @@ interface FinacleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const variantStyles: Record<FinacleButtonVariant, string> = {
-  primary: "bg-[#104080] hover:bg-[#0c3266] text-white border border-[#104080] shadow-2xs active:bg-[#09254d]",
-  secondary: "bg-[#eaf0f8] hover:bg-[#d8e6f5] text-[#104080] border border-[#c4d4ec] active:bg-[#c9def2]",
-  retro: "bg-[#d4d0c8] hover:bg-[#e4e4e4] text-black border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white",
-  outline: "bg-white hover:bg-[#f4f7fb] text-[#104080] border border-[#104080] active:bg-[#eaf0f8]",
-  danger: "bg-red-700 hover:bg-red-800 text-white border border-red-800 shadow-2xs active:bg-red-900",
-  success: "bg-[#0f5132] hover:bg-[#0b3d26] text-white border border-[#0f5132] shadow-2xs active:bg-[#08291a]"
+  primary: "bg-[#0E498C] hover:bg-[#00A2E8] text-white border border-[#0E498C] hover:border-[#00B5E2] shadow-2xs active:bg-[#002D62] transition-all cursor-pointer font-bold",
+  secondary: "bg-[#EBF6FC] hover:bg-[#d8effa] text-[#0E498C] border border-[#b8e2f8] active:bg-[#cbe8f8] transition-all cursor-pointer font-bold",
+  retro: "bg-[#d4d0c8] hover:bg-[#e4e4e4] text-black border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] active:border-t-[#8f8f9d] active:border-l-[#8f8f9d] active:border-b-white active:border-r-white cursor-pointer font-bold",
+  outline: "bg-white hover:bg-[#EBF6FC] text-[#0E498C] border border-[#0E498C] hover:border-[#00A2E8] active:bg-[#d8effa] transition-all cursor-pointer font-bold",
+  danger: "bg-red-700 hover:bg-red-800 text-white border border-red-800 shadow-2xs active:bg-red-900 cursor-pointer font-bold",
+  success: "bg-[#0f5132] hover:bg-[#0b3d26] text-white border border-[#0f5132] shadow-2xs active:bg-[#08291a] cursor-pointer font-bold"
 };
 
 const sizeStyles = {

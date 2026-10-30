@@ -752,14 +752,14 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                 {/* STEP 1: ACCOUNT CLASSIFICATION & VALUE DATE ONLY */}
                 {currentStep === 1 && (
                   <form onSubmit={handleStep1Submit} className="bg-white border border-gray-200 rounded-lg shadow-xs">
-              <div className="bg-[#104080] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
+              <div className="bg-[#0E498C] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
                 <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-blue-200" />
+                  <Building2 className="w-4 h-4 text-[#00B5E2]" />
                   <span className="font-bold text-sm text-white uppercase tracking-wide">
                     Account Classification &amp; Value Date
                   </span>
                 </div>
-                <span className="text-[11px] bg-white/15 text-white border border-white/25 font-bold px-2 py-0.5 rounded font-mono">
+                <span className="text-[11px] bg-[#FFB800] text-black border border-[#e5a600] font-bold px-2 py-0.5 rounded font-mono shadow-2xs">
                   1/3
                 </span>
               </div>
@@ -832,7 +832,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
 
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-[#104080] hover:bg-[#1a559e] text-white px-5 py-2 rounded-md text-xs font-bold shadow-md cursor-pointer transition-all"
+                  className="flex items-center gap-2 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] text-white px-5 py-2 rounded-md text-xs font-bold shadow-md cursor-pointer transition-all"
                 >
                   <span>Continue to CIF &amp; Branch Linkage</span>
                   <ArrowRight className="w-4 h-4" />
@@ -844,14 +844,14 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
           {/* STEP 2: OPERATING BRANCH, CLEARING IFSC & MASTER CIF LINKAGE */}
           {currentStep === 2 && (
             <form onSubmit={handleStep2Submit} className="bg-white border border-gray-200 rounded-lg shadow-xs">
-              <div className="bg-[#104080] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
+              <div className="bg-[#0E498C] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
                 <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-blue-200" />
+                  <User className="w-4 h-4 text-[#00B5E2]" />
                   <span className="font-bold text-sm text-white uppercase tracking-wide">
                     Operating Branch &amp; Master CIF Linkage
                   </span>
                 </div>
-                <span className="text-[11px] bg-white/15 text-white border border-white/25 font-bold px-2 py-0.5 rounded font-mono">
+                <span className="text-[11px] bg-[#FFB800] text-black border border-[#e5a600] font-bold px-2 py-0.5 rounded font-mono shadow-2xs">
                   2/3
                 </span>
               </div>
@@ -996,7 +996,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
 
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-[#104080] hover:bg-[#1a559e] text-white px-5 py-2 rounded-md text-xs font-bold shadow-md cursor-pointer transition-all"
+                  className="flex items-center gap-2 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] text-white px-5 py-2 rounded-md text-xs font-bold shadow-md cursor-pointer transition-all"
                 >
                   <span>Continue to Scheme Details</span>
                   <ArrowRight className="w-4 h-4" />
@@ -1008,18 +1008,18 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
           {/* STEP 3: SCHEME SPECIFICATIONS & FINAL AUTHORIZATION */}
           {currentStep === 3 && (
             <form onSubmit={handleOpenAccount} className="bg-white border border-gray-200 rounded-lg shadow-xs">
-              <div className="bg-[#104080] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
+              <div className="bg-[#0E498C] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-200">{schemeDetails[accountType].icon}</span>
+                  <span className="text-[#00B5E2]">{schemeDetails[accountType].icon}</span>
                   <span className="font-bold text-sm text-white uppercase tracking-wide">
                     {schemeDetails[accountType].title} Specifications
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] bg-white/15 text-white border border-white/25 font-bold px-2 py-0.5 rounded font-mono">
+                  <span className="text-[11px] bg-[#FFB800] text-black border border-[#e5a600] font-bold px-2 py-0.5 rounded font-mono shadow-2xs">
                     3/3
                   </span>
-                  <span className="text-xs font-mono font-bold bg-white/15 text-white border border-white/25 px-2.5 py-0.5 rounded">
+                  <span className="text-xs font-mono font-bold bg-white/20 text-white border border-white/30 px-2.5 py-0.5 rounded">
                     {schemeCode}
                   </span>
                 </div>
@@ -1489,14 +1489,14 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded border border-gray-300 shadow-2xl max-w-lg w-full overflow-hidden text-xs">
             {/* Modal Header */}
-            <div className="bg-[#104080] text-white px-4 py-3 flex items-center justify-between">
+            <div className="bg-[#0E498C] text-white px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                 <div>
                   <h3 className="font-extrabold text-sm uppercase tracking-wide">
                     Account Opened Successfully
                   </h3>
-                  <p className="text-xs text-blue-200">
+                  <p className="text-xs text-[#00B5E2]">
                     Core Banking General Ledger Provisioned
                   </p>
                 </div>
@@ -1512,7 +1512,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
             {/* Modal Body */}
             <div className="p-4 space-y-3.5">
               {/* Account Number & IFSC Highlight Box */}
-              <div className="bg-[#104080] text-white p-4.5 rounded-lg text-center shadow-md space-y-3.5">
+              <div className="bg-[#0E498C] text-white p-4.5 rounded-lg text-center shadow-md space-y-3.5 border border-[#00B5E2]/40">
                 {/* Account Number */}
                 <div>
                   <div className="text-[11px] uppercase font-bold text-blue-200 tracking-wider">
@@ -1624,10 +1624,10 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                       setShowSuccessModal(false);
                       onNavigate("ACCOUNT STATEMENT (ACLI)", createdResult.account_no);
                     }}
-                    className="inline-flex items-center gap-1.5 bg-[#104080] hover:bg-[#1a559e] text-white px-3 py-1.5 rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                    className="inline-flex items-center gap-1.5 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] text-white px-3 py-1.5 rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
                     title="View Account Statement"
                   >
-                    <Receipt className="w-3.5 h-3.5 text-amber-300" />
+                    <Receipt className="w-3.5 h-3.5 text-[#FFB800]" />
                     <span>View Statement (ACLI)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>

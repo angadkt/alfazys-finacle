@@ -244,12 +244,12 @@ export default function ReceivedAedReceiptModal({ record, isOpen, onClose }: Pro
       <div className="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden border border-gray-200 animate-in fade-in zoom-in-95 duration-150">
         
         {/* Top Control Bar */}
-        <div className="px-5 py-3 bg-[#0d2a4d] text-white flex items-center justify-between border-b border-[#164070]">
+        <div className="px-5 py-3 bg-[#0E498C] text-white flex items-center justify-between border-b border-[#00B5E2]/40">
           <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-[#38bdf8]" />
+            <ShieldCheck className="w-5 h-5 text-[#FFB800]" />
             <div>
               <h3 className="text-sm font-bold tracking-wide leading-tight">Official Collection Receipt Preview</h3>
-              <p className="text-[11px] text-gray-300 font-normal">Reference: <span className="font-mono text-cyan-300 font-semibold">{referenceNo}</span></p>
+              <p className="text-[11px] text-gray-200 font-normal">Reference: <span className="font-mono bg-[#FFB800] text-black px-1.5 py-0.2 rounded font-bold">{referenceNo}</span></p>
             </div>
           </div>
 
@@ -257,7 +257,7 @@ export default function ReceivedAedReceiptModal({ record, isOpen, onClose }: Pro
             <button
               onClick={handleDownloadPdf}
               disabled={downloadingPdf}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold rounded shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#00A2E8] hover:bg-[#0093D6] text-white text-xs font-bold rounded shadow-xs transition-colors cursor-pointer disabled:opacity-50"
               title="Download as PDF"
             >
               <Download className="w-3.5 h-3.5" />

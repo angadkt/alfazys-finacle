@@ -213,9 +213,6 @@ export default function ViewRetailCif() {
             Verified Retail Customer Information File Directory (CRM-CIF) • Global Search & Dossier Review
           </p>
         </div>
-        <div className="text-xs text-gray-500 font-medium">
-          Infosys Finacle Core Banking
-        </div>
       </div>
 
       {/* 2. Sub-Ribbon & Toolbar */}
@@ -368,13 +365,13 @@ export default function ViewRetailCif() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs overflow-y-auto">
           <div className="bg-white border-2 border-[#104080] rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="bg-[#104080] text-white px-5 py-3 flex justify-between items-center shrink-0">
+            <div className="bg-[#0E498C] text-white px-5 py-3 flex justify-between items-center shrink-0 border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2.5">
-                <User className="w-5 h-5 text-amber-300" />
+                <User className="w-5 h-5 text-[#FFB800]" />
                 <h3 className="text-sm font-bold m-0 tracking-wide">
                   CIF Master Profile — {selectedCif.cif_no || selectedCif.id}
                 </h3>
-                <span className="bg-emerald-950/80 text-emerald-200 border border-emerald-600 px-2 py-0.5 rounded text-xs font-mono font-bold">
+                <span className="bg-[#FFB800] text-black px-2 py-0.5 rounded text-xs font-mono font-bold">
                   VERIFIED RECORD
                 </span>
               </div>
@@ -668,8 +665,8 @@ export default function ViewRetailCif() {
       {/* 5. Document Preview Modal */}
       {previewDoc && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-2xs">
-          <div className="bg-white border-2 border-[#104080] rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
-            <div className="bg-[#104080] text-white px-5 py-3 font-bold text-sm flex justify-between items-center">
+          <div className="bg-white border border-[#0E498C] rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-[#0E498C] text-white px-5 py-3 font-bold text-sm flex justify-between items-center border-b border-[#00B5E2]/40">
               <span>KYC Document Preview — {previewDoc.label.replace(/_/g, ' ').toUpperCase()}</span>
               <button 
                 onClick={() => setPreviewDoc(null)} 
@@ -686,12 +683,12 @@ export default function ViewRetailCif() {
                 <img src={previewDoc.url} alt={previewDoc.label} className="max-w-full max-h-[580px] object-contain rounded-md shadow-lg bg-white" />
               )}
             </div>
-            <div className="bg-[#e6edf8] px-5 py-2.5 border-t border-[#c4d4ec] flex items-center justify-between text-xs">
-              <span className="text-slate-700">Document: <b>{previewDoc.label}</b></span>
+            <div className="bg-[#EBF6FC] px-5 py-2.5 border-t border-[#bce2f8] flex items-center justify-between text-xs">
+              <span className="text-[#0E498C]">Document: <b>{previewDoc.label}</b></span>
               <button
                 type="button"
                 onClick={() => setPreviewDoc(null)}
-                className="bg-[#104080] hover:bg-[#0a2850] text-white px-4 py-1.5 rounded-md text-xs font-bold cursor-pointer shadow-xs"
+                className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-4 py-1.5 rounded-md text-xs font-bold cursor-pointer shadow-xs transition-colors"
               >
                 Close Preview
               </button>
@@ -703,11 +700,11 @@ export default function ViewRetailCif() {
       {/* 6. Confirm Delete CIF Modal (Admin/Super Admin only) */}
       {deleteCifTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs">
-          <div className="bg-white border-2 border-[#104080] rounded-lg shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white border border-[#0E498C] rounded-lg shadow-2xl z-10 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Title Bar */}
-            <div className="bg-[#104080] text-white px-5 py-3 flex items-center justify-between">
+            <div className="bg-[#0E498C] text-white px-5 py-3 flex items-center justify-between border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2 font-bold text-sm tracking-wide">
-                <AlertTriangle className="w-5 h-5 text-amber-300" />
+                <AlertTriangle className="w-5 h-5 text-[#FFB800]" />
                 <span>Confirm CIF Deletion</span>
               </div>
               <button 

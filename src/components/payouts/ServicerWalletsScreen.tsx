@@ -786,9 +786,6 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
             Servicer float management, digital wallets ledger, and multi-bank settlement statements
           </p>
         </div>
-        <div className="text-xs text-gray-500 font-medium">
-          Infosys Finacle Core Banking
-        </div>
       </div>
 
       {/* Servicer Selector Bar */}
@@ -1374,29 +1371,29 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
       {/* MODAL 1: Open Servicer Account (Link Retail CIF) - 3-Step Wizard */}
       {isAddServicerOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-2xl overflow-hidden my-auto">
+          <div className="bg-white border border-[#0E498C] shadow-2xl rounded-xs w-full max-w-2xl overflow-hidden my-auto">
             {/* Modal Title Bar */}
-            <div className="bg-[#104080] text-white px-3.5 py-2 flex items-center justify-between">
+            <div className="bg-[#0E498C] text-white px-3.5 py-2 flex items-center justify-between border-b border-[#00B5E2]/40">
               <span className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <Folder className="w-4 h-4 text-white" /> Open Servicer Wallet Account (Link Retail CIF)
+                <Folder className="w-4 h-4 text-[#FFB800]" /> Open Servicer Wallet Account (Link Retail CIF)
               </span>
               <button 
                 onClick={() => setIsAddServicerOpen(false)} 
-                className="text-white hover:text-red-300 p-0.5 cursor-pointer transition-colors"
+                className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-xs font-bold"
                 title="Close"
               >
-                <X className="w-4 h-4 stroke-[2.5]" />
+                ✕
               </button>
             </div>
 
             {/* Wizard Step Navigation Tabs */}
-            <div className="bg-[#f0f4f8] px-3.5 py-2 border-b border-[#c4d4ec] flex items-center justify-between text-xs select-none">
+            <div className="bg-[#EBF6FC] px-3.5 py-2 border-b border-[#bce2f8] flex items-center justify-between text-xs select-none">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => setModalStep(1)}
                   className={`flex items-center gap-1 font-bold px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
-                    modalStep === 1 ? 'bg-[#104080] text-white shadow-2xs' : 'text-gray-700 bg-white border border-[#c4d4ec] hover:bg-gray-50'
+                    modalStep === 1 ? 'bg-[#0E498C] text-white shadow-2xs' : 'text-[#0E498C] bg-white border border-[#bce2f8] hover:bg-white/80'
                   }`}
                 >
                   <span>1.</span> Profile & Operating Wallet
@@ -2046,11 +2043,11 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
       {/* MODAL 3: Bank / Cash Transfer (Internal Wallet Transfer) */}
       {isConvertOpen && activeServicer && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-md overflow-hidden">
-            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between">
+          <div className="bg-white border border-[#0E498C] shadow-2xl rounded-xs w-full max-w-md overflow-hidden">
+            <div className="bg-[#0E498C] text-white px-3.5 py-2 flex items-center justify-between border-b border-[#00B5E2]/40">
               <span className="font-bold text-xs uppercase tracking-wider">Internal Wallet Transfer (Bank / Cash)</span>
-              <button onClick={() => setIsConvertOpen(false)} className="text-white hover:text-red-300 p-0.5 cursor-pointer" title="Close">
-                <X className="w-4 h-4 stroke-[2.5]" />
+              <button onClick={() => setIsConvertOpen(false)} className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer text-xs font-bold" title="Close">
+                ✕
               </button>
             </div>
             <form onSubmit={handleConvert} className="p-4 space-y-3">
@@ -2098,8 +2095,8 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 </div>
               </div>
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
-                <button type="button" onClick={() => setIsConvertOpen(false)} className="bg-[#d4d0c8] px-3 py-1 font-bold text-xs">Cancel</button>
-                <button type="submit" disabled={submitting} className="bg-[#104080] text-white px-4 py-1 font-bold text-xs rounded">
+                <button type="button" onClick={() => setIsConvertOpen(false)} className="bg-white hover:bg-[#EBF6FC] text-[#0E498C] border border-gray-300 px-3.5 py-1 font-bold text-xs rounded-xs cursor-pointer transition-colors">Cancel</button>
+                <button type="submit" disabled={submitting} className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-4 py-1 font-bold text-xs rounded-xs cursor-pointer transition-colors shadow-xs">
                   {submitting ? "Transferring..." : "Execute Transfer"}
                 </button>
               </div>
@@ -2191,21 +2188,21 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
       {/* MODAL 6: INTER-SERVICER WORKING FLOAT TRANSFER */}
       {isInterTransferOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#104080] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white border border-[#0E498C] shadow-2xl rounded-xs w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="bg-[#104080] text-white px-3 py-2 flex items-center justify-between select-none">
+            <div className="bg-[#0E498C] text-white px-3.5 py-2 flex items-center justify-between select-none border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2">
-                <ArrowLeftRight className="w-4 h-4 text-white" />
+                <ArrowLeftRight className="w-4 h-4 text-[#FFB800]" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Inter-Servicer Working Float Transfer (Direct Rebalancing)
                 </span>
               </div>
               <button
                 onClick={() => setIsInterTransferOpen(false)}
-                className="text-white hover:text-red-300 p-0.5 cursor-pointer transition-colors"
+                className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-xs font-bold"
                 title="Close"
               >
-                <X className="w-4 h-4 stroke-[2.5]" />
+                ✕
               </button>
             </div>
 
@@ -2436,14 +2433,14 @@ export default function ServicerWalletsScreen({ onNavigate: _onNavigate }: { onN
                 <button
                   type="button"
                   onClick={() => setIsInterTransferOpen(false)}
-                  className="bg-[#d4d0c8] hover:bg-[#e4e4e4] border border-[#808080] px-4 py-1 text-xs font-bold cursor-pointer"
+                  className="bg-white hover:bg-[#EBF6FC] text-[#0E498C] border border-gray-300 px-4 py-1.5 text-xs font-bold rounded-xs cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={transferSubmitting || transferAmountNum <= 0 || transferAmountNum > sourceAvailable || transferFromId === transferToId}
-                  className="bg-[#104080] hover:bg-[#1a559e] text-white px-5 py-1.5 text-xs font-bold rounded shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-5 py-1.5 text-xs font-bold rounded-xs shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   <ArrowLeftRight className="w-3.5 h-3.5" />
                   {transferSubmitting ? "Executing Transfer..." : "Confirm Inter-Servicer Transfer"}

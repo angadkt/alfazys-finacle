@@ -99,19 +99,19 @@ export default function CostRateModal({ isOpen, onClose, initialDate, onRateSave
 
   return (
     <div className="fixed inset-0 bg-black/45 z-50 flex items-center justify-center p-3 antialiased">
-      <div className="bg-[#ece9d8] shadow-2xl flex flex-col w-full max-w-sm border-2 border-[#104080] rounded-[2px] overflow-hidden text-black font-sans text-xs">
+      <div className="bg-[#ece9d8] shadow-2xl flex flex-col w-full max-w-sm border-2 border-[#0E498C] rounded-[2px] overflow-hidden text-black font-sans text-xs">
         
-        {/* Retro Title Bar */}
-        <div className="bg-[#104080] text-white px-2.5 py-1.5 flex items-center justify-between text-xs font-bold select-none cursor-move">
+        {/* Retro Title Bar - Canara Bank Royal Navy */}
+        <div className="bg-[#0E498C] text-white px-2.5 py-1.5 flex items-center justify-between text-xs font-bold select-none cursor-move">
           <div className="flex items-center gap-1.5">
-            <div className="w-3.5 h-3.5 bg-white flex items-center justify-center rounded-[1px]">
-              <span className="text-[#104080] font-bold text-[10px] leading-none">%</span>
+            <div className="w-3.5 h-3.5 bg-[#FFB800] text-black flex items-center justify-center rounded-[1px] font-bold shadow-2xs">
+              <span className="text-black font-extrabold text-[10px] leading-none">%</span>
             </div>
             <span>Set Up Cost Rate</span>
           </div>
           <button 
             onClick={onClose}
-            className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] cursor-pointer"
+            className="bg-white/20 hover:bg-white/30 text-white w-4 h-4 flex items-center justify-center rounded-[1px] cursor-pointer transition-colors"
             title="Close"
           >
             <X className="w-3 h-3 stroke-[2.5]" />

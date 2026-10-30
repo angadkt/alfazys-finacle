@@ -11,19 +11,19 @@ export default function EmailSentModal({ notification, onClose }: EmailSentModal
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#e4e4e4] shadow-2xl flex flex-col max-h-[90vh] w-full max-w-2xl border-2 border-[#104080] rounded-[2px] overflow-hidden text-black font-sans">
+      <div className="bg-[#e4e4e4] shadow-2xl flex flex-col max-h-[90vh] w-full max-w-2xl border-2 border-[#0E498C] rounded-[2px] overflow-hidden text-black font-sans">
         
-        {/* Title Bar */}
-        <div className="bg-[#104080] text-white px-3 py-1.5 flex items-center justify-between text-[12px] font-bold select-none">
+        {/* Title Bar - Canara Bank Royal Navy */}
+        <div className="bg-[#0E498C] text-white px-3 py-1.5 flex items-center justify-between text-[12px] font-bold select-none">
           <div className="flex items-center gap-2">
-            <div className="w-3.5 h-3.5 bg-white flex items-center justify-center">
-              <div className="w-2 h-2 bg-[#104080]"></div>
+            <div className="w-3.5 h-3.5 bg-[#FFB800] flex items-center justify-center rounded-[1px] shadow-2xs">
+              <div className="w-2 h-2 bg-black"></div>
             </div>
             <span>Finacle Mail Delivery System — Dispatch Confirmation</span>
           </div>
           <button 
             onClick={onClose}
-            className="bg-[#c0c0c0] text-black w-4 h-4 flex items-center justify-center border-t border-l border-white border-b border-r border-[#8f8f9d] hover:bg-[#d4d0c8] cursor-pointer"
+            className="bg-white/20 hover:bg-white/30 text-white w-4 h-4 flex items-center justify-center rounded-[1px] cursor-pointer transition-colors"
           >
             <X className="w-3 h-3 stroke-[2.5]" />
           </button>
@@ -109,9 +109,9 @@ export default function EmailSentModal({ notification, onClose }: EmailSentModal
               <button 
                 type="button"
                 onClick={onClose}
-                className="bg-[#104080] text-white px-4 py-1 text-[12px] font-bold hover:bg-[#1a559e]"
+                className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] text-white px-4 py-1.5 text-[12px] font-bold rounded-xs cursor-pointer transition-all shadow-xs"
               >
-                Acknowledge & Close
+                Acknowledge &amp; Close
               </button>
             </div>
           </div>

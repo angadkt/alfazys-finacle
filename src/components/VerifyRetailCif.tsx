@@ -230,15 +230,15 @@ export default function VerifyRetailCif() {
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedCif(null)}></div>
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-[#e4e4e4] border-2 border-[#a0a0a0] w-full max-w-2xl max-h-[90vh] shadow-2xl flex flex-col font-sans">
-              <div className="bg-[#104080] text-white px-3 py-2 flex justify-between items-center">
+              <div className="bg-[#0E498C] text-white px-3 py-2 flex justify-between items-center border-b border-[#00B5E2]/40">
                 <h3 className="text-sm font-bold m-0 tracking-wide">
                   Review CIF & KYC Documents — {selectedCif.cif_no || selectedCif.id}
                 </h3>
-                <button onClick={() => setSelectedCif(null)} className="text-white hover:text-gray-300 text-lg leading-none font-bold cursor-pointer">&times;</button>
+                <button onClick={() => setSelectedCif(null)} className="text-white/80 hover:text-white hover:bg-white/10 px-2 py-0.5 rounded text-sm leading-none font-bold cursor-pointer">✕</button>
               </div>
 
               <div className="p-4 bg-white m-1.5 border border-[#a0a0a0] overflow-y-auto flex-1">
-                <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-2 text-[13px] uppercase">
+                <h4 className="text-[#0E498C] font-bold border-b border-[#e4e4e4] pb-1 mb-2 text-[13px] uppercase">
                   Customer Information
                 </h4>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[12px] mb-4">
@@ -250,7 +250,7 @@ export default function VerifyRetailCif() {
                   <div className="flex justify-between border-b border-gray-100 pb-1"><span className="font-bold text-gray-600">Currency:</span><span>{selectedCif.ccy || 'AED'}</span></div>
                 </div>
 
-                <h4 className="text-[#104080] font-bold border-b border-[#e4e4e4] pb-1 mb-2 text-[13px] uppercase">
+                <h4 className="text-[#0E498C] font-bold border-b border-[#e4e4e4] pb-1 mb-2 text-[13px] uppercase">
                   Uploaded Identification & KYC Documents
                 </h4>
                 {(!selectedCif.documents || selectedCif.documents.length === 0) ? (
@@ -306,17 +306,17 @@ export default function VerifyRetailCif() {
                 )}
               </div>
 
-              <div className="bg-[#d4d0c8] border-t border-[#a0a0a0] p-2 flex justify-between items-center">
+              <div className="bg-[#EBF6FC] border-t border-[#bce2f8] p-2 flex justify-between items-center">
                 <button 
                   onClick={() => setSelectedCif(null)}
-                  className="bg-gray-100 border border-gray-400 px-4 py-1 text-[12px] hover:bg-gray-200 font-bold text-gray-700 cursor-pointer"
+                  className="bg-white hover:bg-gray-100 border border-gray-300 px-4 py-1 text-[12px] font-bold text-[#0E498C] rounded-xs cursor-pointer transition-colors"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => handleVerify(selectedCif.originalCif || selectedCif)}
                   disabled={verifyingId === (selectedCif.originalCif?.id || selectedCif.id)}
-                  className="bg-green-700 hover:bg-green-800 text-white px-4 py-1 text-[12px] font-bold shadow-xs cursor-pointer"
+                  className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-4 py-1 text-[12px] font-bold rounded-xs shadow-xs cursor-pointer transition-colors"
                 >
                   {verifyingId === (selectedCif.originalCif?.id || selectedCif.id) ? 'Verifying...' : 'Approve & Verify CIF'}
                 </button>
@@ -331,14 +331,14 @@ export default function VerifyRetailCif() {
         <>
           <div className="fixed inset-0 bg-black/60 z-[90]" onClick={() => setPreviewDoc(null)}></div>
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="bg-white border-2 border-[#104080] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-              <div className="bg-[#eaf0f8] px-3 py-2 font-bold text-[#104080] border-b border-[#a2b5cd] flex justify-between items-center">
-                <span>Document Preview - {previewDoc.label.replace(/_/g, ' ').toUpperCase()}</span>
+            <div className="bg-white border border-[#0E498C] rounded shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+              <div className="bg-[#0E498C] px-3.5 py-2 font-bold text-white border-b border-[#00B5E2]/40 flex justify-between items-center">
+                <span className="text-xs uppercase tracking-wide">Document Preview — {previewDoc.label.replace(/_/g, ' ').toUpperCase()}</span>
                 <button 
                   onClick={() => setPreviewDoc(null)} 
-                  className="text-red-600 font-bold hover:underline cursor-pointer px-2"
+                  className="text-white/80 hover:text-white hover:bg-white/10 px-2 py-0.5 rounded cursor-pointer text-xs font-bold"
                 >
-                  Close (X)
+                  ✕ Close
                 </button>
               </div>
               <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4 min-h-[400px]">

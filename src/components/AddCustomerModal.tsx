@@ -141,8 +141,8 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
       
       <div className="w-full max-w-4xl bg-white shadow-2xl rounded-xl flex flex-col relative my-auto animate-in zoom-in-95 duration-200">
         
-        {/* Banner Header Style */}
-        <div className="bg-[#9e0248] text-white rounded-t-xl px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm select-none gap-3">
+        {/* Banner Header Style - Canara Bank Royal Navy */}
+        <div className="bg-[#0E498C] text-white rounded-t-xl px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm select-none gap-3">
           <div className="flex items-center">
             <button 
               type="button"
@@ -157,7 +157,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
               {isConfirmationMode ? 'Customer Registration Confirmation' : 'Customer Code Creation - Retail'}
             </span>
           </div>
-          <span className="text-xs font-bold text-white/90 tracking-wider bg-white/10 px-3 py-1.5 rounded uppercase">
+          <span className="text-xs font-bold text-black tracking-wider bg-[#FFB800] px-3 py-1.5 rounded uppercase shadow-2xs">
             {currentTimeStr}
           </span>
         </div>
@@ -370,7 +370,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-[#9e0248] hover:bg-[#85013c] text-white font-bold py-3 px-6 rounded-md transition cursor-pointer text-[13px] uppercase tracking-wide shadow-sm disabled:opacity-75"
+                  className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] text-white font-bold py-3 px-6 rounded-md transition cursor-pointer text-[13px] uppercase tracking-wide shadow-sm disabled:opacity-75"
                 >
                   Create Customer
                 </button>

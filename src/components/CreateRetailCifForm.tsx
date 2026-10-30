@@ -396,7 +396,7 @@ export default function CreateRetailCifForm() {
             </span>
           </div>
           <p className="text-xs text-gray-500 mt-0.5 ml-7">
-            Infosys Finacle Core Banking • Customer Identification & Master Record
+            Customer Identification &amp; Master Record
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -1446,27 +1446,27 @@ export default function CreateRetailCifForm() {
       {/* -------------------------------------------------------------------------- */}
       {isSubmitted && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs">
-          <div className="bg-white border-2 border-[#104080] rounded-lg shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-[#104080] text-white px-5 py-3 font-bold text-sm flex items-center justify-between">
+          <div className="bg-white border border-[#0E498C] rounded-lg shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-[#0E498C] text-white px-5 py-3 font-bold text-sm flex items-center justify-between border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-300" />
+                <CheckCircle2 className="w-5 h-5 text-[#FFB800]" />
                 <span>CIF Provisioning Complete</span>
               </div>
-              <span className="text-xs text-amber-300 font-mono">STATUS: RECORD COMMITTED</span>
+              <span className="text-xs text-[#FFB800] font-mono font-bold">STATUS: RECORD COMMITTED</span>
             </div>
 
             <div className="p-7 flex flex-col gap-5">
-              <div className="flex items-center gap-5 bg-emerald-50 border border-emerald-200 p-5 rounded-lg">
-                <div className="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <div className="flex items-center gap-5 bg-[#EBF6FC] border border-[#bce2f8] p-5 rounded-lg">
+                <div className="w-14 h-14 rounded-full bg-[#0E498C] text-white flex items-center justify-center shrink-0 shadow-xs">
                   <Check className="w-7 h-7 stroke-[3]" />
                 </div>
                 <div>
-                  <div className="text-sm text-emerald-950 font-bold mb-1">
+                  <div className="text-sm text-[#0E498C] font-bold mb-1">
                     Retail Customer Information File Created Successfully
                   </div>
                   <div className="flex items-center gap-2.5 mt-1.5">
                     <span className="text-xs text-slate-600 font-semibold">Allocated CIF ID:</span>
-                    <span className="bg-white text-[#104080] font-mono text-base font-extrabold px-3 py-1 rounded border border-emerald-300 shadow-2xs">
+                    <span className="bg-white text-[#0E498C] font-mono text-base font-extrabold px-3 py-1 rounded border border-[#00A2E8] shadow-2xs">
                       {cifId}
                     </span>
                   </div>
@@ -1483,7 +1483,7 @@ export default function CreateRetailCifForm() {
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button 
                   onClick={handleOk}
-                  className="bg-[#104080] hover:bg-[#0a2850] text-white px-6 py-2.5 rounded-md text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                  className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-6 py-2.5 rounded-md text-sm font-bold shadow-xs transition-colors cursor-pointer"
                 >
                   Acknowledge & Continue
                 </button>
@@ -1498,15 +1498,15 @@ export default function CreateRetailCifForm() {
       {/* -------------------------------------------------------------------------- */}
       {previewDoc && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-2xs">
-          <div className="bg-white border-2 border-[#104080] rounded-lg shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
-            <div className="bg-[#104080] text-white px-5 py-2.5 font-bold text-sm flex justify-between items-center">
+          <div className="bg-white border border-[#0E498C] rounded-lg shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-[#0E498C] text-white px-5 py-2.5 font-bold text-sm flex justify-between items-center border-b border-[#00B5E2]/40">
               <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-amber-300" />
+                <ShieldCheck className="w-5 h-5 text-[#FFB800]" />
                 <span>KYC Verification Inspector - {previewDoc.label}</span>
               </div>
               <button 
                 onClick={() => setPreviewDoc(null)} 
-                className="text-white hover:text-red-300 font-bold cursor-pointer p-1"
+                className="text-white/80 hover:text-white font-bold cursor-pointer p-1"
                 title="Close Modal"
               >
                 <X className="w-5 h-5" />

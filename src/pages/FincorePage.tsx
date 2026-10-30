@@ -172,6 +172,10 @@ export default function FincorePage() {
       navigateToScreen('ACCOUNT STATEMENT (ACLI)');
     } else if (upper.includes('ACIQ') || upper.includes('ENQUIRY') || upper.includes('INQUIRY') || upper === 'ACCTS' || upper === 'ACCOUNTS') {
       navigateToScreen('ACCOUNT ENQUIRY (ACIQ)');
+    } else if (upper.includes('DISPATCH') || upper === 'INR' || upper.includes('PAYOUT')) {
+      navigateToScreen('INR DISPATCH DESK');
+    } else if (upper.includes('WALLET') || upper === 'SRVW') {
+      navigateToScreen('SERVICER WALLETS');
     } else {
       navigateToScreen(screen);
     }
@@ -216,34 +220,38 @@ export default function FincorePage() {
         
         {/* Sidebar */}
         {isSidebarOpen && (
-          <div className="w-[320px] flex flex-col border-r border-[#a0a0a0] bg-[#f8f9fa] flex-shrink-0">
-            {/* Sidebar Header */}
-            <div className="bg-[#e4e4e4] flex items-center justify-between px-2.5 py-1 border-b border-[#a0a0a0] text-xs font-bold text-black">
+          <div className="w-[320px] flex flex-col border-r border-[#a0a0a0] bg-white flex-shrink-0">
+            {/* Sidebar Header - Canara Bank Sky Blue */}
+            <div className="bg-[#00A2E8] text-white flex items-center justify-between px-2.5 py-1.5 border-b border-[#0089c7] text-xs font-bold shadow-2xs">
               <span className="flex items-center gap-1.5">
-                <Folder className="w-3.5 h-3.5 text-[#104080]" /> Finacle Function Tree
+                <Folder className="w-3.5 h-3.5 text-[#FFB800]" /> Finacle Function Tree
               </span>
               <button 
-                className="font-sans text-xs border border-gray-400 px-1 bg-[#d4d0c8] hover:bg-[#e4e4e4] leading-none h-4 flex items-center justify-center cursor-pointer"
+                className="font-sans text-xs px-1.5 py-0.5 bg-white/20 hover:bg-white/30 text-white rounded-xs leading-none flex items-center justify-center cursor-pointer transition-colors"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                <X className="w-3 h-3 text-black stroke-[2.5]" />
+                <X className="w-3 h-3 stroke-[2.5]" />
               </button>
             </div>
             
             {/* Sidebar Tree List */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 custom-scrollbar text-[14px]">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 custom-scrollbar text-[13.5px] bg-white">
               {/* General Upper Menu Items */}
               {generalMenuItems.map((item, idx) => (
                 <div 
                   key={idx} 
-                  className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group tracking-wide text-[#000080] rounded-xs font-medium ${activeScreen === item ? 'bg-[#316ac5] text-white font-semibold' : ''}`}
+                  className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#EBF6FC] hover:text-black group tracking-wide text-black rounded-xs font-semibold transition-colors ${
+                    activeScreen === item 
+                      ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs' 
+                      : ''
+                  }`}
                   onClick={() => {
                     navigateToScreen(item);
                   }}
                 >
                   {/* Finacle Leaf Icon */}
-                  <div className={`w-[15px] h-[16px] relative flex-shrink-0 bg-white border-2 border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === item ? 'border-white' : 'group-hover:border-white'}`}>
-                    <div className={`w-[5px] h-[5px] ${activeScreen === item ? 'bg-white' : 'bg-[#3b73b9] group-hover:bg-white'}`} />
+                  <div className={`w-[15px] h-[16px] relative flex-shrink-0 bg-white border border-gray-400 flex items-start justify-end p-[1px] ${activeScreen === item ? 'border-white' : 'group-hover:border-[#00A2E8]'}`}>
+                    <div className={`w-[5px] h-[5px] ${activeScreen === item ? 'bg-[#FFB800]' : 'bg-[#00A2E8]'}`} />
                   </div>
                   <span className="truncate">{item}</span>
                 </div>
@@ -253,36 +261,38 @@ export default function FincorePage() {
               {hasAccountsAccess && (
                 <div className="mt-1 pt-1 border-t border-gray-200">
                   <div 
-                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#e6edf8] text-[#104080] font-bold select-none group rounded-xs"
+                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#EBF6FC] text-black font-bold select-none group rounded-xs transition-colors"
                     onClick={() => setIsAccountsExpanded(!isAccountsExpanded)}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[11px] leading-none font-mono text-[#104080] font-bold">
+                      <span className="w-3.5 h-3.5 border border-gray-400 bg-white flex items-center justify-center text-[11px] leading-none font-mono text-black font-bold group-hover:border-[#00A2E8]">
                         {isAccountsExpanded ? "−" : "+"}
                       </span>
-                      <span className="text-[#104080] font-bold text-[14px] tracking-wide flex items-center gap-1.5">
-                        <FolderOpen className="w-3.5 h-3.5 text-[#104080]" /> ACCOUNTS
+                      <span className="text-black font-bold text-[13.5px] tracking-wide flex items-center gap-1.5">
+                        <FolderOpen className="w-3.5 h-3.5 text-[#FFB800]" /> ACCOUNTS
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-500 font-medium">
+                    <span className="text-[11px] text-gray-500 font-semibold">
                       ({accountsSubItems.length})
                     </span>
                   </div>
 
                   {isAccountsExpanded && (
-                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-[#9eb3cd] space-y-0.5 mt-0.5">
+                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-gray-300 space-y-0.5 mt-0.5">
                       {accountsSubItems.map((sub, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] font-medium text-[#000080] rounded-xs ${
-                            activeScreen === sub.name ? "bg-[#316ac5] text-white font-bold" : ""
+                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#EBF6FC] hover:text-black group text-[13.5px] font-semibold text-black rounded-xs transition-colors ${
+                            activeScreen === sub.name 
+                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs' 
+                              : ''
                           }`}
                           onClick={() => {
                             navigateToScreen(sub.name);
                           }}
                         >
-                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === sub.name ? "border-white" : "group-hover:border-white"}`}>
-                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? "bg-white" : "bg-[#3b73b9] group-hover:bg-white"}`} />
+                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-gray-400 flex items-start justify-end p-[1px] ${activeScreen === sub.name ? "border-white" : "group-hover:border-[#00A2E8]"}`}>
+                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? "bg-[#FFB800]" : "bg-[#00A2E8]"}`} />
                           </div>
                           <span className="truncate">{sub.label}</span>
                         </div>
@@ -296,36 +306,38 @@ export default function FincorePage() {
               {hasAedAccess && (
                 <div className="mt-1 pt-1 border-t border-gray-200">
                   <div 
-                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#e6edf8] text-[#104080] font-bold select-none group rounded-xs"
+                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#EBF6FC] text-black font-bold select-none group rounded-xs transition-colors"
                     onClick={() => setIsPayoutExpanded(!isPayoutExpanded)}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[11px] leading-none font-mono text-[#104080] font-bold">
+                      <span className="w-3.5 h-3.5 border border-gray-400 bg-white flex items-center justify-center text-[11px] leading-none font-mono text-black font-bold group-hover:border-[#00A2E8]">
                         {isPayoutExpanded ? "−" : "+"}
                       </span>
-                      <span className="text-[#104080] font-bold text-[14px] tracking-wide flex items-center gap-1.5">
-                        <FolderOpen className="w-3.5 h-3.5 text-[#104080]" /> INR PAYOUT
+                      <span className="text-black font-bold text-[13.5px] tracking-wide flex items-center gap-1.5">
+                        <FolderOpen className="w-3.5 h-3.5 text-[#FFB800]" /> INR PAYOUT
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-500 font-medium">
+                    <span className="text-[11px] text-gray-500 font-semibold">
                       ({payoutSubItems.length})
                     </span>
                   </div>
 
                   {isPayoutExpanded && (
-                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-[#9eb3cd] space-y-0.5 mt-0.5">
+                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-gray-300 space-y-0.5 mt-0.5">
                       {payoutSubItems.map((sub, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] font-medium text-[#000080] rounded-xs ${
-                            activeScreen === sub.name ? "bg-[#316ac5] text-white font-bold" : ""
+                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#EBF6FC] hover:text-black group text-[13.5px] font-semibold text-black rounded-xs transition-colors ${
+                            activeScreen === sub.name 
+                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs' 
+                              : ''
                           }`}
                           onClick={() => {
                             navigateToScreen(sub.name);
                           }}
                         >
-                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === sub.name ? "border-white" : "group-hover:border-white"}`}>
-                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? "bg-white" : "bg-[#3b73b9] group-hover:bg-white"}`} />
+                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-gray-400 flex items-start justify-end p-[1px] ${activeScreen === sub.name ? "border-white" : "group-hover:border-[#00A2E8]"}`}>
+                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? "bg-[#FFB800]" : "bg-[#00A2E8]"}`} />
                           </div>
                           <span className="truncate">{sub.label}</span>
                         </div>
@@ -340,39 +352,40 @@ export default function FincorePage() {
                 <div className="mt-1 pt-1 border-t border-gray-200">
                   {/* Folder Header */}
                   <div 
-                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#e6edf8] text-[#104080] font-bold select-none group rounded-xs"
+                    className="flex items-center justify-between py-1 px-2 cursor-pointer hover:bg-[#EBF6FC] text-black font-bold select-none group rounded-xs transition-colors"
                     onClick={() => setIsAedExpanded(!isAedExpanded)}
                   >
                     <div className="flex items-center gap-2">
                       {/* Plus/Minus Box */}
-                      <span className="w-3.5 h-3.5 border border-[#8090a8] bg-white flex items-center justify-center text-[11px] leading-none font-mono text-[#104080] font-bold">
+                      <span className="w-3.5 h-3.5 border border-gray-400 bg-white flex items-center justify-center text-[11px] leading-none font-mono text-black font-bold group-hover:border-[#00A2E8]">
                         {isAedExpanded ? '−' : '+'}
                       </span>
-                      <span className="text-[#104080] font-bold text-[14px] tracking-wide flex items-center gap-1.5">
-                        <FolderOpen className="w-3.5 h-3.5 text-[#104080]" /> AED COLLECTION
+                      <span className="text-black font-bold text-[13.5px] tracking-wide flex items-center gap-1.5">
+                        <FolderOpen className="w-3.5 h-3.5 text-[#FFB800]" /> AED COLLECTION
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-500 font-medium">
+                    <span className="text-[11px] text-gray-500 font-semibold">
                       ({aedSubItems.length})
                     </span>
                   </div>
 
                   {/* Children Branch */}
                   {isAedExpanded && (
-                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-[#9eb3cd] space-y-0.5 mt-0.5">
+                    <div className="ml-3 pl-2.5 border-l-2 border-dotted border-gray-300 space-y-0.5 mt-0.5">
                       {aedSubItems.map((sub, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#316ac5] hover:text-white group text-[14px] font-medium text-[#000080] rounded-xs ${
-                            activeScreen === sub.name ? 'bg-[#316ac5] text-white font-bold' : ''
+                          className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#EBF6FC] hover:text-black group text-[13.5px] font-semibold text-black rounded-xs transition-colors ${
+                            activeScreen === sub.name 
+                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs' 
+                              : ''
                           }`}
                           onClick={() => {
                             navigateToScreen(sub.name);
                           }}
                         >
-                          {/* Sub Item Bullet */}
-                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-[#3b73b9] flex items-start justify-end p-[1px] ${activeScreen === sub.name ? 'border-white' : 'group-hover:border-white'}`}>
-                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? 'bg-white' : 'bg-[#3b73b9] group-hover:bg-white'}`} />
+                          <div className={`w-[13px] h-[14px] relative flex-shrink-0 bg-white border border-gray-400 flex items-start justify-end p-[1px] ${activeScreen === sub.name ? "border-white" : "group-hover:border-[#00A2E8]"}`}>
+                            <div className={`w-[4px] h-[4px] ${activeScreen === sub.name ? "bg-[#FFB800]" : "bg-[#00A2E8]"}`} />
                           </div>
                           <span className="truncate">{sub.label}</span>
                         </div>

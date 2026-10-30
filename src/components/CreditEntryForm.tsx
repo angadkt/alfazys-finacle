@@ -940,30 +940,30 @@ Generated on: ${new Date().toLocaleString()}`;
           <div className="absolute inset-0 z-40 flex items-start justify-center p-2 sm:p-3 overflow-y-auto">
             <div className="bg-[#d4d0c8] p-1 border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#404040] border-r-[#404040] shadow-2xl w-full max-w-5xl my-auto max-h-[calc(100vh-2rem)] flex flex-col">
               
-              {/* Windows 2000/XP Titlebar */}
-              <div className="bg-gradient-to-r from-[#0055ea] via-[#0860f6] to-[#3a90f8] px-3 py-1.5 flex items-center justify-between text-white font-bold text-[12px] select-none">
+              {/* Modal Titlebar */}
+              <div className="bg-[#0E498C] px-3 py-2 flex items-center justify-between text-white font-bold text-[12px] select-none border-b border-[#00B5E2]/40">
                 <div className="flex items-center gap-2">
-                  <Landmark className="w-4 h-4 text-white" />
+                  <Landmark className="w-4 h-4 text-[#FFB800]" />
                   <span>FINCORE Credit Entry System • {editingId ? `Modify Entry (${editingId})` : 'New Credit Entry Workflow'}</span>
                 </div>
                 <button 
                   onClick={() => setIsFormModalOpen(false)}
-                  className="w-5 h-5 bg-[#d4d0c8] border-t border-l border-white border-b border-r border-[#404040] text-black flex items-center justify-center hover:bg-[#eaeaea] leading-none cursor-pointer"
+                  className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer text-xs font-bold"
                   title="Close (Esc)"
                 >
-                  <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                  ✕
                 </button>
               </div>
 
               {/* Modal Body Container */}
-              <div className="bg-white border border-[#8f8f9d] p-3 m-0.5 flex-1 overflow-y-auto">
+              <div className="bg-white border border-[#bce2f8] p-3 m-0.5 flex-1 overflow-y-auto">
                 <div className="flex-1 flex flex-col">
                   
-                  {/* Retro 2004 Stepper Progress Bar */}
-                  <div className="bg-[#f0f0f5] border border-[#7f9db9] p-2 mb-3 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.1)]">
-                    <div className="flex items-center justify-between text-[11px] mb-1.5 font-bold text-[#104080]">
+                  {/* Stepper Progress Bar */}
+                  <div className="bg-[#EBF6FC] border border-[#bce2f8] p-2 mb-3 rounded-xs">
+                    <div className="flex items-center justify-between text-[11px] mb-1.5 font-bold text-[#0E498C]">
                       <div className="flex items-center gap-2">
-                        <span className="bg-[#104080] text-white px-2 py-0.5 text-[10px]">
+                        <span className="bg-[#FFB800] text-black px-2 py-0.5 text-[10px] font-bold rounded-xs">
                           STAGE {currentStep} OF 3
                         </span>
                         <span>Credit Entry Data Input Workflow</span>
@@ -1561,36 +1561,36 @@ Generated on: ${new Date().toLocaleString()}`;
           <div className="absolute inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
             <div className="bg-[#d4d0c8] p-1 border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#404040] border-r-[#404040] shadow-2xl w-full max-w-lg mt-4">
             
-            {/* Windows 2000/XP Titlebar */}
-            <div className="bg-gradient-to-r from-[#0055ea] via-[#0860f6] to-[#3a90f8] px-2 py-1 flex items-center justify-between text-white font-bold text-[12px]">
-              <span>Finacle Core Banking System - Transaction Confirmation</span>
+            {/* Modal Titlebar */}
+            <div className="bg-[#0E498C] px-3 py-2 flex items-center justify-between text-white font-bold text-[12px] border-b border-[#00B5E2]/40">
+              <span>Finacle Core Banking System — Transaction Confirmation</span>
               <button 
                 onClick={() => setSubmittedEntry(null)}
-                className="w-4 h-4 bg-[#d4d0c8] border border-gray-500 text-black flex items-center justify-center hover:bg-white leading-none cursor-pointer"
+                className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer text-xs font-bold"
               >
-                <X className="w-3 h-3 stroke-[2.5]" />
+                ✕
               </button>
             </div>
 
             {/* Inner Content Area */}
-            <div className="bg-[#f0f0f5] border border-[#8f8f9d] p-4 m-1 flex flex-col gap-3">
+            <div className="bg-[#f8fafc] border border-[#bce2f8] p-4 m-1 flex flex-col gap-3">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white font-serif italic font-extrabold text-lg shadow-sm border border-[#00a8ff] shrink-0">
-                  i
+                <div className="w-8 h-8 rounded-full bg-[#00A2E8] flex items-center justify-center text-white font-extrabold text-sm shadow-sm shrink-0">
+                  ✓
                 </div>
                 <div className="text-[12px] text-black">
-                  <div className="font-bold text-[13px] text-[#104080] mb-1">
+                  <div className="font-bold text-[13px] text-[#0E498C] mb-1">
                     Credit Entry {submittedEntry.id} Posted Successfully.
                   </div>
                   <div>Beneficiary: <strong>{submittedEntry.beneficiaryName}</strong> (A/C: {submittedEntry.accountNumber})</div>
                   <div>Bank: <strong>{submittedEntry.bankName}</strong> ({submittedEntry.ifscCode})</div>
-                  <div className="text-green-800 font-bold mt-1">
+                  <div className="text-emerald-700 font-bold mt-1">
                     Total Amount: ₹ {submittedEntry.totalAmount.toLocaleString()} • Status: Completed
                   </div>
-                  <div className="mt-1 text-[11px] bg-white border border-[#a0a0a0] p-1.5 font-mono">
+                  <div className="mt-1 text-[11px] bg-white border border-[#bce2f8] p-1.5 font-mono">
                     Linked UTR(s):
                     {submittedEntry.utrItems.map((u, i) => (
-                      <div key={i} className="text-black font-semibold">
+                      <div key={i} className="text-[#0E498C] font-semibold">
                         • UTR {u.utrNumber}: ₹ {u.amount.toLocaleString()} ({u.status})
                       </div>
                     ))}
@@ -1602,14 +1602,14 @@ Generated on: ${new Date().toLocaleString()}`;
               </div>
 
               {/* Modal Buttons */}
-              <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-gray-300">
+              <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-gray-200">
                 <button
                   onClick={() => {
                     const e = submittedEntry;
                     setSubmittedEntry(null);
                     setSelectedVoucher(e);
                   }}
-                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-3 py-1 text-xs text-black font-bold"
+                  className="bg-white hover:bg-[#EBF6FC] text-[#0E498C] border border-gray-300 rounded-xs px-3.5 py-1 text-xs font-bold cursor-pointer transition-colors"
                 >
                   Print Voucher
                 </button>
@@ -1618,9 +1618,9 @@ Generated on: ${new Date().toLocaleString()}`;
                     setSubmittedEntry(null);
                     setActiveMainTab('inquiry');
                   }}
-                  className="bg-[#e4e4f0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#8f8f9d] border-r-[#8f8f9d] hover:bg-[#d4d0c8] px-4 py-1 text-xs text-black font-bold"
+                  className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white rounded-xs px-4 py-1 text-xs font-bold cursor-pointer transition-colors shadow-xs"
                 >
-                  Ok
+                  OK
                 </button>
               </div>
             </div>
@@ -1637,22 +1637,22 @@ Generated on: ${new Date().toLocaleString()}`;
           <div className="absolute inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
             <div className="bg-[#d4d0c8] p-1 border-t-2 border-l-2 border-white border-b-2 border-r-2 border-b-[#404040] border-r-[#404040] shadow-2xl w-full max-w-2xl mt-4">
             
-            <div className="bg-gradient-to-r from-[#104080] to-[#2563eb] px-2 py-1 flex items-center justify-between text-white font-bold text-[12px]">
+            <div className="bg-[#0E498C] px-3 py-2 flex items-center justify-between text-white font-bold text-[12px] border-b border-[#00B5E2]/40">
               <span>Credit Payment Voucher Advice — {selectedVoucher.id}</span>
               <button 
                 onClick={() => setSelectedVoucher(null)}
-                className="w-4 h-4 bg-[#d4d0c8] border border-gray-500 text-black flex items-center justify-center hover:bg-white cursor-pointer"
+                className="text-white/80 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer text-xs font-bold"
               >
-                <X className="w-3 h-3 stroke-[2.5]" />
+                ✕
               </button>
             </div>
 
             <div className="bg-white border border-[#8f8f9d] p-5 m-1 text-black font-sans">
               
               {/* Voucher Header */}
-              <div className="border-b-2 border-[#104080] pb-3 mb-3 flex items-start justify-between">
+              <div className="border-b-2 border-[#0E498C] pb-3 mb-3 flex items-start justify-between">
                 <div>
-                  <div className="text-[16px] font-bold text-[#104080]">INFAZYS FINACLE CORE BANKING</div>
+                  <div className="text-[16px] font-bold text-[#0E498C]">INFAZYS FINACLE CORE BANKING</div>
                   <div className="text-[11px] text-gray-600">Universal Payment Solution • Outgoing Credit Settlement Advice</div>
                 </div>
                 <div className="text-right text-[11px]">

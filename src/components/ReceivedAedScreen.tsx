@@ -1,6 +1,6 @@
 import FinacleDatePicker from './FinacleDatePicker';
 import { useState, useEffect } from 'react';
-import { ExternalLink, X, FileText } from 'lucide-react';
+import { Landmark, X, FileText, Plus, RefreshCw } from 'lucide-react';
 import api from '../services/api';
 import FinacleSelect from './FinacleSelect';
 import ReceivedAedReceiptModal from './ReceivedAedReceiptModal';
@@ -227,176 +227,182 @@ export default function ReceivedAedScreen() {
   const totalRemainingShown = records.reduce((s, r) => s + (r.remaining_amount != null ? parseFloat(r.remaining_amount || 0) : 0), 0);
 
   return (
-    <div className="flex-1 bg-[#d4d0c8] flex flex-col h-full overflow-hidden select-none" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-      {/* Title Bar */}
-      <div className="bg-[#e4e4e4] border-b border-[#a0a0a0] px-3 py-2 flex items-center justify-between shadow-xs">
-        <div>
-          <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide">
-            Received AED Collection Register
-          </h4>
-          <span className="text-[11px] text-gray-600">
-            FINCORE Universal Settlement Module • Cash & CDM Collection Journal
-          </span>
+    <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden text-xs select-none">
+      {/* 1. Header Bar */}
+      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-md bg-[#0E498C] text-white flex items-center justify-center shadow-xs">
+            <Landmark className="w-5 h-5 text-[#FFB800]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base md:text-lg font-bold text-gray-900 tracking-tight">
+                Received AED Collection Register
+              </h1>
+              <span className="bg-[#FFB800] text-black font-extrabold text-[10px] px-2 py-0.5 rounded shadow-2xs tracking-wider">
+                REC-AED
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 font-medium">
+              FINCORE Universal Settlement Module • Cash &amp; CDM Collection Journal
+            </p>
+          </div>
         </div>
-
-
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => fetchRecords(page, fromDate, toDate, modeFilter, agentFilter)}
+            disabled={loading}
+            className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border border-gray-300 shadow-2xs"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-gray-600 ${loading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="flex items-center gap-1.5 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-3.5 py-1.5 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Received AED Entry</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Workspace */}
-      <div className="flex-1 bg-white border border-[#a0a0a0] m-1 flex flex-col overflow-hidden">
-        {/* Navigator Action Bar */}
-        <div className="flex items-center gap-3 px-3 py-1.5 bg-[#f8f9fa] border-b border-[#a0a0a0] text-[#104080] font-bold text-[11px]">
-          <ExternalLink className="w-3.5 h-3.5 text-[#104080] hover:text-[#0a244d] cursor-pointer" />
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span 
-            className="cursor-pointer hover:underline tracking-wide flex items-center gap-1"
-            onClick={handleOpenAdd}
-          >
-            <span className="text-[#0d6e5a] text-sm">+</span> Add Received AED Entry
-          </span>
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span 
-            className="cursor-pointer hover:underline tracking-wide"
-            onClick={() => fetchRecords(page, fromDate, toDate, modeFilter, agentFilter)}
-          >
-            Refresh Register
-          </span>
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span className="text-gray-500 font-normal">
-            Total Records: <strong className="text-[#104080]">{total}</strong>
-          </span>
-        </div>
-
-        {/* Filters Strip */}
-        <div className="p-3 bg-white flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e4e4]">
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Date Range: From & To */}
-            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-              <span className="text-[#104080] font-bold text-[11px]">From:</span>
-              <FinacleDatePicker
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
-              />
-              <span className="text-[#104080] font-bold text-[11px] ml-1">To:</span>
-              <FinacleDatePicker
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
-              />
-              {(fromDate || toDate) && (
-                <button
-                  onClick={() => { setFromDate(''); setToDate(''); }}
-                  className="text-gray-400 hover:text-red-500 ml-1 cursor-pointer"
-                  title="Clear Dates"
-                >
-                  <X className="w-3 h-3 stroke-[2.5]" />
-                </button>
-              )}
-            </div>
-
-            {/* Agent Filter */}
-            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
-              <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Agent:</span>
-              <FinacleSelect
-                value={agentFilter}
-                onChange={(e) => setAgentFilter(e.target.value)}
-                options={[
-                  { value: '', label: 'All Agents' },
-                  ...customers.map((c) => ({
-                    value: c.name,
-                    label: c.name,
-                  })),
-                ]}
-                triggerClassName="min-w-[150px] max-w-[200px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
-              />
-              {agentFilter && (
-                <button
-                  onClick={() => setAgentFilter('')}
-                  className="text-gray-400 hover:text-red-500 cursor-pointer"
-                  title="Clear Agent"
-                >
-                  <X className="w-3 h-3 stroke-[2.5]" />
-                </button>
-              )}
-            </div>
-
-            {/* Mode Filter */}
-            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
-              <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Mode:</span>
-              <FinacleSelect
-                value={modeFilter}
-                onChange={(e) => setModeFilter(e.target.value)}
-                options={[
-                  { value: '', label: 'All Modes' },
-                  { value: 'CDM', label: 'CDM' },
-                  { value: 'BNK SLP', label: 'BNK SLP' },
-                  { value: 'FINAC', label: 'FINAC' },
-                  { value: 'BY CASH', label: 'BY CASH' },
-                  { value: 'MOB TRF', label: 'MOB TRF' },
-                  { value: 'UPI', label: 'UPI' },
-                  { value: 'COR NET', label: 'COR NET' },
-                ]}
-                triggerClassName="min-w-[120px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
-              />
-              {modeFilter && (
-                <button
-                  onClick={() => setModeFilter('')}
-                  className="text-gray-400 hover:text-red-500 cursor-pointer"
-                  title="Clear Mode"
-                >
-                  <X className="w-3 h-3 stroke-[2.5]" />
-                </button>
-              )}
-            </div>
-
-            <button
-              onClick={() => fetchRecords(1, fromDate, toDate, modeFilter, agentFilter)}
-              className="bg-[#104080] text-white text-[11px] font-bold px-3 py-1 rounded hover:bg-[#0c3266] cursor-pointer"
-            >
-              Apply Filter
-            </button>
-
-            {(fromDate || toDate || agentFilter || modeFilter) && (
+      {/* 2. Workspace Filter & Summary Ribbon */}
+      <div className="p-4 md:px-8 border-b border-gray-200 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Date Range: From & To */}
+          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
+            <span className="text-[#0E498C] font-bold text-[11px]">From:</span>
+            <FinacleDatePicker
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
+            />
+            <span className="text-[#0E498C] font-bold text-[11px] ml-1">To:</span>
+            <FinacleDatePicker
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
+            />
+            {(fromDate || toDate) && (
               <button
-                onClick={() => {
-                  setFromDate('');
-                  setToDate('');
-                  setAgentFilter('');
-                  setModeFilter('');
-                }}
-                className="text-xs text-gray-500 hover:text-red-600 underline font-semibold ml-1 cursor-pointer"
-                title="Reset All Filters"
+                onClick={() => { setFromDate(''); setToDate(''); }}
+                className="text-gray-400 hover:text-red-500 ml-1 cursor-pointer"
+                title="Clear Dates"
               >
-                Reset All
+                <X className="w-3 h-3 stroke-[2.5]" />
               </button>
             )}
           </div>
 
-          {/* Quick Metrics */}
-          <div className="flex items-center gap-3 text-xs">
-            <span className="bg-[#eef2f9] border border-[#c4d4ec] px-2.5 py-1 rounded text-[#104080]">
-              Total Collected: <strong>{totalAedShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong>
-            </span>
-            <span className="bg-[#fef9ec] border border-[#fae29c] px-2.5 py-1 rounded text-[#92400e]">
-              Unallocated Balance: <strong>{totalRemainingShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong>
-            </span>
+          {/* Agent Filter */}
+          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+            <span className="text-[#0E498C] font-bold text-[11px] whitespace-nowrap">Agent:</span>
+            <FinacleSelect
+              value={agentFilter}
+              onChange={(e) => setAgentFilter(e.target.value)}
+              options={[
+                { value: '', label: 'All Agents' },
+                ...customers.map((c) => ({
+                  value: c.name,
+                  label: c.name,
+                })),
+              ]}
+              triggerClassName="min-w-[150px] max-w-[200px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+            />
+            {agentFilter && (
+              <button
+                onClick={() => setAgentFilter('')}
+                className="text-gray-400 hover:text-red-500 cursor-pointer"
+                title="Clear Agent"
+              >
+                <X className="w-3 h-3 stroke-[2.5]" />
+              </button>
+            )}
           </div>
+
+          {/* Mode Filter */}
+          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+            <span className="text-[#0E498C] font-bold text-[11px] whitespace-nowrap">Mode:</span>
+            <FinacleSelect
+              value={modeFilter}
+              onChange={(e) => setModeFilter(e.target.value)}
+              options={[
+                { value: '', label: 'All Modes' },
+                { value: 'CDM', label: 'CDM' },
+                { value: 'BNK SLP', label: 'BNK SLP' },
+                { value: 'FINAC', label: 'FINAC' },
+                { value: 'BY CASH', label: 'BY CASH' },
+                { value: 'MOB TRF', label: 'MOB TRF' },
+                { value: 'UPI', label: 'UPI' },
+                { value: 'COR NET', label: 'COR NET' },
+              ]}
+              triggerClassName="min-w-[120px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+            />
+            {modeFilter && (
+              <button
+                onClick={() => setModeFilter('')}
+                className="text-gray-400 hover:text-red-500 cursor-pointer"
+                title="Clear Mode"
+              >
+                <X className="w-3 h-3 stroke-[2.5]" />
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={() => fetchRecords(1, fromDate, toDate, modeFilter, agentFilter)}
+            className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white text-xs font-bold px-3 py-1.5 rounded cursor-pointer transition-colors shadow-2xs"
+          >
+            Apply Filter
+          </button>
+
+          {(fromDate || toDate || agentFilter || modeFilter) && (
+            <button
+              onClick={() => {
+                setFromDate('');
+                setToDate('');
+                setAgentFilter('');
+                setModeFilter('');
+              }}
+              className="text-xs text-gray-500 hover:text-red-600 underline font-semibold ml-1 cursor-pointer"
+              title="Reset All Filters"
+            >
+              Reset All
+            </button>
+          )}
         </div>
 
-        {/* Table Register */}
-        <div className="flex-1 overflow-auto bg-white">
+        {/* Quick Metrics & Total Badge */}
+        <div className="flex flex-wrap items-center gap-2.5 text-xs">
+          <span className="bg-[#EBF6FC] border border-[#bce2f8] px-2.5 py-1 rounded text-[#0E498C] font-semibold shadow-2xs">
+            Total Records: <strong className="text-gray-900 ml-1">{total}</strong>
+          </span>
+          <span className="bg-[#EBF6FC] border border-[#bce2f8] px-2.5 py-1 rounded text-[#0E498C] shadow-2xs">
+            Total Collected: <strong>{totalAedShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong>
+          </span>
+          <span className="bg-[#fef9ec] border border-[#fae29c] px-2.5 py-1 rounded text-[#92400e] shadow-2xs">
+            Unallocated Balance: <strong>{totalRemainingShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong>
+          </span>
+        </div>
+      </div>
+
+      {/* 3. Table Register with Standard Outer Padding */}
+      <div className="flex-1 overflow-y-auto p-4 md:px-8 custom-scrollbar bg-slate-50">
+        <div className="overflow-x-auto border border-[#c4d4ec] bg-white rounded shadow-2xs">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-gray-400 text-sm">
               Loading Received AED records...
             </div>
           ) : records.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-              <span className="text-lg font-bold text-[#104080] mb-1">No Received AED Records Found</span>
+              <span className="text-lg font-bold text-[#0E498C] mb-1">No Received AED Records Found</span>
               <span className="text-xs text-gray-400 mb-3">Try clearing filters or add a new entry.</span>
               <button
                 onClick={handleOpenAdd}
-                className="bg-[#104080] text-white text-xs font-bold px-4 py-1.5 rounded hover:bg-[#0c3266] cursor-pointer"
+                className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white text-xs font-bold px-4 py-1.5 rounded cursor-pointer transition-colors"
               >
                 + Create Received AED Entry
               </button>
@@ -404,25 +410,25 @@ export default function ReceivedAedScreen() {
           ) : (
             <table className="w-full text-[12px] border-collapse">
               <thead>
-                <tr className="bg-[#104080] text-white text-left sticky top-0 z-10 shadow-xs">
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">#</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Entry Date</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Agent / Customer</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">AED Amount</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Mode</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">UTR / Ref</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Cash Staff</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Remaining AED</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Description</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Created By</th>
-                  <th className="px-3 py-2 font-semibold whitespace-nowrap text-center">Actions</th>
+                <tr className="bg-[#0E498C] text-white text-left sticky top-0 z-10 shadow-xs">
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">#</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">Entry Date</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">Agent / Customer</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">AED Amount</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">Mode</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">UTR / Ref</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">Cash Staff</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">Remaining AED</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">Description</th>
+                  <th className="px-3 py-2.5 font-bold border-r border-[#20549c] whitespace-nowrap">Created By</th>
+                  <th className="px-3 py-2.5 font-bold whitespace-nowrap text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {records.map((rec, i) => (
                   <tr
                     key={rec.id}
-                    className={`border-b border-[#e4e4e4] hover:bg-[#f0f5ff] ${i % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}`}
+                    className={`border-b border-[#e4e4e4] hover:bg-[#EBF6FC] transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}`}
                   >
                     <td className="px-3 py-2 border-r border-[#e4e4e4] text-gray-500">
                       {(page - 1) * 50 + i + 1}
@@ -443,7 +449,7 @@ export default function ReceivedAedScreen() {
                       {parseFloat(rec.aed_amount || 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED
                     </td>
                     <td className="px-3 py-2 border-r border-[#e4e4e4]">
-                      <span className="bg-[#e8f0fb] text-[#104080] px-2 py-0.5 rounded font-bold text-[11px]">
+                      <span className="bg-[#EBF6FC] text-[#0E498C] border border-[#bce2f8] px-2 py-0.5 rounded font-bold text-[11px]">
                         {rec.mode_of_txn}
                       </span>
                     </td>
@@ -468,15 +474,15 @@ export default function ReceivedAedScreen() {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleOpenReceipt(rec)}
-                          className="text-[#0284c7] hover:text-[#0369a1] bg-[#e0f2fe] hover:bg-[#bae6fd] border border-[#7dd3fc] px-2 py-0.5 rounded font-bold text-[11px] cursor-pointer flex items-center gap-1 transition-colors shadow-2xs"
+                          className="text-[#0E498C] hover:text-white bg-[#EBF6FC] hover:bg-[#00A2E8] border border-[#bce2f8] px-2 py-0.5 rounded font-bold text-[11px] cursor-pointer flex items-center gap-1 transition-colors shadow-2xs"
                           title="View, Print & Download Receipt"
                         >
-                          <FileText className="w-3 h-3 text-[#0284c7]" />
+                          <FileText className="w-3 h-3 text-[#0E498C]" />
                           Receipt
                         </button>
                         <button
                           onClick={() => handleEdit(rec)}
-                          className="text-[#104080] hover:underline font-bold text-[11px] cursor-pointer"
+                          className="text-[#0E498C] hover:underline font-bold text-[11px] cursor-pointer"
                         >
                           Edit
                         </button>
@@ -492,7 +498,7 @@ export default function ReceivedAedScreen() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-[#eef2f9] font-bold text-[#104080] border-t-2 border-[#c4d4ec]">
+                <tr className="bg-[#EBF6FC] font-bold text-[#0E498C] border-t-2 border-[#c4d4ec]">
                   <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}>
                     Page Total ({records.length} records shown)
                   </td>
@@ -508,31 +514,31 @@ export default function ReceivedAedScreen() {
               </tfoot>
             </table>
           )}
-        </div>
 
-        {/* Pagination Bar */}
-        <div className="px-4 py-2 bg-[#f8f9fa] border-t border-[#a0a0a0] flex items-center justify-between text-xs text-gray-600">
-          <span>
-            Showing <strong>{records.length}</strong> of <strong>{total}</strong> records
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              disabled={page <= 1}
-              onClick={() => fetchRecords(page - 1)}
-              className="bg-white border border-[#c4d4ec] px-3 py-1 rounded hover:bg-[#f0f4f8] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#104080]"
-            >
-              Previous
-            </button>
-            <span className="font-bold text-[#104080]">
-              Page {page} of {Math.max(1, Math.ceil(total / 50))}
+          {/* Pagination Bar inside the Table Card */}
+          <div className="px-4 py-2.5 bg-[#f8f9fa] border-t border-[#c4d4ec] flex items-center justify-between text-xs text-gray-600">
+            <span>
+              Showing <strong>{records.length}</strong> of <strong>{total}</strong> records
             </span>
-            <button
-              disabled={page >= Math.ceil(total / 50)}
-              onClick={() => fetchRecords(page + 1)}
-              className="bg-white border border-[#c4d4ec] px-3 py-1 rounded hover:bg-[#f0f4f8] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#104080]"
-            >
-              Next
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page <= 1}
+                onClick={() => fetchRecords(page - 1)}
+                className="bg-white border border-[#c4d4ec] px-3 py-1 rounded hover:bg-[#EBF6FC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#0E498C] cursor-pointer transition-colors"
+              >
+                Previous
+              </button>
+              <span className="font-bold text-[#0E498C]">
+                Page {page} of {Math.max(1, Math.ceil(total / 50))}
+              </span>
+              <button
+                disabled={page >= Math.ceil(total / 50)}
+                onClick={() => fetchRecords(page + 1)}
+                className="bg-white border border-[#c4d4ec] px-3 py-1 rounded hover:bg-[#EBF6FC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#0E498C] cursor-pointer transition-colors"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -544,19 +550,19 @@ export default function ReceivedAedScreen() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <div className="bg-white shadow-2xl flex flex-col max-h-[90vh] max-w-xl w-full rounded-md overflow-hidden pointer-events-auto border border-[#c4d4ec]">
               {/* Header */}
-              <div className="bg-[#eef2f9] px-6 py-4 font-bold text-black border-b border-[#c4d4ec] text-[16px] flex items-center justify-between">
+              <div className="bg-[#0E498C] px-6 py-4 font-bold text-white border-b border-[#00B5E2]/40 text-[16px] flex items-center justify-between">
                 <span>{editingId ? 'Edit Received AED Entry' : 'New Received AED Entry'}</span>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="text-[#a51a1a] font-bold hover:underline cursor-pointer text-[14px]"
+                  className="text-white/80 hover:text-white hover:bg-white/10 px-2 py-0.5 rounded cursor-pointer text-xs font-bold"
                 >
-                  Close (X)
+                  ✕ Close
                 </button>
               </div>
 
               {/* Form Body */}
               <div className="p-6 overflow-auto bg-white flex flex-col gap-6">
-                <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-4 text-[13px] items-center bg-[#eaf0f8] border border-[#c4d4ec] rounded-md py-5 px-6">
+                <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-4 text-[13px] items-center bg-[#EBF6FC] border border-[#bce2f8] rounded-md py-5 px-6">
                   {/* Entry Date */}
                   <label className="font-medium text-black whitespace-nowrap">
                     Date <span className="text-red-600">*</span>
@@ -707,13 +713,13 @@ export default function ReceivedAedScreen() {
                   <button
                     disabled={submitting}
                     onClick={handleSubmit}
-                    className="bg-[#104080] text-white rounded-md px-6 py-2 shadow-sm font-bold hover:bg-[#0c3266] text-[13px] disabled:opacity-50 cursor-pointer"
+                    className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white rounded-md px-6 py-2 shadow-sm font-bold text-[13px] disabled:opacity-50 cursor-pointer transition-colors"
                   >
                     {submitting ? 'Saving...' : editingId ? 'Update Entry' : 'Submit Entry'}
                   </button>
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="bg-gray-200 text-gray-800 rounded-md px-6 py-2 shadow-sm font-medium hover:bg-gray-300 text-[13px] cursor-pointer"
+                    className="bg-white hover:bg-[#EBF6FC] text-[#0E498C] border border-gray-300 rounded-md px-6 py-2 shadow-sm font-bold text-[13px] cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>

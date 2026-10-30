@@ -3,7 +3,7 @@ import FinacleDatePicker from './FinacleDatePicker';
 import FinacleBadge from './FinacleBadge';
 import FinacleSelect from './FinacleSelect';
 import api from '../services/api';
-import { FileSpreadsheet, FileText, RefreshCw, Eye, ArrowUpDown, ExternalLink, X } from 'lucide-react';
+import { FileSpreadsheet, FileText, RefreshCw, Eye, ArrowUpDown, Landmark, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -342,45 +342,53 @@ export default function PendingAedReportScreen() {
   };
 
   return (
-    <div className="flex-1 bg-[#d4d0c8] flex flex-col h-full overflow-hidden select-none" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-      {/* Title Bar */}
-      <div className="bg-[#e4e4e4] border-b border-[#a0a0a0] px-3 py-2 flex items-center justify-between shadow-xs">
-        <div>
-          <h4 className="text-[15px] font-extrabold text-black m-0 capitalize tracking-wide flex items-center gap-2">
-            <span>Pending AED Collection Register & Aging Report</span>
-            <span className="bg-[#b91c1c] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-              Receivables
-            </span>
-          </h4>
-          <span className="text-[11px] text-gray-600">
-            FINCORE Universal Settlement Module • Agent & Customer Outstanding Balance Ledger
-          </span>
+    <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden text-xs select-none">
+      {/* 1. Header Bar */}
+      <div className="bg-white px-5 md:px-8 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-md bg-[#0E498C] text-white flex items-center justify-center shadow-xs">
+            <Landmark className="w-5 h-5 text-[#FFB800]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base md:text-lg font-bold text-gray-900 tracking-tight">
+                Pending AED Collection Register &amp; Aging Report
+              </h1>
+              <span className="bg-[#FFB800] text-black font-extrabold text-[10px] px-2 py-0.5 rounded shadow-2xs tracking-wider">
+                RECEIVABLES
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 font-medium">
+              FINCORE Universal Settlement Module • Agent &amp; Customer Outstanding Balance Ledger
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleDownloadExcel}
             disabled={isExporting !== null || loading || sortedRecords.length === 0}
-            className="flex items-center gap-1.5 border border-[#c4d4ec] bg-white hover:bg-[#edf7ed] text-[#1e6e38] disabled:opacity-50 disabled:cursor-not-allowed px-2.5 py-1.5 rounded text-xs font-bold shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-md text-xs font-bold shadow-2xs cursor-pointer transition-colors"
             title="Export Excel"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-[#2e7d32]" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
             <span>{isExporting === 'excel' ? 'Exporting...' : 'Excel'}</span>
           </button>
 
           <button
             onClick={handleDownloadPdf}
             disabled={isExporting !== null || loading || sortedRecords.length === 0}
-            className="flex items-center gap-1.5 border border-[#c4d4ec] bg-white hover:bg-[#fdf2f2] text-[#b91c1c] disabled:opacity-50 disabled:cursor-not-allowed px-2.5 py-1.5 rounded text-xs font-bold shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 border border-red-300 bg-white hover:bg-red-50 text-red-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-md text-xs font-bold shadow-2xs cursor-pointer transition-colors"
             title="Export PDF"
           >
-            <FileText className="w-3.5 h-3.5 text-[#d32f2f]" />
+            <FileText className="w-3.5 h-3.5 text-red-600" />
             <span>{isExporting === 'pdf' ? 'Generating...' : 'PDF'}</span>
           </button>
 
           <button
             onClick={fetchReport}
-            className="bg-[#104080] text-white font-bold text-[12px] px-3 py-1.5 rounded shadow-xs hover:bg-[#0c3266] flex items-center gap-1.5 cursor-pointer"
+            disabled={loading}
+            className="flex items-center gap-1.5 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white font-bold text-xs px-3.5 py-1.5 rounded-md shadow-2xs cursor-pointer transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -388,213 +396,207 @@ export default function PendingAedReportScreen() {
         </div>
       </div>
 
-      {/* Main Workspace */}
-      <div className="flex-1 bg-white border border-[#a0a0a0] m-1 flex flex-col overflow-hidden">
-        {/* Navigator Action Strip */}
-        <div className="flex items-center gap-3 px-3 py-1.5 bg-[#f8f9fa] border-b border-[#a0a0a0] text-[#104080] font-bold text-[11px]">
-          <ExternalLink className="w-3.5 h-3.5 text-[#104080] hover:text-[#0a244d] cursor-pointer" />
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span>Active Period: <strong className="text-gray-800">{dateRangeLabel}</strong></span>
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span>Total Outstanding: <strong className="text-[#b91c1c]">{summary.total_pending_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong></span>
-          <div className="border-l-[2px] border-dotted border-[#8f8f9d] h-3"></div>
-          <span>Pending Agents: <strong className="text-[#b45309]">{summary.pending_agents_count}</strong> of {summary.total_agents_count}</span>
+      {/* 2. Executive KPI Cards */}
+      <div className="p-4 md:px-8 bg-white border-b border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 shrink-0">
+        {/* Card 1: Total Pending to Collect */}
+        <div className="bg-[#fef2f2] border border-[#fca5a5] rounded-md p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[11px] font-bold text-[#991b1b]">
+            <span>TOTAL OUTSTANDING PENDING</span>
+            <span className="bg-[#fee2e2] px-1.5 py-0.5 rounded text-[10px] text-[#b91c1c] font-extrabold">
+              {summary.pending_agents_count} AGENTS DUE
+            </span>
+          </div>
+          <div className="text-[18px] font-black text-[#991b1b] font-mono mt-1">
+            {summary.total_pending_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} <span className="text-[12px]">AED</span>
+          </div>
+          <span className="text-[10px] text-gray-500 mt-0.5">
+            Net balance to collect across all orders
+          </span>
         </div>
 
-        {/* Executive KPI Cards (4 Cards) */}
-        <div className="p-3 bg-[#f8fafc] border-b border-[#e4e4e4] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {/* Card 1: Total Pending to Collect */}
-          <div className="bg-[#fef2f2] border border-[#fca5a5] rounded p-2.5 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[11px] font-bold text-[#991b1b]">
-              <span>TOTAL OUTSTANDING PENDING</span>
-              <span className="bg-[#fee2e2] px-1.5 py-0.5 rounded text-[10px] text-[#b91c1c] font-extrabold">
-                {summary.pending_agents_count} AGENTS DUE
-              </span>
-            </div>
-            <div className="text-[18px] font-black text-[#991b1b] font-mono mt-1">
-              {summary.total_pending_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} <span className="text-[12px]">AED</span>
-            </div>
-            <span className="text-[10px] text-gray-500 mt-0.5">
-              Net balance to collect across all orders
+        {/* Card 2: Total Booked Orders */}
+        <div className="bg-[#f0f4f8] border border-[#c4d4ec] rounded-md p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[11px] font-bold text-[#0E498C]">
+            <span>TOTAL BOOKED ORDERS</span>
+            <span className="bg-[#e2ebf6] px-1.5 py-0.5 rounded text-[10px] text-[#0E498C] font-bold">
+              {records.reduce((s, r) => s + r.order_count, 0)} ORDERS
             </span>
           </div>
-
-          {/* Card 2: Total Booked Orders */}
-          <div className="bg-[#f0f4f8] border border-[#c4d4ec] rounded p-2.5 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[11px] font-bold text-[#104080]">
-              <span>TOTAL BOOKED ORDERS</span>
-              <span className="bg-[#e2ebf6] px-1.5 py-0.5 rounded text-[10px] text-[#104080] font-bold">
-                {records.reduce((s, r) => s + r.order_count, 0)} ORDERS
-              </span>
-            </div>
-            <div className="text-[18px] font-black text-[#104080] font-mono mt-1">
-              {summary.total_booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} <span className="text-[12px]">AED</span>
-            </div>
-            <span className="text-[10px] text-gray-500 mt-0.5">
-              Gross remittance orders booked in period
-            </span>
+          <div className="text-[18px] font-black text-[#0E498C] font-mono mt-1">
+            {summary.total_booked_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} <span className="text-[12px]">AED</span>
           </div>
-
-          {/* Card 3: Total Collected AED */}
-          <div className="bg-[#f0fdf4] border border-[#86efac] rounded p-2.5 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[11px] font-bold text-[#166534]">
-              <span>TOTAL RECEIVED / COLLECTED</span>
-              <span className="bg-[#dcfce7] px-1.5 py-0.5 rounded text-[10px] text-[#166534] font-bold">
-                SETTLED
-              </span>
-            </div>
-            <div className="text-[18px] font-black text-[#166534] font-mono mt-1">
-              {summary.total_received_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} <span className="text-[12px]">AED</span>
-            </div>
-            <span className="text-[10px] text-gray-500 mt-0.5">
-              Verified receipts credited in CDM/Cash/Bank
-            </span>
-          </div>
-
-          {/* Card 4: Overall Collection Rate */}
-          <div className="bg-[#f8fafc] border border-[#cbd5e1] rounded p-2.5 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[11px] font-bold text-[#334155]">
-              <span>COLLECTION PERFORMANCE</span>
-              <span className="text-[11px] font-extrabold text-[#104080]">
-                {summary.collection_rate_pct.toFixed(1)}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden mt-1.5">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  summary.collection_rate_pct >= 90
-                    ? 'bg-[#16a34a]'
-                    : summary.collection_rate_pct >= 60
-                    ? 'bg-[#2563eb]'
-                    : summary.collection_rate_pct >= 30
-                    ? 'bg-[#f59e0b]'
-                    : 'bg-[#dc2626]'
-                }`}
-                style={{ width: `${Math.min(100, summary.collection_rate_pct)}%` }}
-              ></div>
-            </div>
-            <div className="flex justify-between text-[9.5px] text-gray-500 mt-1">
-              <span>Collected: {summary.collection_rate_pct.toFixed(1)}%</span>
-              <span className="text-[#b91c1c] font-bold">Outstanding: {(100 - summary.collection_rate_pct).toFixed(1)}%</span>
-            </div>
-          </div>
+          <span className="text-[10px] text-gray-500 mt-0.5">
+            Gross remittance orders booked in period
+          </span>
         </div>
 
-        {/* Filters Strip */}
-        <div className="p-3 bg-white flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e4e4]">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* From - To Date Pickers */}
-            <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <span className="text-[#104080] font-bold text-[11px]">From:</span>
-              <FinacleDatePicker
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
-              />
+        {/* Card 3: Total Collected AED */}
+        <div className="bg-[#f0fdf4] border border-[#86efac] rounded-md p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[11px] font-bold text-[#166534]">
+            <span>TOTAL RECEIVED / COLLECTED</span>
+            <span className="bg-[#dcfce7] px-1.5 py-0.5 rounded text-[10px] text-[#166534] font-bold">
+              SETTLED
+            </span>
+          </div>
+          <div className="text-[18px] font-black text-[#166534] font-mono mt-1">
+            {summary.total_received_aed.toLocaleString('en-AE', { minimumFractionDigits: 2 })} <span className="text-[12px]">AED</span>
+          </div>
+          <span className="text-[10px] text-gray-500 mt-0.5">
+            Verified receipts credited in CDM/Cash/Bank
+          </span>
+        </div>
 
-              <span className="text-[#104080] font-bold text-[11px] ml-0.5">To:</span>
-              <FinacleDatePicker
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="bg-white border border-[#c4d4ec] rounded px-1.5 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
-              />
+        {/* Card 4: Overall Collection Rate */}
+        <div className="bg-[#f8fafc] border border-[#cbd5e1] rounded-md p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[11px] font-bold text-[#334155]">
+            <span>COLLECTION PERFORMANCE</span>
+            <span className="text-[11px] font-extrabold text-[#0E498C]">
+              {summary.collection_rate_pct.toFixed(1)}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden mt-1.5">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                summary.collection_rate_pct >= 90
+                  ? 'bg-[#16a34a]'
+                  : summary.collection_rate_pct >= 60
+                  ? 'bg-[#2563eb]'
+                  : summary.collection_rate_pct >= 30
+                  ? 'bg-[#f59e0b]'
+                  : 'bg-[#dc2626]'
+              }`}
+              style={{ width: `${Math.min(100, summary.collection_rate_pct)}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between text-[9.5px] text-gray-500 mt-1">
+            <span>Collected: {summary.collection_rate_pct.toFixed(1)}%</span>
+            <span className="text-[#b91c1c] font-bold">Outstanding: {(100 - summary.collection_rate_pct).toFixed(1)}%</span>
+          </div>
+        </div>
+      </div>
 
-              <div className="flex items-center gap-1 ml-1 border-l border-[#c4d4ec] pl-1.5">
+      {/* 3. Filters Strip */}
+      <div className="p-4 md:px-8 bg-white flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* From - To Date Pickers */}
+          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
+            <span className="text-[#0E498C] font-bold text-[11px]">From:</span>
+            <FinacleDatePicker
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
+            />
+
+            <span className="text-[#0E498C] font-bold text-[11px] ml-0.5">To:</span>
+            <FinacleDatePicker
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
+            />
+
+            <div className="flex items-center gap-1 ml-1 border-l border-[#c4d4ec] pl-1.5">
+              <button
+                type="button"
+                onClick={handleSetToday}
+                className="bg-[#0E498C] hover:bg-[#00A2E8] text-white px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-colors shadow-2xs"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={handleSetThisMonth}
+                className="bg-white border border-[#c4d4ec] text-[#0E498C] hover:bg-[#eaf0f8] px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-colors"
+              >
+                This Month
+              </button>
+              {(fromDate || toDate) && (
                 <button
                   type="button"
-                  onClick={handleSetToday}
-                  className="bg-[#104080] hover:bg-[#0c3266] text-white px-1.5 py-0.5 text-[10px] font-bold rounded cursor-pointer"
-                >
-                  Today
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSetThisMonth}
-                  className="bg-white border border-[#c4d4ec] text-[#104080] hover:bg-[#eaf0f8] px-1.5 py-0.5 text-[10px] font-bold rounded cursor-pointer"
-                >
-                  This Month
-                </button>
-                {(fromDate || toDate) && (
-                  <button
-                    type="button"
-                    onClick={handleClearDates}
-                    className="text-gray-400 hover:text-red-600 px-1 cursor-pointer"
-                    title="Clear Dates (All Time)"
-                  >
-                    <X className="w-3 h-3 stroke-[2.5]" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Agent Search Filter */}
-            <div className="flex items-center gap-1 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <span className="text-[#104080] font-bold text-[11px]">Agent:</span>
-              <input
-                type="text"
-                list="pending-aed-agent-list"
-                value={agentSearch}
-                onChange={(e) => setAgentSearch(e.target.value)}
-                placeholder="Search Agent / CIF..."
-                className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 w-[160px] h-[26px] focus:outline-none focus:border-[#104080]"
-              />
-              <datalist id="pending-aed-agent-list">
-                {customers.map((c) => (
-                  <option key={c.id} value={`${c.name} (${c.id})`} />
-                ))}
-              </datalist>
-              {agentSearch && (
-                <button
-                  type="button"
-                  onClick={() => setAgentSearch('')}
-                  className="text-gray-400 hover:text-red-500 cursor-pointer"
+                  onClick={handleClearDates}
+                  className="text-gray-400 hover:text-red-600 px-1 cursor-pointer"
+                  title="Clear Dates (All Time)"
                 >
                   <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               )}
             </div>
-
-            {/* Status Filter */}
-            <div className="flex items-center gap-1 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <span className="text-[#104080] font-bold text-[11px] whitespace-nowrap">Status:</span>
-              <FinacleSelect
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                options={[
-                  { value: 'pending_only', label: 'Pending Collection Only' },
-                  { value: 'all', label: 'All Statuses' },
-                  { value: 'uncollected', label: 'Uncollected (0%)' },
-                  { value: 'partial', label: 'Partially Collected' },
-                  { value: 'settled', label: 'Fully Settled / 100%' },
-                ]}
-                triggerClassName="min-w-[170px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
-              />
-            </div>
-
-            {/* Sort Filter */}
-            <div className="flex items-center gap-1 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-1 rounded">
-              <ArrowUpDown className="w-3 h-3 text-[#104080] shrink-0" />
-              <FinacleSelect
-                value={sortBy}
-                onChange={(e: any) => setSortBy(e.target.value)}
-                options={[
-                  { value: 'pending_desc', label: 'Pending AED: Highest First' },
-                  { value: 'pending_asc', label: 'Pending AED: Lowest First' },
-                  { value: 'booked_desc', label: 'Booked AED: Highest First' },
-                  { value: 'name_asc', label: 'Agent Name: A to Z' },
-                ]}
-                triggerClassName="min-w-[190px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
-              />
-            </div>
           </div>
 
-          <span className="text-[11px] text-gray-500 font-medium">
-            Showing <strong className="text-[#104080]">{sortedRecords.length}</strong> agent record{sortedRecords.length !== 1 ? 's' : ''}
-          </span>
+          {/* Agent Search Filter */}
+          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
+            <span className="text-[#0E498C] font-bold text-[11px]">Agent:</span>
+            <input
+              type="text"
+              list="pending-aed-agent-list"
+              value={agentSearch}
+              onChange={(e) => setAgentSearch(e.target.value)}
+              placeholder="Search Agent / CIF..."
+              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 w-[160px] h-[26px] focus:outline-none focus:border-[#0E498C]"
+            />
+            <datalist id="pending-aed-agent-list">
+              {customers.map((c) => (
+                <option key={c.id} value={`${c.name} (${c.id})`} />
+              ))}
+            </datalist>
+            {agentSearch && (
+              <button
+                type="button"
+                onClick={() => setAgentSearch('')}
+                className="text-gray-400 hover:text-red-500 cursor-pointer"
+              >
+                <X className="w-3 h-3 stroke-[2.5]" />
+              </button>
+            )}
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+            <span className="text-[#0E498C] font-bold text-[11px] whitespace-nowrap">Status:</span>
+            <FinacleSelect
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={[
+                { value: 'pending_only', label: 'Pending Collection Only' },
+                { value: 'all', label: 'All Statuses' },
+                { value: 'uncollected', label: 'Uncollected (0%)' },
+                { value: 'partial', label: 'Partially Collected' },
+                { value: 'settled', label: 'Fully Settled / 100%' },
+              ]}
+              triggerClassName="min-w-[170px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+            />
+          </div>
+
+          {/* Sort Filter */}
+          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+            <ArrowUpDown className="w-3 h-3 text-[#0E498C] shrink-0" />
+            <FinacleSelect
+              value={sortBy}
+              onChange={(e: any) => setSortBy(e.target.value)}
+              options={[
+                { value: 'pending_desc', label: 'Pending AED: Highest First' },
+                { value: 'pending_asc', label: 'Pending AED: Lowest First' },
+                { value: 'booked_desc', label: 'Booked AED: Highest First' },
+                { value: 'name_asc', label: 'Agent Name: A to Z' },
+              ]}
+              triggerClassName="min-w-[190px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+            />
+          </div>
         </div>
 
-        {/* Data Table */}
-        <div className="flex-1 overflow-auto bg-white">
+        {/* Period & Agent Count */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="bg-[#EBF6FC] border border-[#bce2f8] px-2.5 py-1 rounded text-[#0E498C] font-semibold shadow-2xs">
+            Period: <strong className="text-gray-900 ml-1">{dateRangeLabel}</strong>
+          </span>
+          <span className="text-[11px] text-gray-500 font-medium ml-1">
+            Showing <strong className="text-[#0E498C]">{sortedRecords.length}</strong> agent record{sortedRecords.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+      </div>
+
+      {/* 4. Data Table with Standard Outer Padding */}
+      <div className="flex-1 overflow-y-auto p-4 md:px-8 custom-scrollbar bg-slate-50">
+        <div className="overflow-x-auto border border-[#c4d4ec] bg-white rounded shadow-2xs">
           {loading ? (
             <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
               <RefreshCw className="w-4 h-4 mr-2 animate-spin text-[#104080]" />
@@ -624,17 +626,17 @@ export default function PendingAedReportScreen() {
           ) : (
             <table className="w-full text-[12px] border-collapse">
               <thead>
-                <tr className="bg-[#104080] text-white text-left sticky top-0 z-10 shadow-xs">
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">#</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">CIF No</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap">Agent / Customer Name</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-center">Orders</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-right">Booked AED</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-right">Collected AED</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-right">Pending to Collect (AED)</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-center min-w-[120px]">Collection %</th>
-                  <th className="px-3 py-2 font-semibold border-r border-[#20549c] whitespace-nowrap text-center">Status</th>
-                  <th className="px-3 py-2 font-semibold whitespace-nowrap text-center">Statement</th>
+                <tr className="bg-[#0E498C] text-white text-left sticky top-0 z-10 shadow-xs">
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap">#</th>
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap">CIF No</th>
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap">Agent / Customer Name</th>
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap text-center">Orders</th>
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap text-right">Booked AED</th>
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap text-right">Collected AED</th>
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap text-right">Pending to Collect (AED)</th>
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap text-center min-w-[120px]">Collection %</th>
+                  <th className="px-3 py-2.5 font-semibold border-r border-[#00B5E2]/30 whitespace-nowrap text-center">Status</th>
+                  <th className="px-3 py-2.5 font-semibold whitespace-nowrap text-center">Statement</th>
                 </tr>
               </thead>
               <tbody>
@@ -645,7 +647,7 @@ export default function PendingAedReportScreen() {
                   return (
                     <tr
                       key={rec.party_id || `rec-${i}`}
-                      className={`border-b border-[#e4e4e4] hover:bg-[#f0f5ff] transition-colors ${
+                      className={`border-b border-[#e4e4e4] hover:bg-[#EBF6FC] transition-colors ${
                         i % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'
                       }`}
                     >
@@ -768,12 +770,12 @@ export default function PendingAedReportScreen() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <div className="bg-white shadow-2xl flex flex-col w-full max-w-5xl max-h-[90vh] rounded-md overflow-hidden pointer-events-auto border border-[#c4d4ec]">
               {/* Header */}
-              <div className="bg-[#104080] text-white px-5 py-3 font-bold text-[14px] flex items-center justify-between shrink-0">
+              <div className="bg-[#0E498C] text-white px-5 py-3 font-bold text-[14px] flex items-center justify-between shrink-0 border-b border-[#00B5E2]/40">
                 <div className="flex items-center gap-2">
                   <span>Party Statement:</span>
-                  <span className="text-amber-300 font-extrabold">{selectedParty.party_name}</span>
+                  <span className="text-[#FFB800] font-extrabold">{selectedParty.party_name}</span>
                   {selectedParty.cif_no && (
-                    <span className="bg-[#20549c] text-white px-2 py-0.5 rounded text-xs font-mono">
+                    <span className="bg-[#00A2E8] text-white px-2 py-0.5 rounded text-xs font-mono font-bold">
                       {selectedParty.cif_no}
                     </span>
                   )}
@@ -781,7 +783,7 @@ export default function PendingAedReportScreen() {
                 <button
                   type="button"
                   onClick={() => setSelectedParty(null)}
-                  className="text-white hover:text-red-300 font-bold text-[12px] cursor-pointer flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded transition-colors"
+                  className="text-white/80 hover:text-white font-bold text-[12px] cursor-pointer flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded transition-colors"
                 >
                   <span>Close</span>
                   <X className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -789,7 +791,7 @@ export default function PendingAedReportScreen() {
               </div>
 
               {/* Statement KPI Bar */}
-              <div className="bg-[#f0f4f8] border-b border-[#c4d4ec] px-5 py-3 grid grid-cols-3 gap-4 shrink-0">
+              <div className="bg-[#EBF6FC] border-b border-[#bce2f8] px-5 py-3 grid grid-cols-3 gap-4 shrink-0">
                 <div className="bg-white border border-[#c4d4ec] rounded p-2 text-center">
                   <div className="text-[10px] text-gray-500 font-bold uppercase">Total Booked AED</div>
                   <div className="text-[15px] font-black text-[#104080] font-mono">

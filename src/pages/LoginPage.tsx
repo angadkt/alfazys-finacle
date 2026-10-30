@@ -276,7 +276,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="absolute bottom-8 w-full text-center text-[12px] text-[#666666]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-          Copyright © 2007-2008 Infosys Limited. All rights reserved. <a href="#" className="text-[#444444] underline font-medium">www.finacle.com</a>
+          Copyright © 2007-2008 Infazys Finacle. All rights reserved. <a href="#" className="text-[#444444] underline font-medium">www.finacle.com</a>
         </div>
 
         {/* Hidden Role Switchers (for testing without breaking the design) */}
