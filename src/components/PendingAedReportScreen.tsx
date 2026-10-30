@@ -479,59 +479,62 @@ export default function PendingAedReportScreen() {
       <div className="p-4 md:px-8 bg-white flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 shrink-0">
         <div className="flex flex-wrap items-center gap-2.5">
           {/* From - To Date Pickers */}
-          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
+          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2.5 h-[32px] shadow-2xs focus-within:border-[#00A2E8] focus-within:ring-1 focus-within:ring-[#00A2E8] transition-all">
             <span className="text-[#0E498C] font-bold text-[11px]">From:</span>
             <FinacleDatePicker
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
+              className="bg-transparent border-0 text-xs text-gray-800 min-w-[100px] h-[26px] p-0 shadow-none hover:border-0"
             />
 
             <span className="text-[#0E498C] font-bold text-[11px] ml-0.5">To:</span>
             <FinacleDatePicker
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[110px] h-[26px]"
+              className="bg-transparent border-0 text-xs text-gray-800 min-w-[100px] h-[26px] p-0 shadow-none hover:border-0"
             />
 
-            <div className="flex items-center gap-1 ml-1 border-l border-[#c4d4ec] pl-1.5">
+            {(fromDate || toDate) && (
               <button
                 type="button"
-                onClick={handleSetToday}
-                className="bg-[#0E498C] hover:bg-[#00A2E8] text-white px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-colors shadow-2xs"
+                onClick={handleClearDates}
+                className="text-gray-400 hover:text-red-500 px-0.5 cursor-pointer"
+                title="Clear Dates (All Time)"
               >
-                Today
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
-              <button
-                type="button"
-                onClick={handleSetThisMonth}
-                className="bg-white border border-[#c4d4ec] text-[#0E498C] hover:bg-[#eaf0f8] px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-colors"
-              >
-                This Month
-              </button>
-              {(fromDate || toDate) && (
-                <button
-                  type="button"
-                  onClick={handleClearDates}
-                  className="text-gray-400 hover:text-red-600 px-1 cursor-pointer"
-                  title="Clear Dates (All Time)"
-                >
-                  <X className="w-3 h-3 stroke-[2.5]" />
-                </button>
-              )}
-            </div>
+            )}
+          </div>
+
+          {/* Quick Date Segmented Buttons */}
+          <div className="inline-flex items-center h-[32px] border border-gray-300 rounded-md overflow-hidden bg-white shadow-2xs">
+            <button
+              type="button"
+              onClick={handleSetToday}
+              className="h-full px-2.5 text-xs font-semibold text-[#0E498C] hover:bg-[#EBF6FC] hover:text-[#00A2E8] transition-colors cursor-pointer"
+            >
+              Today
+            </button>
+            <div className="w-[1px] h-4 bg-gray-200"></div>
+            <button
+              type="button"
+              onClick={handleSetThisMonth}
+              className="h-full px-2.5 text-xs font-semibold text-[#0E498C] hover:bg-[#EBF6FC] hover:text-[#00A2E8] transition-colors cursor-pointer"
+            >
+              This Month
+            </button>
           </div>
 
           {/* Agent Search Filter */}
-          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
-            <span className="text-[#0E498C] font-bold text-[11px]">Agent:</span>
+          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2.5 h-[32px] shadow-2xs focus-within:border-[#00A2E8] focus-within:ring-1 focus-within:ring-[#00A2E8] transition-all">
+            <span className="text-[#0E498C] font-bold text-[11px] whitespace-nowrap">Agent:</span>
             <input
               type="text"
               list="pending-aed-agent-list"
               value={agentSearch}
               onChange={(e) => setAgentSearch(e.target.value)}
               placeholder="Search Agent / CIF..."
-              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 w-[160px] h-[26px] focus:outline-none focus:border-[#0E498C]"
+              className="bg-transparent text-xs text-gray-800 placeholder:text-gray-400 w-[150px] h-full outline-none"
             />
             <datalist id="pending-aed-agent-list">
               {customers.map((c) => (
@@ -544,13 +547,13 @@ export default function PendingAedReportScreen() {
                 onClick={() => setAgentSearch('')}
                 className="text-gray-400 hover:text-red-500 cursor-pointer"
               >
-                <X className="w-3 h-3 stroke-[2.5]" />
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             )}
           </div>
 
           {/* Status Filter */}
-          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2.5 h-[32px] shadow-2xs focus-within:border-[#00A2E8] focus-within:ring-1 focus-within:ring-[#00A2E8] transition-all">
             <span className="text-[#0E498C] font-bold text-[11px] whitespace-nowrap">Status:</span>
             <FinacleSelect
               value={statusFilter}
@@ -562,13 +565,13 @@ export default function PendingAedReportScreen() {
                 { value: 'partial', label: 'Partially Collected' },
                 { value: 'settled', label: 'Fully Settled / 100%' },
               ]}
-              triggerClassName="min-w-[170px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+              triggerClassName="min-w-[165px] h-[28px] border-0 bg-transparent px-1 text-xs"
             />
           </div>
 
           {/* Sort Filter */}
-          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
-            <ArrowUpDown className="w-3 h-3 text-[#0E498C] shrink-0" />
+          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2.5 h-[32px] shadow-2xs focus-within:border-[#00A2E8] focus-within:ring-1 focus-within:ring-[#00A2E8] transition-all">
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#0E498C] shrink-0" />
             <FinacleSelect
               value={sortBy}
               onChange={(e: any) => setSortBy(e.target.value)}
@@ -578,17 +581,17 @@ export default function PendingAedReportScreen() {
                 { value: 'booked_desc', label: 'Booked AED: Highest First' },
                 { value: 'name_asc', label: 'Agent Name: A to Z' },
               ]}
-              triggerClassName="min-w-[190px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+              triggerClassName="min-w-[185px] h-[28px] border-0 bg-transparent px-1 text-xs"
             />
           </div>
         </div>
 
         {/* Period & Agent Count */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="bg-[#EBF6FC] border border-[#bce2f8] px-2.5 py-1 rounded text-[#0E498C] font-semibold shadow-2xs">
+        <div className="flex items-center gap-2.5 text-xs">
+          <span className="bg-[#EBF6FC] border border-[#bce2f8] px-3 py-1 rounded-full text-[#0E498C] font-semibold shadow-2xs text-xs">
             Period: <strong className="text-gray-900 ml-1">{dateRangeLabel}</strong>
           </span>
-          <span className="text-[11px] text-gray-500 font-medium ml-1">
+          <span className="text-[11.5px] text-gray-500 font-medium">
             Showing <strong className="text-[#0E498C]">{sortedRecords.length}</strong> agent record{sortedRecords.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -733,7 +736,7 @@ export default function PendingAedReportScreen() {
                 })}
               </tbody>
               <tfoot>
-                <tr className="bg-[#eef2f9] font-bold text-[#104080] border-t-2 border-[#c4d4ec] sticky bottom-0 z-10 shadow-xs">
+                <tr className="bg-[#eef2f9] font-bold text-[#0E498C] border-t-2 border-[#FFB800] sticky bottom-0 z-10 shadow-xs">
                   <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}>
                     Report Total ({sortedRecords.length} parties displayed)
                   </td>

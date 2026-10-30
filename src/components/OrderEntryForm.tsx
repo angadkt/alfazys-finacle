@@ -1005,7 +1005,7 @@ export default function OrderEntryForm() {
             onClick={() => { setIsFormModalOpen(true); }}
             className="flex items-center gap-1.5 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-3.5 py-1.5 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 text-[#FFB800]" />
             <span>Add Order Entry</span>
           </button>
         </div>

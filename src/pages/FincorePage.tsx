@@ -242,7 +242,7 @@ export default function FincorePage() {
                   key={idx} 
                   className={`flex items-center gap-2.5 py-1.5 px-2 cursor-pointer hover:bg-[#EBF6FC] hover:text-black group tracking-wide text-black rounded-xs font-semibold transition-colors ${
                     activeScreen === item 
-                      ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs' 
+                      ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs border-l-[3.5px] border-[#FFB800] pl-1.5' 
                       : ''
                   }`}
                   onClick={() => {
@@ -284,7 +284,7 @@ export default function FincorePage() {
                           key={idx}
                           className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#EBF6FC] hover:text-black group text-[13.5px] font-semibold text-black rounded-xs transition-colors ${
                             activeScreen === sub.name 
-                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs' 
+                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs border-l-[3.5px] border-[#FFB800] pl-1.5' 
                               : ''
                           }`}
                           onClick={() => {
@@ -329,7 +329,7 @@ export default function FincorePage() {
                           key={idx}
                           className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#EBF6FC] hover:text-black group text-[13.5px] font-semibold text-black rounded-xs transition-colors ${
                             activeScreen === sub.name 
-                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs' 
+                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs border-l-[3.5px] border-[#FFB800] pl-1.5' 
                               : ''
                           }`}
                           onClick={() => {
@@ -377,7 +377,7 @@ export default function FincorePage() {
                           key={idx}
                           className={`flex items-center gap-2 py-1.5 px-2 cursor-pointer hover:bg-[#EBF6FC] hover:text-black group text-[13.5px] font-semibold text-black rounded-xs transition-colors ${
                             activeScreen === sub.name 
-                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs' 
+                              ? 'bg-[#00A2E8] text-white font-bold hover:bg-[#0093D6] hover:text-white shadow-2xs border-l-[3.5px] border-[#FFB800] pl-1.5' 
                               : ''
                           }`}
                           onClick={() => {

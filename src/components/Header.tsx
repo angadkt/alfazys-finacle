@@ -421,21 +421,26 @@ export default function Header({
 
   return (
     <div className="w-full flex flex-col font-sans antialiased shrink-0">
-      {/* Top Utility Navbar - Canara Bank Sky Blue */}
-      <div className="w-full bg-[#00A2E8] text-white flex items-center justify-between px-8 py-1.5 border-b border-[#0089c7] text-xs shadow-sm z-10">
+      {/* Top Utility Navbar - 50/50 Canara Gold & Cyan Blue Split with Subtle Diagonal Transition */}
+      <div 
+        className="w-full min-h-[42px] flex items-stretch border-b border-[#0089c7] text-xs shadow-sm z-10 overflow-hidden"
+        style={{
+          background: 'linear-gradient(115deg, #FFB800 0%, #FFB800 50%, #00A5E3 50%, #00A5E3 100%)'
+        }}
+      >
         
-        {/* Left Side Navigation Info */}
-        <div className="flex items-center h-full">
-          <div className="text-white font-semibold flex items-center gap-1.5">
+        {/* Left Half: Canara Gold (#FFB800) */}
+        <div className="flex-1 text-gray-900 flex items-center px-4 sm:px-8 py-2.5">
+          <div className="text-gray-900 font-bold flex items-center gap-1.5">
             <span>User: {userName}</span>
-            <span className="text-[11px] bg-[#FFB800] text-black px-2 py-0.5 rounded uppercase font-bold tracking-wide shadow-2xs">
+            <span className="text-[11px] bg-[#0E498C] text-white px-2 py-0.5 rounded uppercase font-extrabold tracking-wide shadow-2xs">
               {isSuperAdmin ? 'ADMIN' : 'STAFF'}
             </span>
           </div>
-          <div className="w-[1px] h-4 bg-white/30 mx-5"></div>
-          <div className="flex items-center gap-2 text-white font-semibold">
+          <div className="w-[1px] h-4 bg-black/20 mx-3 sm:mx-5"></div>
+          <div className="flex items-center gap-2 text-gray-900 font-bold">
             Time Zone: GMT
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-90">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-90 text-gray-900">
               <circle cx="15" cy="15" r="3"></circle>
               <line x1="9" y1="9" x2="15" y2="15"></line>
               <line x1="14" y1="8" x2="16" y2="10"></line>
@@ -443,11 +448,11 @@ export default function Header({
           </div>
         </div>
 
-        {/* Right Side Controls */}
-        <div className="flex items-center">
+        {/* Right Half: Cyan Blue (#00A5E3) */}
+        <div className="flex-1 text-white flex items-center justify-end px-4 sm:px-8 py-2.5">
           <div className="flex items-center gap-2">
             <span className="text-white font-semibold text-xs">Solution:</span>
-            <div className="w-[170px]">
+            <div className="w-[145px]">
               <FinacleSelect
                 value={isFincoreActive ? 'FINCORE' : (isFltActive ? 'FLT' : 'Select')}
                 onChange={(e) => {
@@ -458,7 +463,7 @@ export default function Header({
                   }
                 }}
                 className="w-full"
-                triggerClassName="py-1 px-2 text-xs font-semibold bg-white/95 text-[#0E498C] border-white"
+                triggerClassName="h-[22px] py-0 px-2 text-[11px] leading-none font-bold bg-white text-[#0E498C] border-white shadow-2xs rounded"
                 options={[
                   { value: "Select", label: "---Select---" },
                   { value: "FINCORE", label: "FINCORE" },
@@ -467,15 +472,15 @@ export default function Header({
               />
             </div>
           </div>
-          <div className="w-[1px] h-5 bg-white/30 mx-5"></div>
+          <div className="w-[1px] h-4 bg-white/30 mx-3 sm:mx-5"></div>
           
           {/* Logout/Exit Icon */}
           <button 
-            className="flex items-center justify-center cursor-pointer bg-white/15 hover:bg-white/30 p-1 rounded-lg transition-colors border border-white/40 shadow-sm ml-1"
+            className="w-[22px] h-[22px] flex items-center justify-center cursor-pointer bg-white/15 hover:bg-white/30 rounded transition-colors border border-white/40 shadow-sm ml-1"
             onClick={handleLogout}
             title="Logout"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -519,19 +524,19 @@ export default function Header({
             </div>
           </div>
 
-          {/* Top Right Toolbar */}
-          <div className="absolute top-0 right-0 flex items-center text-xs font-bold text-[#0E498C] bg-[#f4f7f9] border border-[#a0a0a0] border-t-0 border-r-0 z-10">
-            <button className="px-2 py-0.5 hover:bg-[#EBF6FC] flex items-center justify-center h-full">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10"/><path d="M17 7 7 17"/></svg>
+          {/* Top Right Toolbar - Modernized Canara Pill */}
+          <div className="absolute top-1.5 right-6 flex items-center text-xs font-semibold text-[#0E498C] bg-white border border-gray-200/90 rounded-md shadow-2xs p-0.5 z-10 gap-0.5">
+            <button className="w-6 h-6 hover:bg-[#EBF6FC] hover:text-[#00A2E8] text-[#0E498C] rounded flex items-center justify-center cursor-pointer transition-colors" title="Expand Toolbar">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10"/><path d="M17 7 7 17"/></svg>
             </button>
-            <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
-            <button className="px-2 py-0.5 hover:bg-[#EBF6FC] tracking-wide" onClick={onMenuClick}>Menu</button>
-            <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
-            <button className="px-2 py-0.5 hover:bg-[#EBF6FC] tracking-wide">CCY Converter</button>
-            <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
-            <button disabled className="px-2 py-0.5 tracking-wide text-gray-400 cursor-not-allowed" title="Profit Calculator (Disabled)">Profit Calculator</button>
-            <div className="w-[1px] h-3 border-l-[1.5px] border-dotted border-[#808080]"></div>
-            <button className="px-2 py-0.5 hover:bg-[#EBF6FC] tracking-wide" onClick={() => setIsCostRateModalOpen(true)}>Cost Rate</button>
+            <div className="w-[1px] h-3.5 bg-gray-200"></div>
+            <button className="px-2.5 py-1 hover:bg-[#EBF6FC] hover:text-[#00A2E8] rounded transition-colors cursor-pointer" onClick={onMenuClick}>Menu</button>
+            <div className="w-[1px] h-3.5 bg-gray-200"></div>
+            <button className="px-2.5 py-1 hover:bg-[#EBF6FC] hover:text-[#00A2E8] rounded transition-colors cursor-pointer">CCY Converter</button>
+            <div className="w-[1px] h-3.5 bg-gray-200"></div>
+            <button disabled className="px-2.5 py-1 text-gray-400 cursor-not-allowed" title="Profit Calculator (Disabled)">Profit Calculator</button>
+            <div className="w-[1px] h-3.5 bg-gray-200"></div>
+            <button className="px-2.5 py-1 hover:bg-[#EBF6FC] hover:text-[#00A2E8] text-[#0E498C] font-bold rounded transition-colors cursor-pointer" onClick={() => setIsCostRateModalOpen(true)}>Cost Rate</button>
           </div>
         </div>
       )}
@@ -701,6 +706,9 @@ export default function Header({
           </div>
         </div>
       </div>
+
+      {/* Finacle Burgundy Logo Accent Ribbon */}
+      <div className="h-[2.5px] bg-[#9E0E41] w-full shrink-0 shadow-xs" />
 
       {/* Dedicated Cost Rate Modal */}
       <CostRateModal 

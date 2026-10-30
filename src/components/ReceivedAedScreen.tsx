@@ -263,7 +263,7 @@ export default function ReceivedAedScreen() {
             onClick={handleOpenAdd}
             className="flex items-center gap-1.5 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white px-3.5 py-1.5 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 text-[#FFB800]" />
             <span>Add Received AED Entry</span>
           </button>
         </div>
@@ -273,32 +273,33 @@ export default function ReceivedAedScreen() {
       <div className="p-4 md:px-8 border-b border-gray-200 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Date Range: From & To */}
-          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2.5 py-1 rounded">
+          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2.5 h-[32px] shadow-2xs focus-within:border-[#00A2E8] focus-within:ring-1 focus-within:ring-[#00A2E8] transition-all">
             <span className="text-[#0E498C] font-bold text-[11px]">From:</span>
             <FinacleDatePicker
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
+              className="bg-transparent border-0 text-xs text-gray-800 min-w-[105px] h-[26px] p-0 shadow-none hover:border-0"
             />
-            <span className="text-[#0E498C] font-bold text-[11px] ml-1">To:</span>
+            <span className="text-[#0E498C] font-bold text-[11px] ml-0.5">To:</span>
             <FinacleDatePicker
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="bg-white border border-[#c4d4ec] rounded px-2 py-0.5 text-xs text-gray-700 min-w-[125px] h-[26px]"
+              className="bg-transparent border-0 text-xs text-gray-800 min-w-[105px] h-[26px] p-0 shadow-none hover:border-0"
             />
             {(fromDate || toDate) && (
               <button
+                type="button"
                 onClick={() => { setFromDate(''); setToDate(''); }}
-                className="text-gray-400 hover:text-red-500 ml-1 cursor-pointer"
+                className="text-gray-400 hover:text-red-500 px-0.5 cursor-pointer"
                 title="Clear Dates"
               >
-                <X className="w-3 h-3 stroke-[2.5]" />
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             )}
           </div>
 
           {/* Agent Filter */}
-          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2.5 h-[32px] shadow-2xs focus-within:border-[#00A2E8] focus-within:ring-1 focus-within:ring-[#00A2E8] transition-all">
             <span className="text-[#0E498C] font-bold text-[11px] whitespace-nowrap">Agent:</span>
             <FinacleSelect
               value={agentFilter}
@@ -310,21 +311,22 @@ export default function ReceivedAedScreen() {
                   label: c.name,
                 })),
               ]}
-              triggerClassName="min-w-[150px] max-w-[200px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+              triggerClassName="min-w-[150px] max-w-[200px] h-[28px] border-0 bg-transparent px-1 text-xs"
             />
             {agentFilter && (
               <button
+                type="button"
                 onClick={() => setAgentFilter('')}
                 className="text-gray-400 hover:text-red-500 cursor-pointer"
                 title="Clear Agent"
               >
-                <X className="w-3 h-3 stroke-[2.5]" />
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             )}
           </div>
 
           {/* Mode Filter */}
-          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#c4d4ec] px-2 py-0.5 rounded">
+          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2.5 h-[32px] shadow-2xs focus-within:border-[#00A2E8] focus-within:ring-1 focus-within:ring-[#00A2E8] transition-all">
             <span className="text-[#0E498C] font-bold text-[11px] whitespace-nowrap">Mode:</span>
             <FinacleSelect
               value={modeFilter}
@@ -339,28 +341,31 @@ export default function ReceivedAedScreen() {
                 { value: 'UPI', label: 'UPI' },
                 { value: 'COR NET', label: 'COR NET' },
               ]}
-              triggerClassName="min-w-[120px] h-[26px] text-xs border-[#c4d4ec] bg-white rounded px-2"
+              triggerClassName="min-w-[120px] h-[28px] border-0 bg-transparent px-1 text-xs"
             />
             {modeFilter && (
               <button
+                type="button"
                 onClick={() => setModeFilter('')}
                 className="text-gray-400 hover:text-red-500 cursor-pointer"
                 title="Clear Mode"
               >
-                <X className="w-3 h-3 stroke-[2.5]" />
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             )}
           </div>
 
           <button
+            type="button"
             onClick={() => fetchRecords(1, fromDate, toDate, modeFilter, agentFilter)}
-            className="bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2]/40 text-white text-xs font-bold px-3 py-1.5 rounded cursor-pointer transition-colors shadow-2xs"
+            className="h-[32px] bg-[#0E498C] hover:bg-[#00A2E8] text-white text-xs font-bold px-3.5 rounded-md cursor-pointer transition-colors shadow-2xs flex items-center justify-center"
           >
             Apply Filter
           </button>
 
           {(fromDate || toDate || agentFilter || modeFilter) && (
             <button
+              type="button"
               onClick={() => {
                 setFromDate('');
                 setToDate('');
@@ -383,7 +388,7 @@ export default function ReceivedAedScreen() {
           <span className="bg-[#EBF6FC] border border-[#bce2f8] px-2.5 py-1 rounded text-[#0E498C] shadow-2xs">
             Total Collected: <strong>{totalAedShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong>
           </span>
-          <span className="bg-[#fef9ec] border border-[#fae29c] px-2.5 py-1 rounded text-[#92400e] shadow-2xs">
+          <span className="bg-[#fef9ec] border border-[#fae29c] border-t-2 border-t-[#FFB800] px-2.5 py-1 rounded text-[#92400e] shadow-2xs">
             Unallocated Balance: <strong>{totalRemainingShown.toLocaleString('en-AE', { minimumFractionDigits: 2 })} AED</strong>
           </span>
         </div>
@@ -498,7 +503,7 @@ export default function ReceivedAedScreen() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-[#EBF6FC] font-bold text-[#0E498C] border-t-2 border-[#c4d4ec]">
+                <tr className="bg-[#EBF6FC] font-bold text-[#0E498C] border-t-2 border-[#FFB800]">
                   <td className="px-3 py-2 border-r border-[#c4d4ec]" colSpan={3}>
                     Page Total ({records.length} records shown)
                   </td>

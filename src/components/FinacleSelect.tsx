@@ -226,7 +226,7 @@ export default function FinacleSelect<T extends string = string>({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`w-full h-[38px] bg-white border border-gray-300 rounded-md px-3 py-2 text-xs flex items-center justify-between gap-2 text-left cursor-pointer transition-all duration-150 shadow-2xs hover:border-gray-400 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080] ${
+        className={`w-full ${triggerClassName.includes('h-') ? '' : 'h-[38px]'} bg-white border border-gray-300 rounded-md ${triggerClassName.includes('px-') ? '' : 'px-3'} ${triggerClassName.includes('py-') ? '' : 'py-2'} text-xs flex items-center justify-between gap-2 text-left cursor-pointer transition-all duration-150 shadow-2xs hover:border-gray-400 focus:outline-none focus:border-[#104080] focus:ring-1 focus:ring-[#104080] ${
           isOpen ? "border-[#104080] ring-1 ring-[#104080]" : ""
         } ${disabled ? "opacity-60 cursor-not-allowed bg-gray-50" : ""} ${triggerClassName}`}
       >
