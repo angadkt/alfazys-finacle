@@ -130,6 +130,15 @@ export const initialCreditEntries: CreditEntry[] = [];
 
 import { DEFAULT_STAFF_PERMISSIONS } from '../types/staff';
 import type { StaffMember, StaffPermissions, StaffEmailNotification } from '../types/staff';
+import type { 
+  Flat, 
+  Room, 
+  MessPlan, 
+  Member, 
+  RentInvoice, 
+  RentPayment, 
+  EmailNoticeLog 
+} from '../types/flt';
 
 export interface DbSchema {
   user: User;
@@ -141,7 +150,209 @@ export interface DbSchema {
   creditEntries?: CreditEntry[];
   staffMembers?: StaffMember[];
   emailLogs?: StaffEmailNotification[];
+  flats?: Flat[];
+  rooms?: Room[];
+  messPlans?: MessPlan[];
+  members?: Member[];
+  rentInvoices?: RentInvoice[];
+  rentPayments?: RentPayment[];
+  emailNoticeLogs?: EmailNoticeLog[];
 }
+
+export const initialFlats: Flat[] = [
+  {
+    id: 'FLT-101',
+    flatNumber: 'Flat 304',
+    buildingName: 'Al Huda Residence',
+    areaLocation: 'Al Barsha 1, Dubai',
+    totalRooms: 3,
+    totalBedsCapacity: 8,
+    landlordName: 'Mohamed Al Nuaimi',
+    landlordPhone: '+971 50 882 1109',
+    monthlyLeaseCost: 6500,
+    electricityAccountNo: 'DEWA-8849201',
+    wifiNetworkName: 'AlHuda_304_5G',
+    wifiPassword: 'FastNet@2026',
+    status: 'ACTIVE',
+    createdDate: '2026-09-01'
+  },
+  {
+    id: 'FLT-102',
+    flatNumber: 'Flat 12B',
+    buildingName: 'Marina Crown',
+    areaLocation: 'Dubai Marina, Dubai',
+    totalRooms: 2,
+    totalBedsCapacity: 5,
+    landlordName: 'Emaar Properties LLC',
+    landlordPhone: '+971 4 366 1688',
+    monthlyLeaseCost: 7200,
+    electricityAccountNo: 'DEWA-7731902',
+    wifiNetworkName: 'MarinaCrown_12B',
+    wifiPassword: 'MarinaPass@2026',
+    status: 'ACTIVE',
+    createdDate: '2026-09-15'
+  }
+];
+
+export const initialRooms: Room[] = [
+  {
+    id: 'RM-101',
+    flatId: 'FLT-101',
+    roomName: 'Room 1 (Master Bedroom)',
+    roomType: 'DOUBLE_SHARING',
+    hasAttachedBath: true,
+    hasBalcony: true,
+    acType: 'SPLIT',
+    totalBeds: 2,
+    occupiedBeds: 1,
+    availableBeds: 1,
+    defaultMonthlyRentPerBed: 1100,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'RM-102',
+    flatId: 'FLT-101',
+    roomName: 'Room 2 (Partition Room)',
+    roomType: 'TRIPLE_SHARING',
+    hasAttachedBath: false,
+    hasBalcony: false,
+    acType: 'CENTRAL',
+    totalBeds: 3,
+    occupiedBeds: 1,
+    availableBeds: 2,
+    defaultMonthlyRentPerBed: 750,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'RM-103',
+    flatId: 'FLT-101',
+    roomName: 'Room 3 (Balcony Room)',
+    roomType: 'TRIPLE_SHARING',
+    hasAttachedBath: false,
+    hasBalcony: true,
+    acType: 'SPLIT',
+    totalBeds: 3,
+    occupiedBeds: 1,
+    availableBeds: 2,
+    defaultMonthlyRentPerBed: 800,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'RM-104',
+    flatId: 'FLT-102',
+    roomName: 'Room A (Sea View)',
+    roomType: 'DOUBLE_SHARING',
+    hasAttachedBath: true,
+    hasBalcony: true,
+    acType: 'CENTRAL',
+    totalBeds: 2,
+    occupiedBeds: 0,
+    availableBeds: 2,
+    defaultMonthlyRentPerBed: 1300,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'RM-105',
+    flatId: 'FLT-102',
+    roomName: 'Room B (Executive)',
+    roomType: 'TRIPLE_SHARING',
+    hasAttachedBath: false,
+    hasBalcony: false,
+    acType: 'CENTRAL',
+    totalBeds: 3,
+    occupiedBeds: 0,
+    availableBeds: 3,
+    defaultMonthlyRentPerBed: 950,
+    status: 'AVAILABLE'
+  }
+];
+
+export const initialMessPlans: MessPlan[] = [
+  {
+    id: 'MESS-01',
+    planName: '3-Times Daily Meals (Breakfast + Lunch + Dinner)',
+    mealTypes: ['BREAKFAST', 'LUNCH', 'DINNER'],
+    cuisineCategory: 'KERALA',
+    monthlyPrice: 450,
+    dailyPrice: 18,
+    description: 'Hot fresh breakfast, rice/curry lunch, and dinner delivered daily to flat.',
+    isActive: true
+  },
+  {
+    id: 'MESS-02',
+    planName: '2-Times Daily Meals (Lunch + Dinner)',
+    mealTypes: ['LUNCH', 'DINNER'],
+    cuisineCategory: 'NORTH_INDIAN',
+    monthlyPrice: 350,
+    dailyPrice: 14,
+    description: 'Roti, sabzi, dal, rice for afternoon and night meals.',
+    isActive: true
+  },
+  {
+    id: 'MESS-03',
+    planName: 'Dinner Only (Night Meal)',
+    mealTypes: ['DINNER'],
+    cuisineCategory: 'SOUTH_INDIAN',
+    monthlyPrice: 220,
+    dailyPrice: 9,
+    description: 'Evening hot meals and chapati for busy office executives.',
+    isActive: true
+  }
+];
+
+export const initialMembers: Member[] = [
+  {
+    id: 'MBR-001',
+    fullName: 'Rahul Sharma',
+    phone: '+971 50 234 5678',
+    email: 'rahul.sharma@example.com',
+    assignedFlatId: 'FLT-101',
+    assignedRoomId: 'RM-101',
+    bedNumber: 'Bed 1 (Window)',
+    agreedRoomRent: 1100,
+    messPlanId: 'MESS-01',
+    messFee: 450,
+    joiningDate: '2026-10-01',
+    rentDueDay: 1,
+    securityDeposit: 500,
+    status: 'ACTIVE',
+    notes: 'Senior IT Analyst'
+  },
+  {
+    id: 'MBR-002',
+    fullName: 'Mohammed Anas',
+    phone: '+971 55 876 1234',
+    email: 'anas.dubai99@example.com',
+    assignedFlatId: 'FLT-101',
+    assignedRoomId: 'RM-102',
+    bedNumber: 'Bed 1 (Lower)',
+    agreedRoomRent: 750,
+    messPlanId: 'MESS-02',
+    messFee: 350,
+    joiningDate: '2026-10-05',
+    rentDueDay: 5,
+    securityDeposit: 400,
+    status: 'ACTIVE',
+    notes: 'Sales Representative'
+  },
+  {
+    id: 'MBR-003',
+    fullName: 'Vishnu Prasad',
+    phone: '+971 52 901 3456',
+    email: 'vishnu.p@example.com',
+    assignedFlatId: 'FLT-101',
+    assignedRoomId: 'RM-103',
+    bedNumber: 'Bed 1 (Balcony side)',
+    agreedRoomRent: 800,
+    messPlanId: undefined,
+    messFee: 0,
+    joiningDate: '2026-09-15',
+    rentDueDay: 1,
+    securityDeposit: 500,
+    status: 'ACTIVE',
+    notes: 'Cooking on own'
+  }
+];
 
 export const initialStaffMembers: StaffMember[] = [
   {
@@ -287,6 +498,41 @@ export const getDb = (): DbSchema => {
       db.emailLogs = [];
       saveDb(db);
     }
+
+    if (!db.flats || !Array.isArray(db.flats) || db.flats.length === 0) {
+      db.flats = [...initialFlats];
+      saveDb(db);
+    }
+
+    if (!db.rooms || !Array.isArray(db.rooms) || db.rooms.length === 0) {
+      db.rooms = [...initialRooms];
+      saveDb(db);
+    }
+
+    if (!db.messPlans || !Array.isArray(db.messPlans) || db.messPlans.length === 0) {
+      db.messPlans = [...initialMessPlans];
+      saveDb(db);
+    }
+
+    if (!db.members || !Array.isArray(db.members) || db.members.length === 0) {
+      db.members = [...initialMembers];
+      saveDb(db);
+    }
+
+    if (!db.rentInvoices || !Array.isArray(db.rentInvoices)) {
+      db.rentInvoices = [];
+      saveDb(db);
+    }
+
+    if (!db.rentPayments || !Array.isArray(db.rentPayments)) {
+      db.rentPayments = [];
+      saveDb(db);
+    }
+
+    if (!db.emailNoticeLogs || !Array.isArray(db.emailNoticeLogs)) {
+      db.emailNoticeLogs = [];
+      saveDb(db);
+    }
     
     return db;
   } catch (e) {
@@ -295,6 +541,13 @@ export const getDb = (): DbSchema => {
     typedInitialData.creditEntries = [...initialCreditEntries];
     typedInitialData.staffMembers = [...initialStaffMembers];
     typedInitialData.emailLogs = [];
+    typedInitialData.flats = [...initialFlats];
+    typedInitialData.rooms = [...initialRooms];
+    typedInitialData.messPlans = [...initialMessPlans];
+    typedInitialData.members = [...initialMembers];
+    typedInitialData.rentInvoices = [];
+    typedInitialData.rentPayments = [];
+    typedInitialData.emailNoticeLogs = [];
     saveDb(typedInitialData);
     localStorage.setItem('infazys_finacle_db_cleaned', 'true');
     return typedInitialData;
@@ -747,5 +1000,264 @@ export const dbService = {
 
   getEmailLogs: (): StaffEmailNotification[] => {
     return getDb().emailLogs || [];
+  },
+
+  // --- FLT (Flat & Mess Management) Methods ---
+  getFlats: (): Flat[] => {
+    return getDb().flats || [];
+  },
+
+  getFlatById: (id: string): Flat | undefined => {
+    return (getDb().flats || []).find(f => f.id === id);
+  },
+
+  saveFlat: (flat: Flat): Flat => {
+    const db = getDb();
+    if (!db.flats) db.flats = [];
+    const index = db.flats.findIndex(f => f.id === flat.id);
+    if (index >= 0) {
+      db.flats[index] = flat;
+    } else {
+      db.flats.unshift(flat);
+    }
+    saveDb(db);
+    return flat;
+  },
+
+  deleteFlat: (id: string): boolean => {
+    const db = getDb();
+    if (!db.flats) return false;
+    const initialLen = db.flats.length;
+    db.flats = db.flats.filter(f => f.id !== id);
+    if (db.flats.length !== initialLen) {
+      saveDb(db);
+      return true;
+    }
+    return false;
+  },
+
+  getRooms: (flatId?: string): Room[] => {
+    const rooms = getDb().rooms || [];
+    if (flatId && flatId !== 'ALL') {
+      return rooms.filter(r => r.flatId === flatId);
+    }
+    return rooms;
+  },
+
+  getRoomById: (id: string): Room | undefined => {
+    return (getDb().rooms || []).find(r => r.id === id);
+  },
+
+  saveRoom: (room: Room): Room => {
+    const db = getDb();
+    if (!db.rooms) db.rooms = [];
+    const index = db.rooms.findIndex(r => r.id === room.id);
+    if (index >= 0) {
+      db.rooms[index] = room;
+    } else {
+      db.rooms.push(room);
+    }
+    saveDb(db);
+    return room;
+  },
+
+  deleteRoom: (id: string): boolean => {
+    const db = getDb();
+    if (!db.rooms) return false;
+    const initialLen = db.rooms.length;
+    db.rooms = db.rooms.filter(r => r.id !== id);
+    if (db.rooms.length !== initialLen) {
+      saveDb(db);
+      return true;
+    }
+    return false;
+  },
+
+  getMessPlans: (): MessPlan[] => {
+    return getDb().messPlans || [];
+  },
+
+  saveMessPlan: (plan: MessPlan): MessPlan => {
+    const db = getDb();
+    if (!db.messPlans) db.messPlans = [];
+    const index = db.messPlans.findIndex(p => p.id === plan.id);
+    if (index >= 0) {
+      db.messPlans[index] = plan;
+    } else {
+      db.messPlans.push(plan);
+    }
+    saveDb(db);
+    return plan;
+  },
+
+  deleteMessPlan: (id: string): boolean => {
+    const db = getDb();
+    if (!db.messPlans) return false;
+    const initialLen = db.messPlans.length;
+    db.messPlans = db.messPlans.filter(p => p.id !== id);
+    if (db.messPlans.length !== initialLen) {
+      saveDb(db);
+      return true;
+    }
+    return false;
+  },
+
+  getMembers: (flatId?: string): Member[] => {
+    const members = getDb().members || [];
+    if (flatId && flatId !== 'ALL') {
+      return members.filter(m => m.assignedFlatId === flatId);
+    }
+    return members;
+  },
+
+  getMemberById: (id: string): Member | undefined => {
+    return (getDb().members || []).find(m => m.id === id);
+  },
+
+  saveMember: (member: Member): Member => {
+    const db = getDb();
+    if (!db.members) db.members = [];
+    const index = db.members.findIndex(m => m.id === member.id);
+    if (index >= 0) {
+      db.members[index] = member;
+    } else {
+      db.members.unshift(member);
+    }
+    if (db.rooms) {
+      const room = db.rooms.find(r => r.id === member.assignedRoomId);
+      if (room) {
+        const roomMembers = db.members.filter(m => m.assignedRoomId === room.id && m.status === 'ACTIVE');
+        room.occupiedBeds = roomMembers.length;
+        room.availableBeds = Math.max(0, room.totalBeds - room.occupiedBeds);
+        room.status = room.availableBeds === 0 ? 'FULL' : 'AVAILABLE';
+      }
+    }
+    saveDb(db);
+    return member;
+  },
+
+  deleteMember: (id: string): boolean => {
+    const db = getDb();
+    if (!db.members) return false;
+    const memberToDelete = db.members.find(m => m.id === id);
+    const initialLen = db.members.length;
+    db.members = db.members.filter(m => m.id !== id);
+    if (db.members.length !== initialLen) {
+      if (memberToDelete && db.rooms) {
+        const room = db.rooms.find(r => r.id === memberToDelete.assignedRoomId);
+        if (room) {
+          const roomMembers = db.members.filter(m => m.assignedRoomId === room.id && m.status === 'ACTIVE');
+          room.occupiedBeds = roomMembers.length;
+          room.availableBeds = Math.max(0, room.totalBeds - room.occupiedBeds);
+          room.status = room.availableBeds === 0 ? 'FULL' : 'AVAILABLE';
+        }
+      }
+      saveDb(db);
+      return true;
+    }
+    return false;
+  },
+
+  getRentInvoices: (month?: string): RentInvoice[] => {
+    const invoices = getDb().rentInvoices || [];
+    if (month && month !== 'ALL') {
+      return invoices.filter(inv => inv.billingMonth === month);
+    }
+    return invoices;
+  },
+
+  saveRentInvoice: (invoice: RentInvoice): RentInvoice => {
+    const db = getDb();
+    if (!db.rentInvoices) db.rentInvoices = [];
+    const index = db.rentInvoices.findIndex(inv => inv.id === invoice.id);
+    if (index >= 0) {
+      db.rentInvoices[index] = invoice;
+    } else {
+      db.rentInvoices.unshift(invoice);
+    }
+    saveDb(db);
+    return invoice;
+  },
+
+  generateMonthlyRentInvoices: (billingMonth: string): RentInvoice[] => {
+    const db = getDb();
+    if (!db.rentInvoices) db.rentInvoices = [];
+    const members = db.members || [];
+    const newInvoices: RentInvoice[] = [];
+
+    members.forEach((member, idx) => {
+      if (member.status !== 'ACTIVE') return;
+      const existing = db.rentInvoices!.find(
+        inv => inv.memberId === member.id && inv.billingMonth === billingMonth
+      );
+      if (!existing) {
+        const seq = String(db.rentInvoices!.length + idx + 1).padStart(3, '0');
+        const total = (member.agreedRoomRent || 0) + (member.messFee || 0);
+        const inv: RentInvoice = {
+          id: `INV-${billingMonth.replace('-', '')}-${seq}`,
+          invoiceNumber: `FLT/${billingMonth.replace('-', '/')}/${seq}`,
+          memberId: member.id,
+          memberName: member.fullName,
+          memberEmail: member.email,
+          flatId: member.assignedFlatId,
+          roomId: member.assignedRoomId,
+          billingMonth,
+          invoiceDate: `${billingMonth}-01`,
+          dueDate: `${billingMonth}-${String(member.rentDueDay || 5).padStart(2, '0')}`,
+          roomRentAmount: member.agreedRoomRent || 0,
+          messAmount: member.messFee || 0,
+          utilityCharges: 0,
+          discountsOrDeductions: 0,
+          totalAmountDue: total,
+          amountPaid: 0,
+          balanceDue: total,
+          status: 'UNPAID',
+          dueEmailSent: false
+        };
+        db.rentInvoices!.unshift(inv);
+        newInvoices.push(inv);
+      }
+    });
+
+    if (newInvoices.length > 0) {
+      saveDb(db);
+    }
+    return db.rentInvoices!;
+  },
+
+  recordRentPayment: (payment: RentPayment): RentPayment => {
+    const db = getDb();
+    if (!db.rentPayments) db.rentPayments = [];
+    db.rentPayments.unshift(payment);
+
+    if (db.rentInvoices) {
+      const invoice = db.rentInvoices.find(inv => inv.id === payment.invoiceId);
+      if (invoice) {
+        invoice.amountPaid = (invoice.amountPaid || 0) + payment.amountPaid;
+        invoice.balanceDue = Math.max(0, invoice.totalAmountDue - invoice.amountPaid);
+        invoice.status = invoice.balanceDue === 0 ? 'PAID' : 'PARTIALLY_PAID';
+      }
+    }
+    saveDb(db);
+    return payment;
+  },
+
+  getRentPayments: (invoiceId?: string): RentPayment[] => {
+    const payments = getDb().rentPayments || [];
+    if (invoiceId) {
+      return payments.filter(p => p.invoiceId === invoiceId);
+    }
+    return payments;
+  },
+
+  getEmailNoticeLogs: (): EmailNoticeLog[] => {
+    return getDb().emailNoticeLogs || [];
+  },
+
+  logEmailNotice: (log: EmailNoticeLog): void => {
+    const db = getDb();
+    if (!db.emailNoticeLogs) db.emailNoticeLogs = [];
+    db.emailNoticeLogs.unshift(log);
+    saveDb(db);
   }
 };

@@ -10,6 +10,7 @@ const CustomersPage = lazy(() => import('./pages/CustomersPage'));
 const CustomerViewPage = lazy(() => import('./pages/CustomerViewPage'));
 const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
 const FincorePage = lazy(() => import('./pages/FincorePage'));
+const FltPage = lazy(() => import('./pages/FltPage'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('infazys_token');
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/customers/new" element={<Navigate to="/customers" replace />} />
               <Route path="/customers/view/:id" element={<ProtectedRoute><CustomerViewPage /></ProtectedRoute>} />
               <Route path="/fincore" element={<ProtectedRoute><FincorePage /></ProtectedRoute>} />
+              <Route path="/flt" element={<ProtectedRoute><FltPage /></ProtectedRoute>} />
               
               {/* Legacy fallback redirects */}
               <Route path="/admin-panel" element={<Navigate to="/customers" replace />} />

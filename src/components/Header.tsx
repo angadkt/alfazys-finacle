@@ -161,6 +161,86 @@ const SHORTCUT_REGISTRY: ShortcutItem[] = [
     description: 'Provision new staff credentials & permissions',
     synonyms: ['astf', 'add staff', 'new staff', 'create user', 'provision'],
     adminOnly: true
+  },
+  {
+    code: 'FDASH',
+    name: 'FLT Dashboard',
+    screen: 'FLT DASHBOARD',
+    module: 'FLT Core',
+    description: 'Flat management occupancy & revenue overview',
+    synonyms: ['fdash', 'flt', 'flat dashboard', 'occupancy']
+  },
+  {
+    code: 'FLTM',
+    name: 'Flat Maintenance (FLTM)',
+    screen: 'FLAT MAINTENANCE',
+    module: 'FLT Flats',
+    description: 'Property, building & flat master registry',
+    synonyms: ['fltm', 'flat', 'flats', 'add flat', 'new flat', 'apartment']
+  },
+  {
+    code: 'ROOM',
+    name: 'Room & Bedspace Inventory',
+    screen: 'ROOM & BEDSPACE',
+    module: 'FLT Rooms',
+    description: 'Rooms, partition beds & monthly rates',
+    synonyms: ['room', 'rooms', 'bed', 'bedspace', 'beds']
+  },
+  {
+    code: 'MESS',
+    name: 'Mess & Food Plans',
+    screen: 'MESS & FOOD PLANS',
+    module: 'FLT Mess',
+    description: 'Meal subscriptions, 3x daily & 2x daily packages',
+    synonyms: ['mess', 'food', 'meal', 'meals', 'catering']
+  },
+  {
+    code: 'MBRM',
+    name: 'Member Management (MBRM)',
+    screen: 'MEMBER MANAGEMENT',
+    module: 'FLT Tenants',
+    description: 'Tenant directory, room assignment & rent package',
+    synonyms: ['mbrm', 'member', 'members', 'tenant', 'tenants', 'add member']
+  },
+  {
+    code: 'RENTD',
+    name: 'Rent Due & Invoicing (RENTD)',
+    screen: 'RENT DUE & INVOICING',
+    module: 'FLT Billing',
+    description: 'Monthly rent dues, pending balances & demand notices',
+    synonyms: ['rentd', 'rent', 'due', 'rent due', 'pending', 'invoice']
+  },
+  {
+    code: 'RCPT',
+    name: 'Rent Collection (RCPT)',
+    screen: 'RENT COLLECTION',
+    module: 'FLT Cash Desk',
+    description: 'Collect room rent & mess fee, print voucher',
+    synonyms: ['rcpt', 'receipt', 'collect', 'collect rent', 'payment']
+  },
+  {
+    code: 'TLEDG',
+    name: 'Tenant Statement & Ledger',
+    screen: 'TENANT STATEMENT',
+    module: 'FLT Audit',
+    description: 'Tenant payment history and balance ledger',
+    synonyms: ['tledg', 'statement', 'tenant ledger', 'tenant statement']
+  },
+  {
+    code: 'MROST',
+    name: 'Kitchen Mess Roster',
+    screen: 'KITCHEN ROSTER',
+    module: 'FLT Mess',
+    description: 'Daily breakfast, lunch & dinner meal headcounts',
+    synonyms: ['mrost', 'kitchen', 'roster', 'meal count', 'attendance']
+  },
+  {
+    code: 'MAIL',
+    name: 'Email Notice Dispatch',
+    screen: 'EMAIL NOTICE DISPATCH',
+    module: 'FLT Communications',
+    description: 'Automated rent due alerts & reminder dispatch log',
+    synonyms: ['mail', 'email', 'notices', 'alerts', 'due email']
   }
 ];
 
@@ -176,6 +256,7 @@ export default function Header({
   const navigate = useNavigate();
   const location = useLocation();
   const isFincoreActive = location.pathname.includes('/fincore');
+  const isFltActive = location.pathname.includes('/flt');
   const [shortcutText, setShortcutText] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -253,8 +334,25 @@ export default function Header({
     if (onShortcutSelect) {
       onShortcutSelect(item.screen);
     } else {
-      sessionStorage.setItem('fincore_active_screen', item.screen);
-      navigate('/fincore');
+      const isFltScreen = item.module.startsWith('FLT') || item.screen.startsWith('FLT') || [
+        'FLAT MAINTENANCE', 
+        'ROOM & BEDSPACE', 
+        'MESS & FOOD PLANS', 
+        'MEMBER MANAGEMENT', 
+        'RENT DUE & INVOICING', 
+        'RENT COLLECTION', 
+        'TENANT STATEMENT', 
+        'KITCHEN ROSTER', 
+        'EMAIL NOTICE DISPATCH'
+      ].includes(item.screen);
+
+      if (isFltScreen) {
+        sessionStorage.setItem('flt_active_screen', item.screen);
+        navigate('/flt');
+      } else {
+        sessionStorage.setItem('fincore_active_screen', item.screen);
+        navigate('/fincore');
+      }
     }
   };
 
@@ -351,17 +449,20 @@ export default function Header({
             <span className="text-white font-semibold text-xs">Solution:</span>
             <div className="w-[170px]">
               <FinacleSelect
-                value={isFincoreActive ? 'FINCORE' : 'Select'}
+                value={isFincoreActive ? 'FINCORE' : (isFltActive ? 'FLT' : 'Select')}
                 onChange={(e) => {
                   if (e.target.value === 'FINCORE') {
                     navigate('/fincore');
+                  } else if (e.target.value === 'FLT') {
+                    navigate('/flt');
                   }
                 }}
                 className="w-full"
                 triggerClassName="py-1 px-2 text-xs font-semibold bg-white/95 text-[#0E498C] border-white"
                 options={[
                   { value: "Select", label: "---Select---" },
-                  { value: "FINCORE", label: "FINCORE" }
+                  { value: "FINCORE", label: "FINCORE" },
+                  { value: "FLT", label: "FLT" }
                 ]}
               />
             </div>
