@@ -423,7 +423,7 @@ export default function Header({
     <div className="w-full flex flex-col font-sans antialiased shrink-0">
       {/* Top Utility Navbar - 50/50 Canara Gold & Cyan Blue Split with Subtle Diagonal Transition */}
       <div 
-        className="w-full min-h-[42px] flex items-stretch border-b border-[#0089c7] text-xs shadow-sm z-10 overflow-hidden"
+        className="w-full min-h-[42px] flex items-stretch border-b border-[#0089c7] text-xs shadow-sm relative z-50 overflow-visible"
         style={{
           background: 'linear-gradient(115deg, #FFB800 0%, #FFB800 50%, #00A5E3 50%, #00A5E3 100%)'
         }}
@@ -449,10 +449,10 @@ export default function Header({
         </div>
 
         {/* Right Half: Cyan Blue (#00A5E3) */}
-        <div className="flex-1 text-white flex items-center justify-end px-4 sm:px-8 py-2.5">
-          <div className="flex items-center gap-2">
+        <div className="flex-1 text-white flex items-center justify-end px-4 sm:px-8 py-2.5 overflow-visible">
+          <div className="flex items-center gap-2 overflow-visible">
             <span className="text-white font-semibold text-xs">Solution:</span>
-            <div className="w-[145px]">
+            <div className="w-[145px] relative z-50">
               <FinacleSelect
                 value={isFincoreActive ? 'FINCORE' : (isFltActive ? 'FLT' : 'Select')}
                 onChange={(e) => {
@@ -462,6 +462,8 @@ export default function Header({
                     navigate('/flt');
                   }
                 }}
+                align="right"
+                searchable={false}
                 className="w-full"
                 triggerClassName="h-[22px] py-0 px-2 text-[11px] leading-none font-bold bg-white text-[#0E498C] border-white shadow-2xs rounded"
                 options={[

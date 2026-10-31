@@ -23,6 +23,7 @@ export interface FinacleSelectProps<T extends string = string> {
   triggerClassName?: string;
   searchable?: boolean;
   searchPlaceholder?: string;
+  align?: 'left' | 'right';
 }
 
 export default function FinacleSelect<T extends string = string>({
@@ -38,7 +39,8 @@ export default function FinacleSelect<T extends string = string>({
   required = false,
   accentClass = "text-[#104080]",
   searchable,
-  searchPlaceholder = "Type to search..."
+  searchPlaceholder = "Type to search...",
+  align = 'left'
 }: FinacleSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
@@ -207,7 +209,7 @@ export default function FinacleSelect<T extends string = string>({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full text-xs select-none ${isOpen ? "z-40" : "z-10"} ${className}`}
+      className={`relative w-full text-xs select-none ${isOpen ? "z-50" : "z-10"} ${className}`}
       onKeyDown={handleKeyDown}
     >
       {/* Hidden input for HTML form validation compatibility */}
@@ -249,10 +251,10 @@ export default function FinacleSelect<T extends string = string>({
         <div
           role="listbox"
           tabIndex={-1}
-          className={`absolute z-[100] ${
+          className={`absolute z-[9999] ${
             dropUp ? "bottom-full mb-1.5" : "top-full mt-1.5"
-          } left-0 w-full bg-white border border-gray-200 rounded-lg shadow-2xl overflow-hidden py-0 animate-in fade-in zoom-in-95 duration-100 flex flex-col`}
-          style={{ minWidth: "260px" }}
+          } ${align === 'right' ? 'right-0' : 'left-0'} bg-white border border-gray-200 rounded-lg shadow-2xl overflow-hidden py-0 animate-in fade-in zoom-in-95 duration-100 flex flex-col`}
+          style={{ minWidth: options.length <= 4 ? "170px" : "260px" }}
         >
           {/* Sticky Quick-Search Input */}
           {isSearchable && (
