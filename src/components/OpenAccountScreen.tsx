@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import api from "../services/api";
+import { resolveAccountScheme } from "../utils/schemeUtils";
 import FinacleDatePicker from "./FinacleDatePicker";
 import FinacleSelect from "./FinacleSelect";
 import Loader from "./Loader";
@@ -28,7 +29,8 @@ import {
   Users,
   TrendingUp,
   Receipt,
-  BadgeCheck
+  BadgeCheck,
+  Printer
 } from "lucide-react";
 
 function formatAmountInWords(num: number, branch: "INDIA" | "UAE"): string {
@@ -138,23 +140,66 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
   // Scheme Selection
   const [accountType, setAccountType] = useState<AccountType>("SAVINGS");
 
-  // Multi-Step Wizard Flow (1: Scheme & Date, 2: Branch & CIF, 3: Scheme Details & Activation)
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  // Multi-Step Wizard Flow (1: Scheme & Date, 2: Branch & CIF, 3: Scheme Details & Activation, 4: Completion Advice)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [stepLoading, setStepLoading] = useState(false);
 
   // CIF Selection (Servicer-only vs All CIFs)
   const [servicerCifs, setServicerCifs] = useState<EligibleCif[]>([]);
   const [allCifs, setAllCifs] = useState<EligibleCif[]>([]);
+  const [existingAccounts, setExistingAccounts] = useState<any[]>([]);
   const [loadingCifs, setLoadingCifs] = useState(false);
   const [selectedPartyId, setSelectedPartyId] = useState<string>("");
 
-  // Context-aware dynamic CIF list: Servicer scheme shows only servicers; all other schemes show all verified CIFs
+  // Context-aware dynamic CIF list:
+  // 1. Servicer scheme shows only eligible servicers
+  // 2. All other schemes show verified CIFs
+  // 3. Scheme-Specific Deduplication: Filters out CIFs that already hold an active account
+  //    for the currently selected scheme (e.g. SAVINGS), while keeping them eligible and visible
+  //    for other schemes (e.g. CURRENT, SALARY, CORPORATE, ODA, etc.)
   const activeCifList: EligibleCif[] = useMemo(() => {
-    if (accountType === "SERVICER") {
-      return servicerCifs;
+    const baseList = accountType === "SERVICER"
+      ? servicerCifs
+      : (allCifs.length > 0 ? allCifs : servicerCifs);
+
+    return baseList.filter((cif) => {
+      const alreadyHasThisScheme = existingAccounts.some((acc) => {
+        const matchesParty =
+          (acc.party_id && String(acc.party_id) === String(cif.id)) ||
+          (acc.cif_no && cif.cif_no && String(acc.cif_no).trim().toUpperCase() === String(cif.cif_no).trim().toUpperCase());
+
+        if (!matchesParty) return false;
+
+        const accScheme = resolveAccountScheme(acc.account_type, acc.account_no);
+        return accScheme === accountType.trim().toUpperCase();
+      });
+
+      return !alreadyHasThisScheme;
+    });
+  }, [accountType, servicerCifs, allCifs, existingAccounts]);
+
+  // Safeguard: If the selected CIF already has an account under the current scheme, clear selection
+  useEffect(() => {
+    if (selectedPartyId && existingAccounts.length > 0) {
+      const cif = allCifs.find((c) => String(c.id) === String(selectedPartyId)) ||
+        servicerCifs.find((c) => String(c.id) === String(selectedPartyId));
+      if (cif) {
+        const hasThisScheme = existingAccounts.some((acc) => {
+          const matches =
+            (acc.party_id && String(acc.party_id) === String(cif.id)) ||
+            (acc.cif_no && cif.cif_no && String(acc.cif_no).trim().toUpperCase() === String(cif.cif_no).trim().toUpperCase());
+          return matches && resolveAccountScheme(acc.account_type, acc.account_no) === accountType.trim().toUpperCase();
+        });
+        if (hasThisScheme) {
+          setSelectedPartyId("");
+          setName("");
+          setPhone("");
+          setCity("");
+          setEntryAccountHolder("");
+        }
+      }
     }
-    return allCifs.length > 0 ? allCifs : servicerCifs;
-  }, [accountType, servicerCifs, allCifs]);
+  }, [accountType, existingAccounts]);
 
   // Base Identity Fields
   const [name, setName] = useState("");
@@ -379,10 +424,11 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
   const fetchAllCifsData = async () => {
     try {
       setLoadingCifs(true);
-      const [servicerRes, partiesRes, mastersRes] = await Promise.allSettled([
+      const [servicerRes, partiesRes, mastersRes, accountsRes] = await Promise.allSettled([
         api.get("/payouts/eligible-cifs"),
         api.get("/records/parties"),
-        api.get("/masters/cif_types")
+        api.get("/masters/cif_types"),
+        api.get("/payouts/servicers")
       ]);
 
       const cifTypeLookup: Record<string, string> = {
@@ -439,6 +485,13 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
         });
         setAllCifs(formattedAll);
       }
+
+      // 3. Process Existing Accounts for Scheme-Specific Deduplication
+      if (accountsRes.status === "fulfilled") {
+        const rawAccounts = accountsRes.value.data?.servicers ||
+          (Array.isArray(accountsRes.value.data) ? accountsRes.value.data : []);
+        setExistingAccounts(rawAccounts);
+      }
     } catch (err) {
       console.error("Error loading CIF lists:", err);
     } finally {
@@ -464,7 +517,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
       allCifs.find((c) => String(c.id) === String(partyId)) ||
       servicerCifs.find((c) => String(c.id) === String(partyId));
     if (cif) {
-      const fullName = [cif.first_name, cif.last_name].filter(Boolean).join(" ");
+      const fullName = [cif.first_name, cif.last_name].filter(Boolean).join(" ").toUpperCase();
       setName(fullName);
       setPhone(cif.contact_number || cif.indian_number || "");
       setCity(cif.city || (cif.country === "UAE" ? "Dubai" : "Mumbai"));
@@ -703,6 +756,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
         cif_no: servicer.cif_no || selectedCifObj?.cif_no,
         opening_date: openingDate
       });
+      setCurrentStep(4);
       setShowSuccessModal(true);
       fetchAllCifsData();
     } catch (err: any) {
@@ -732,7 +786,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
       {/* 2. Main Workspace Area - Centered Stepped Flow */}
       <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar bg-slate-50/60">
         <div className="min-h-full flex flex-col items-center justify-center pt-4 pb-20 md:pb-28">
-          <div className={`w-full mx-auto space-y-6 -translate-y-4 md:-translate-y-6 ${currentStep === 3 ? 'max-w-3xl' : 'max-w-2xl'}`}>
+          <div className={`w-full mx-auto space-y-6 -translate-y-4 md:-translate-y-6 ${currentStep >= 3 ? 'max-w-3xl' : 'max-w-2xl'}`}>
 
             {/* Error Banner */}
             {formError && (
@@ -930,12 +984,11 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                             : "-- Choose Verified CIF or Enter Manually Below --"
                       },
                       ...activeCifList.map((c) => {
-                        const fullName = `${c.first_name} ${c.last_name}`.trim();
-                        const badge = c.cif_type_name || (accountType === "SERVICER" ? "Servicer" : "CIF");
+                        const fullName = `${c.first_name} ${c.last_name}`.trim().toUpperCase();
+                        const badge = (c.cif_type_name || (accountType === "SERVICER" ? "Servicer" : "CIF")).toUpperCase();
                         return {
                           value: String(c.id),
-                          label: `${c.cif_no} — ${fullName} [${badge}]`,
-                          subLabel: c.contact_number ? `Contact: ${c.contact_number}` : undefined
+                          label: `${c.cif_no} — ${fullName} [${badge}]`
                         };
                       })
                     ]}
@@ -1006,7 +1059,7 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
           )}
 
           {/* STEP 3: SCHEME SPECIFICATIONS & FINAL AUTHORIZATION */}
-          {currentStep === 3 && (
+          {currentStep === 3 && !createdResult && (
             <form onSubmit={handleOpenAccount} className="bg-white border border-gray-200 rounded-lg shadow-xs">
               <div className="bg-[#0E498C] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
                 <div className="flex items-center gap-2">
@@ -1477,6 +1530,195 @@ export default function OpenAccountScreen({ onNavigate }: OpenAccountScreenProps
                 </button>
               </div>
             </form>
+          )}
+
+          {/* STEP 4: OFFICIAL ACCOUNT PROVISIONING ADVICE & COMPLETION RECEIPT */}
+          {currentStep === 4 && createdResult && (
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+              {/* Header */}
+              <div className="bg-[#0E498C] text-white px-5 py-3.5 flex items-center justify-between rounded-t-lg shadow-xs">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <div>
+                    <span className="font-bold text-sm text-white uppercase tracking-wide block">
+                      Account Provisioned &amp; Active in Core Ledger
+                    </span>
+                    <span className="text-[11px] text-[#00B5E2] font-semibold">
+                      General Ledger Verification Complete
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] bg-emerald-500 text-white font-extrabold px-2.5 py-0.5 rounded shadow-2xs uppercase tracking-wider flex items-center gap-1">
+                    <Check className="w-3 h-3 stroke-[3]" /> Active
+                  </span>
+                  <span className="text-[11px] bg-[#FFB800] text-black border border-[#e5a600] font-bold px-2 py-0.5 rounded font-mono shadow-2xs">
+                    Completed
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Highlight Banner with Account Number & IFSC */}
+                <div className="bg-[#0E498C] text-white p-5 rounded-lg text-center shadow-md space-y-4 border border-[#00B5E2]/40">
+                  <div>
+                    <div className="text-[11px] uppercase font-bold text-blue-200 tracking-widest">
+                      Finacle Account Number
+                    </div>
+                    <div className="font-mono text-3xl font-black text-amber-300 tracking-widest my-1 select-all">
+                      {createdResult.account_no}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-blue-400/30">
+                    <div className="text-[11px] uppercase font-bold text-blue-200 tracking-wider">
+                      Clearing IFSC Code
+                    </div>
+                    <div className="font-mono text-xl font-black text-emerald-300 tracking-wider my-0.5 select-all">
+                      {createdResult.ifsc}
+                    </div>
+                  </div>
+
+                  {/* Copy Actions */}
+                  <div className="flex items-center justify-center gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleCopyAccountNo}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Account Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Account No</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCopyIfsc}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      {copiedIfsc ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>IFSC Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy IFSC</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Provisioned Account Master Details Grid */}
+                <div className="bg-slate-50/80 border border-gray-200 rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <span className="text-gray-500 block text-[11px] font-semibold uppercase">Account Holder Title</span>
+                    <span className="font-bold text-gray-900 text-sm">{createdResult.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block text-[11px] font-semibold uppercase">Target Scheme</span>
+                    <span className="font-bold text-[#104080] text-sm">{createdResult.scheme_type}</span>
+                    <span className="text-[10px] text-gray-500 block font-mono">Code: {createdResult.scheme_code}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block text-[11px] font-semibold uppercase">Operating Branch</span>
+                    <span className="font-bold text-gray-900">
+                      {createdResult.branch === "UAE" ? "Dubai Regional Branch (UAE)" : "India National Branch (IN)"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block text-[11px] font-semibold uppercase">Account Opening Date</span>
+                    <span className="font-bold font-mono text-[#104080]">
+                      {createdResult.opening_date ? formatDateToDisplay(createdResult.opening_date) : "Immediate"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block text-[11px] font-semibold uppercase">Linked CIF ID</span>
+                    <span className="font-mono font-bold text-gray-900">{createdResult.cif_no || "N/A"}</span>
+                  </div>
+                  {createdResult.servicer_code && (
+                    <div>
+                      <span className="text-gray-500 block text-[11px] font-semibold uppercase">Servicer Code</span>
+                      <span className="font-mono font-bold text-purple-700">{createdResult.servicer_code}</span>
+                    </div>
+                  )}
+                  {initialDeposit !== "" && Number(initialDeposit) > 0 && (
+                    <div>
+                      <span className="text-gray-500 block text-[11px] font-semibold uppercase">Initial Deposit</span>
+                      <span className="font-mono font-bold text-emerald-700">
+                        {currencySymbol} {Number(initialDeposit).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {sanctionedLimit !== "" && Number(sanctionedLimit) > 0 && (
+                    <div>
+                      <span className="text-gray-500 block text-[11px] font-semibold uppercase">Sanctioned Limit</span>
+                      <span className="font-mono font-bold text-purple-700">
+                        {currencySymbol} {Number(sanctionedLimit).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 4 Footer Actions */}
+              <div className="bg-slate-50 border-t border-gray-200 px-6 py-4 flex flex-wrap items-center justify-between gap-3 rounded-b-lg">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-gray-600" />
+                    <span>Print Opening Advice</span>
+                  </button>
+
+                  {onNavigate && createdResult.account_no && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigate("ACCOUNT STATEMENT (ACLI)", createdResult.account_no)}
+                      className="inline-flex items-center gap-1.5 bg-[#0E498C] hover:bg-[#00A2E8] border border-[#00B5E2] text-white px-4 py-2 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                      title="View Account Statement"
+                    >
+                      <Receipt className="w-3.5 h-3.5 text-[#FFB800]" />
+                      <span>View Statement (ACLI)</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+
+                  {createdResult.servicer_code && onNavigate && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigate("SERVICER WALLETS")}
+                      className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      <Wallet className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Servicer Passbook</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="inline-flex items-center gap-2 bg-[#0E498C] hover:bg-[#00A2E8] text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer transition-colors shadow-md"
+                >
+                  <Plus className="w-4 h-4 text-[#FFB800]" />
+                  <span>Open Another Account</span>
+                </button>
+              </div>
+            </div>
           )}
               </>
             )}

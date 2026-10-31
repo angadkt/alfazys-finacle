@@ -32,7 +32,15 @@ export default function FltPage() {
     return sessionStorage.getItem('flt_active_screen') || 'FLT DASHBOARD';
   });
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem('flt_sidebar_open');
+    return saved !== null ? saved === 'true' : false;
+  });
+
+  // Sync sidebar open state with localStorage to persist across refreshes
+  useEffect(() => {
+    localStorage.setItem('flt_sidebar_open', String(isSidebarOpen));
+  }, [isSidebarOpen]);
 
   // Sync activeScreen with sessionStorage
   useEffect(() => {

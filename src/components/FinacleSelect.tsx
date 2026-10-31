@@ -37,7 +37,7 @@ export default function FinacleSelect<T extends string = string>({
   id,
   name,
   required = false,
-  accentClass = "text-[#104080]",
+  accentClass = "text-black font-bold",
   searchable,
   searchPlaceholder = "Type to search...",
   align = 'left'
@@ -233,8 +233,8 @@ export default function FinacleSelect<T extends string = string>({
         } ${disabled ? "opacity-60 cursor-not-allowed bg-gray-50" : ""} ${triggerClassName}`}
       >
         <span
-          className={`truncate font-bold ${
-            selectedOption ? accentClass : "text-gray-400 font-normal"
+          className={`truncate ${
+            selectedOption && selectedOption.value ? `${accentClass} font-bold` : "text-gray-500 font-normal"
           }`}
         >
           {selectedOption ? selectedOption.label : placeholder}
@@ -315,14 +315,16 @@ export default function FinacleSelect<T extends string = string>({
                       opt.disabled
                         ? "opacity-40 cursor-not-allowed text-gray-400"
                         : isSelected
-                        ? "bg-blue-50/80 font-bold text-[#104080]"
+                        ? `bg-blue-50/80 font-bold ${!opt.value ? "text-gray-500" : "text-black"}`
                         : isFocused
-                        ? "bg-slate-100 text-gray-900"
-                        : "text-gray-800 hover:bg-slate-50"
+                        ? `bg-slate-100 font-semibold ${!opt.value ? "text-gray-500" : "text-black"}`
+                        : `${!opt.value ? "text-gray-500" : "text-black"} hover:bg-slate-50`
                     }`}
                   >
                     <div className="flex flex-col min-w-0 pr-2">
-                      <span className="truncate font-semibold">{opt.label}</span>
+                      <span className={`truncate ${!opt.value ? "text-gray-500 font-normal italic" : "font-semibold text-black"}`}>
+                        {opt.label}
+                      </span>
                       {opt.subLabel && (
                         <span className="text-[11px] text-gray-500 font-normal truncate mt-0.5">
                           {opt.subLabel}

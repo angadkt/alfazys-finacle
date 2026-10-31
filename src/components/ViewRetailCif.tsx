@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { exportCifsToExcel, exportCifsToPdf } from '../utils/exportCif';
+import { resolveAccountScheme } from '../utils/schemeUtils';
 
 const SCHEME_BADGES: Record<string, { label: string; badgeClass: string }> = {
   SAVINGS: { label: "Savings Account", badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-300" },
@@ -516,7 +517,7 @@ export default function ViewRetailCif() {
                       </thead>
                       <tbody>
                         {linkedAccounts.map((acc: any) => {
-                          const schemeKey = (acc.account_type || "SERVICER").toUpperCase();
+                          const schemeKey = resolveAccountScheme(acc.account_type, acc.account_no);
                           const schemeInfo = SCHEME_BADGES[schemeKey] || {
                             label: schemeKey,
                             badgeClass: "bg-slate-100 text-slate-800 border-slate-300"
@@ -557,7 +558,7 @@ export default function ViewRetailCif() {
                                 {acc.opening_date || acc.created_at ? new Date(acc.opening_date || acc.created_at).toLocaleDateString() : "-"}
                               </td>
                               <td className="py-2.5 px-3 font-mono font-semibold text-slate-800">
-                                {acc.account_type === "BORROWED" ? (
+                                {schemeKey === "BORROWED" ? (
                                   <span>
                                     Limit: {ccySymbol} {Number(acc.sanctioned_limit || 0).toLocaleString()}
                                   </span>

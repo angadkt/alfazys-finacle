@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import api from "../services/api";
+import { resolveAccountScheme } from "../utils/schemeUtils";
 import {
   Search,
   RefreshCw,
@@ -22,7 +23,6 @@ import {
   TrendingUp,
   Receipt,
   X,
-  Phone,
   Calendar
 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -186,7 +186,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
     return accounts.filter((acc) => {
       // Scheme Filter
       if (selectedSchemeFilter !== "ALL") {
-        const accScheme = (acc.account_type || "SERVICER").toUpperCase();
+        const accScheme = resolveAccountScheme(acc.account_type, acc.account_no);
         if (accScheme !== selectedSchemeFilter) return false;
       }
 
@@ -216,7 +216,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
         const phone = (acc.phone || "").toLowerCase();
         const city = (acc.city || "").toLowerCase();
         const ifsc = (acc.ifsc_code || "").toLowerCase();
-        const scheme = (acc.account_type || "").toLowerCase();
+        const scheme = resolveAccountScheme(acc.account_type, acc.account_no).toLowerCase();
 
         return (
           accNo.includes(q) ||
@@ -250,13 +250,13 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
   // Statistics
   const stats = useMemo(() => {
     const total = accounts.length;
-    const savings = accounts.filter((a) => (a.account_type || "SERVICER") === "SAVINGS").length;
-    const current = accounts.filter((a) => (a.account_type || "SERVICER") === "CURRENT").length;
+    const savings = accounts.filter((a) => resolveAccountScheme(a.account_type, a.account_no) === "SAVINGS").length;
+    const current = accounts.filter((a) => resolveAccountScheme(a.account_type, a.account_no) === "CURRENT").length;
     const corporate = accounts.filter((a) =>
-      (a.account_type || "").includes("CORPORATE")
+      resolveAccountScheme(a.account_type, a.account_no).includes("CORPORATE")
     ).length;
-    const overdraft = accounts.filter((a) => (a.account_type || "") === "BORROWED").length;
-    const servicer = accounts.filter((a) => (a.account_type || "SERVICER") === "SERVICER").length;
+    const overdraft = accounts.filter((a) => resolveAccountScheme(a.account_type, a.account_no) === "BORROWED").length;
+    const servicer = accounts.filter((a) => resolveAccountScheme(a.account_type, a.account_no) === "SERVICER").length;
 
     return { total, savings, current, corporate, overdraft, servicer };
   }, [accounts]);
@@ -264,9 +264,10 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
   // Export to Excel
   const handleExportExcel = () => {
     const rows = filteredAccounts.map((a, idx) => {
-      const scheme = SCHEME_CONFIG[a.account_type || "SERVICER"] || {
+      const schemeType = resolveAccountScheme(a.account_type, a.account_no);
+      const scheme = SCHEME_CONFIG[schemeType] || {
         code: "1000",
-        label: a.account_type || "General Ledger"
+        label: schemeType || "General Ledger"
       };
       return {
         "Sl. No": idx + 1,
@@ -310,15 +311,16 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
     );
 
     const tableRows = filteredAccounts.map((a, idx) => {
-      const scheme = SCHEME_CONFIG[a.account_type || "SERVICER"] || {
+      const schemeType = resolveAccountScheme(a.account_type, a.account_no);
+      const scheme = SCHEME_CONFIG[schemeType] || {
         code: "1000",
-        label: a.account_type || "GL"
+        label: schemeType || "GL"
       };
       return [
         idx + 1,
         a.name || "N/A",
         a.account_no || "N/A",
-        `${scheme.code} - ${a.account_type || "SBA"}`,
+        `${scheme.code} - ${schemeType}`,
         a.cif_no || "N/A",
         a.branch === "UAE" ? "Dubai (AED)" : "India (INR)",
         a.ifsc_code || "N/A",
@@ -613,10 +615,10 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
                 </tr>
               ) : (
                 paginatedAccounts.map((acc, index) => {
-                  const schemeType = (acc.account_type || "SERVICER").toUpperCase();
+                  const schemeType = resolveAccountScheme(acc.account_type, acc.account_no);
                   const scheme = SCHEME_CONFIG[schemeType] || {
                     code: "1000",
-                    label: acc.account_type || "General Ledger",
+                    label: schemeType || "General Ledger",
                     badgeClass: "bg-gray-100 text-gray-700 border-gray-300",
                     icon: <Landmark className="w-3.5 h-3.5" />
                   };
@@ -649,12 +651,6 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
                             </span>
                           )}
                         </div>
-                        {acc.phone && (
-                          <div className="text-[11px] text-gray-500 font-mono font-normal flex items-center gap-1 mt-0.5">
-                            <Phone className="w-3 h-3 text-gray-400 shrink-0" />
-                            <span>{acc.phone}</span>
-                          </div>
-                        )}
                       </td>
 
                       {/* Account Number */}
@@ -869,7 +865,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
                     Finacle Account Dossier
                   </h3>
                   <p className="text-[11px] text-blue-200">
-                    Scheme: {activeAccountDossier.account_type || "General Ledger"}
+                    Scheme: {SCHEME_CONFIG[resolveAccountScheme(activeAccountDossier.account_type, activeAccountDossier.account_no)]?.label || "General Ledger"}
                   </p>
                 </div>
               </div>
@@ -959,7 +955,8 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
                   <div>
                     <div className="text-[10px] font-bold text-gray-500 uppercase">Scheme Classification</div>
                     <div className="font-bold text-gray-800 text-xs mt-0.5">
-                      {activeAccountDossier.account_type || "Savings (SBA)"}
+                      [{SCHEME_CONFIG[resolveAccountScheme(activeAccountDossier.account_type, activeAccountDossier.account_no)]?.code || "GL"}]{" "}
+                      {SCHEME_CONFIG[resolveAccountScheme(activeAccountDossier.account_type, activeAccountDossier.account_no)]?.label || "General Ledger"}
                     </div>
                   </div>
 
@@ -971,7 +968,7 @@ export default function AccountInquiryScreen({ onNavigateToLedger }: AccountInqu
                     </div>
                   </div>
 
-                  {activeAccountDossier.account_type === "BORROWED" && (
+                  {resolveAccountScheme(activeAccountDossier.account_type, activeAccountDossier.account_no) === "BORROWED" && (
                     <div>
                       <div className="text-[10px] font-bold text-gray-500 uppercase">Sanctioned Limit (ODA)</div>
                       <div className="font-mono font-bold text-amber-700 text-xs mt-0.5">

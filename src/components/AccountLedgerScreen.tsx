@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../services/api";
+import { resolveAccountScheme } from "../utils/schemeUtils";
 import {
   Search,
   Landmark,
@@ -229,7 +230,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
     // 1. Genesis / Account Opening Entry
     const openDeposit = Number(activeAccount.initial_deposit || 0);
     const sanctionLimit = Number(activeAccount.sanctioned_limit || 0);
-    const isOverdraft = activeAccount.account_type === "BORROWED";
+    const isOverdraft = resolveAccountScheme(activeAccount.account_type, activeAccount.account_no) === "BORROWED";
 
     const initialBal = isOverdraft ? sanctionLimit : openDeposit;
     const openDate = activeAccount.opening_date || (activeAccount.created_at ? activeAccount.created_at.slice(0, 10) : "2026-01-01");
@@ -425,10 +426,10 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
 
   const isUae = activeAccount?.branch === "UAE";
   const currencySym = isUae ? "AED" : "₹";
-  const schemeKey = (activeAccount?.account_type || "SERVICER").toUpperCase();
+  const schemeKey = resolveAccountScheme(activeAccount?.account_type, activeAccount?.account_no);
   const schemeInfo = SCHEME_CONFIG[schemeKey] || {
     code: "1000",
-    label: activeAccount?.account_type || "General Ledger",
+    label: schemeKey || "General Ledger",
     badgeClass: "bg-gray-100 text-gray-800 border-gray-300"
   };
 
@@ -514,7 +515,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                       options={[
                         { value: "", label: "— Choose an Account —" },
                         ...accounts.map((a) => {
-                          const scheme = (a.account_type || "SERVICER").toUpperCase();
+                          const scheme = resolveAccountScheme(a.account_type, a.account_no);
                           return {
                             value: a.account_no,
                             label: `${a.account_no} — ${a.name}`,
@@ -590,7 +591,7 @@ export default function AccountLedgerScreen({ initialAccountNo, onNavigateToAcco
                     options={[
                       { value: "", label: "— Choose an Account —" },
                       ...accounts.map((a) => {
-                        const scheme = (a.account_type || "SERVICER").toUpperCase();
+                        const scheme = resolveAccountScheme(a.account_type, a.account_no);
                         return {
                           value: a.account_no,
                           label: `${a.account_no} — ${a.name}`,

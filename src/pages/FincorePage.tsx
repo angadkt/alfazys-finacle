@@ -42,7 +42,15 @@ export default function FincorePage() {
     screen === 'AED COLLECTON' ||
     screen === 'PENDING AED REPORT';
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem('infazys_finacle_sidebar_open');
+    return saved !== null ? saved === 'true' : false;
+  });
+
+  // Sync sidebar open state with localStorage to persist across refreshes
+  useEffect(() => {
+    localStorage.setItem('infazys_finacle_sidebar_open', String(isSidebarOpen));
+  }, [isSidebarOpen]);
   const [isAccountsExpanded, setIsAccountsExpanded] = useState<boolean>(true);
   const [isPayoutExpanded, setIsPayoutExpanded] = useState<boolean>(true);
   const [isAedExpanded, setIsAedExpanded] = useState<boolean>(true);
